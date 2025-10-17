@@ -15,7 +15,7 @@ django.setup()
 
 def migrate_data():
     """Migrar datos de SQLite a PostgreSQL"""
-    print("🚀 Iniciando migración de datos...")
+    print("Iniciando migración de datos...")
     
     try:
         # Importar modelos después de configurar Django
