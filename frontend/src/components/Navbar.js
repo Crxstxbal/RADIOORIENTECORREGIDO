@@ -12,10 +12,9 @@ const Navbar = () => {
   const navItems = [
     { name: "Inicio", path: "/" },
     { name: "Programación", path: "/programacion" },
-    { name: "Noticias", path: "/noticias" },
+    { name: "Artículos", path: "/articulos" },
     { name: "Contacto", path: "/contacto" },
     { name: "Suscripción", path: "/suscripcion" },
-    { name: "Blog", path: "/blog" },
     {/* { name: "Reproductor", path: "/reproductor", icon: <Radio size={18}/> }, */}
   ];
 

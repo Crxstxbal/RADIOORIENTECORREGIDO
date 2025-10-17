@@ -1,17 +1,29 @@
 from django.contrib import admin
-from .models import ContactMessage, Subscription
+from .models import TipoAsunto, Estado, Contacto, Suscripcion
 
-@admin.register(ContactMessage)
-class ContactMessageAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'correo', 'asunto', 'estado', 'fecha_envio')
-    list_filter = ('asunto', 'estado', 'fecha_envio')
+@admin.register(TipoAsunto)
+class TipoAsuntoAdmin(admin.ModelAdmin):
+    list_display = ('nombre',)
+    search_fields = ('nombre',)
+
+@admin.register(Estado)
+class EstadoAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'tipo_entidad', 'descripcion')
+    list_filter = ('tipo_entidad',)
+    search_fields = ('nombre',)
+
+@admin.register(Contacto)
+class ContactoAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'email', 'tipo_asunto', 'estado', 'fecha_envio')
+    list_filter = ('tipo_asunto', 'estado', 'fecha_envio')
     list_editable = ('estado',)
-    search_fields = ('nombre', 'correo', 'mensaje')
+    search_fields = ('nombre', 'email', 'mensaje')
     readonly_fields = ('fecha_envio',)
 
-@admin.register(Subscription)
-class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ('correo', 'nombre', 'activa', 'fecha_suscripcion')
+@admin.register(Suscripcion)
+class SuscripcionAdmin(admin.ModelAdmin):
+    list_display = ('email', 'nombre', 'activa', 'fecha_suscripcion')
     list_filter = ('activa', 'fecha_suscripcion')
     list_editable = ('activa',)
-    search_fields = ('correo', 'nombre')
+    search_fields = ('email', 'nombre')
+    readonly_fields = ('token_unsuscribe', 'fecha_suscripcion')

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -7,20 +7,42 @@ import './Pages.css';
 const Contacto = () => {
   const [formData, setFormData] = useState({
     nombre: '',
-    correo: '',
+    email: '',
     telefono: '',
-    asunto: 'general',
+    tipo_asunto: '',
     mensaje: ''
   });
   const [loading, setLoading] = useState(false);
+  const [tiposAsunto, setTiposAsunto] = useState([]);
+  const [estacionInfo, setEstacionInfo] = useState(null);
 
-  const opcionesAsunto = [
-    { value: 'general', label: 'Consulta General' },
-    { value: 'programacion', label: 'Programación' },
-    { value: 'publicidad', label: 'Publicidad' },
-    { value: 'soporte', label: 'Soporte Técnico' },
-    { value: 'otro', label: 'Otro' }
-  ];
+  // Cargar tipos de asunto y información de la estación
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        // Cargar tipos de asunto
+        const tiposResponse = await axios.get('/api/contact/api/tipos-asunto/');
+        setTiposAsunto(tiposResponse.data);
+        
+        // Cargar información de la estación
+        const estacionResponse = await axios.get('/api/radio/api/estaciones/');
+        if (estacionResponse.data.length > 0) {
+          setEstacionInfo(estacionResponse.data[0]);
+        }
+      } catch (error) {
+        console.error('Error al cargar datos:', error);
+        // Fallback con tipos de asunto por defecto
+        setTiposAsunto([
+          { id: 1, nombre: 'Consulta General' },
+          { id: 2, nombre: 'Publicidad' },
+          { id: 3, nombre: 'Programación' },
+          { id: 4, nombre: 'Técnico' }
+        ]);
+      }
+    };
+    
+    cargarDatos();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -34,13 +56,17 @@ const Contacto = () => {
     setLoading(true);
 
     try {
-      await axios.post('/api/contact/message/', formData);
+      // Obtener token de autenticación si existe
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Token ${token}` } : {};
+      
+      await axios.post('/api/contact/api/contactos/', formData, { headers });
       toast.success('Mensaje enviado exitosamente. Te contactaremos pronto.');
       setFormData({
         nombre: '',
-        correo: '',
+        email: '',
         telefono: '',
-        asunto: 'general',
+        tipo_asunto: '',
         mensaje: ''
       });
     } catch (error) {
@@ -70,18 +96,16 @@ const Contacto = () => {
             <div className="contact-item">
               <Phone className="contact-icon" />
               <div>
-                <h3>Teléfonos</h3>
-                <p>+58 414-123-4567</p>
-                <p>+58 212-987-6543</p>
+                <h3>Teléfono</h3>
+                <p>{estacionInfo?.telefono || '+56 2 2345 6789'}</p>
               </div>
             </div>
 
             <div className="contact-item">
               <Mail className="contact-icon" />
               <div>
-                <h3>Correos</h3>
-                <p>info@radioorientefm.com</p>
-                <p>programacion@radioorientefm.com</p>
+                <h3>Correo</h3>
+                <p>{estacionInfo?.email || 'contacto@radiooriente.com'}</p>
               </div>
             </div>
 
@@ -89,9 +113,7 @@ const Contacto = () => {
               <MapPin className="contact-icon" />
               <div>
                 <h3>Dirección</h3>
-                <p>Av. Principal, Centro Comercial Oriente</p>
-                <p>Piso 3, Local 301</p>
-                <p>Barcelona, Estado Anzoátegui</p>
+                <p>{estacionInfo?.direccion || 'Av. Providencia 1234, Santiago, Chile'}</p>
               </div>
             </div>
 
@@ -135,14 +157,14 @@ const Contacto = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="correo" className="form-label">
+                  <label htmlFor="email" className="form-label">
                     Correo Electrónico *
                   </label>
                   <input
                     type="email"
-                    id="correo"
-                    name="correo"
-                    value={formData.correo}
+                    id="email"
+                    name="email"
+                    value={formData.email}
                     onChange={handleChange}
                     className="form-input"
                     required
@@ -166,20 +188,21 @@ const Contacto = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="asunto" className="form-label">
-                    Asunto *
+                  <label htmlFor="tipo_asunto" className="form-label">
+                    Tipo de Asunto *
                   </label>
                   <select
-                    id="asunto"
-                    name="asunto"
-                    value={formData.asunto}
+                    id="tipo_asunto"
+                    name="tipo_asunto"
+                    value={formData.tipo_asunto}
                     onChange={handleChange}
                     className="form-select"
                     required
                   >
-                    {opcionesAsunto.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
+                    <option value="">Selecciona un tipo de asunto</option>
+                    {tiposAsunto.map((tipo) => (
+                      <option key={tipo.id} value={tipo.id}>
+                        {tipo.nombre}
                       </option>
                     ))}
                   </select>

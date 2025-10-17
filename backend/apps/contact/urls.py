@@ -1,6 +1,14 @@
-from django.urls import path
+from django.urls import path, include
 from django.http import JsonResponse
+from rest_framework.routers import DefaultRouter
 from . import views
+
+# Router para los ViewSets normalizados
+router = DefaultRouter()
+router.register(r'tipos-asunto', views.TipoAsuntoViewSet)
+router.register(r'estados', views.EstadoViewSet)
+router.register(r'contactos', views.ContactoViewSet)
+router.register(r'suscripciones', views.SuscripcionViewSet)
 
 def contact_info(request):
     return JsonResponse({
@@ -14,6 +22,9 @@ def contact_info(request):
 
 urlpatterns = [
     path('', contact_info, name='contact-info'),
+    # APIs normalizadas
+    path('api/', include(router.urls)),
+    # APIs de compatibilidad para el frontend existente
     path('message/', views.ContactMessageCreateView.as_view(), name='contact-message'),
     path('subscribe/', views.subscribe, name='subscribe'),
     path('unsubscribe/', views.unsubscribe, name='unsubscribe'),

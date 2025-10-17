@@ -1,17 +1,16 @@
 from django.contrib import admin
-from .models import BlogPost, BlogComment
+from .models import Categoria, Articulo
 
-@admin.register(BlogPost)
-class BlogPostAdmin(admin.ModelAdmin):
-    list_display = ('titulo', 'autor_nombre', 'publicado', 'categoria', 'fecha_publicacion')
-    list_filter = ('publicado', 'categoria', 'fecha_publicacion')
-    list_editable = ('publicado',)
+@admin.register(Categoria)
+class CategoriaAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'descripcion')
+    search_fields = ('nombre',)
+
+@admin.register(Articulo)
+class ArticuloAdmin(admin.ModelAdmin):
+    list_display = ('titulo', 'autor', 'categoria', 'publicado', 'destacado', 'fecha_publicacion')
+    list_filter = ('publicado', 'destacado', 'categoria', 'fecha_publicacion')
+    list_editable = ('publicado', 'destacado')
     search_fields = ('titulo', 'contenido')
-    readonly_fields = ('fecha_creacion', 'fecha_actualizacion')
-
-@admin.register(BlogComment)
-class BlogCommentAdmin(admin.ModelAdmin):
-    list_display = ('autor_nombre', 'articulo_id', 'aprobado', 'fecha_creacion')
-    list_filter = ('aprobado', 'fecha_creacion')
-    list_editable = ('aprobado',)
-    search_fields = ('autor_nombre', 'contenido')
+    readonly_fields = ('slug', 'fecha_creacion')
+    prepopulated_fields = {'slug': ('titulo',)}

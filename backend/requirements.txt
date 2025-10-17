@@ -4,5 +4,12 @@ djangorestframework>=3.14.0
 django-cors-headers>=4.0.0
 python-decouple>=3.6
 
-# Database (Python 3.13 compatible)
-psycopg[binary]>=3.1.0
+# Database - PostgreSQL (opcional, solo si se quiere usar PostgreSQL)
+# psycopg[binary]>=3.1.0
+
+# Additional packages
+requests>=2.31.0
+Pillow>=10.0.0
+
+# Development and testing
+coverage>=7.0.0

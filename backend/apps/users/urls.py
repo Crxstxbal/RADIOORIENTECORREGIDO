@@ -21,4 +21,6 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('profile/', views.profile, name='profile'),
     path('profile/update/', views.update_profile, name='update_profile'),
+    # Endpoints de compatibilidad
+    path('profile/legacy/', views.profile_legacy, name='profile_legacy'),
 ]

@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import login, logout
 from .models import User
-from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserSerializer
+from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserSerializer, UserLegacySerializer
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -60,3 +60,11 @@ def update_profile(request):
         serializer.save()
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Views de compatibilidad para el frontend existente
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def profile_legacy(request):
+    """Endpoint de compatibilidad para el frontend existente"""
+    serializer = UserLegacySerializer(request.user)
+    return Response(serializer.data)

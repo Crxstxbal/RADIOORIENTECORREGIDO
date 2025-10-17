@@ -5,19 +5,22 @@ import axios from "axios";
 import "./Home.css";
 
 const Home = () => {
-  const [featuredNews, setFeaturedNews] = useState([]);
+  const [featuredArticles, setFeaturedArticles] = useState([]);
   const [radioStation, setRadioStation] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [newsResponse, stationResponse] = await Promise.all([
-          axios.get("/api/radio/news/"),
+        const [articlesResponse, stationResponse] = await Promise.all([
+          axios.get("/api/blog/articulos/"),
           axios.get("/api/radio/station/"),
         ]);
 
-        setFeaturedNews(newsResponse.data.results?.slice(0, 3) || []);
+        // Filtrar artículos destacados
+        const articles = articlesResponse.data.results || articlesResponse.data || [];
+        const featured = articles.filter(article => article.destacado && article.publicado).slice(0, 3);
+        setFeaturedArticles(featured);
         setRadioStation(stationResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -111,31 +114,29 @@ const Home = () => {
       {/* Noticias */}
       <section className="featured-news">
         <div className="container">
-          <h2 className="section-title">Últimas Noticias</h2>
+          <h2 className="section-title">Últimos Artículos</h2>
           {loading ? (
-            <div className="loading">Cargando noticias...</div>
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Cargando artículos...</p>
+            </div>
           ) : (
             <div className="news-grid">
-              {featuredNews.map((news) => (
-                <article key={news.id} className="news-card">
-                  {news.image && (
+              {featuredArticles.map((article) => (
+                <article key={article.id} className="news-card">
+                  {article.imagen_url && (
                     <img
-                      src={news.image}
-                      alt={news.title}
+                      src={article.imagen_url}
+                      alt={article.titulo}
                       className="news-image"
                     />
                   )}
                   <div className="news-content">
-                    <h3 className="news-title">{news.title}</h3>
-                    <p className="news-excerpt">
-                      {news.content.substring(0, 150)}...
-                    </p>
+                    <h3 className="news-title">{article.titulo}</h3>
+                    <p className="news-excerpt">{article.resumen || article.contenido.substring(0, 120) + '...'}</p>
                     <div className="news-meta">
-                      <span className="news-author">
-                        Por {news.autor_nombre}
-                      </span>
                       <span className="news-date">
-                        {new Date(news.created_at).toLocaleDateString()}
+                        {new Date(article.fecha_publicacion || article.fecha_creacion).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
@@ -144,8 +145,8 @@ const Home = () => {
             </div>
           )}
           <div className="text-center mt-8">
-            <Link to="/noticias" className="btn btn-secondary">
-              Ver Todas las Noticias
+            <Link to="/articulos" className="btn btn-outline">
+              Ver todos los artículos
             </Link>
           </div>
         </div>

@@ -1,37 +1,50 @@
 from django.db import models
+from django.conf import settings
+from django.utils.text import slugify
 
-class BlogPost(models.Model):
+class Categoria(models.Model):
+    """Categorías de artículos normalizadas"""
+    nombre = models.CharField(max_length=50, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        db_table = 'categoria'
+        verbose_name = 'Categoría'
+        verbose_name_plural = 'Categorías'
+    
+    def __str__(self):
+        return self.nombre
+
+class Articulo(models.Model):
+    """Artículos de blog normalizados"""
     titulo = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=250, unique=True, blank=True)
     contenido = models.TextField()
     resumen = models.TextField(blank=True, null=True)
-    imagen_url = models.CharField(max_length=500, blank=True, null=True)
-    autor_id = models.IntegerField(blank=True, null=True)
-    autor_nombre = models.CharField(max_length=100, blank=True, null=True)
-    categoria = models.CharField(max_length=50, blank=True, null=True)
-    tags = models.CharField(max_length=500, blank=True, null=True, help_text="Tags separados por comas")
-    publicado = models.BooleanField(default=True)
-    fecha_publicacion = models.DateTimeField(auto_now_add=True)
+    imagen_url = models.URLField(max_length=500, blank=True, null=True)
+    autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='articulos')
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='articulos')
+    publicado = models.BooleanField(default=False)
+    destacado = models.BooleanField(default=False)
+    fecha_publicacion = models.DateTimeField(blank=True, null=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    fecha_actualizacion = models.DateTimeField(auto_now=True)
-
+    
     class Meta:
-        db_table = 'blog_articulos'
-        ordering = ['-fecha_publicacion']
+        db_table = 'articulo'
+        ordering = ['-fecha_publicacion', '-fecha_creacion']
+        verbose_name = 'Artículo'
+        verbose_name_plural = 'Artículos'
+        indexes = [
+            models.Index(fields=['publicado']),
+            models.Index(fields=['slug']),
+            models.Index(fields=['autor']),
+            models.Index(fields=['categoria']),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.titulo)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.titulo
-
-class BlogComment(models.Model):
-    articulo_id = models.IntegerField()
-    autor_nombre = models.CharField(max_length=100)
-    autor_correo = models.CharField(max_length=150, blank=True, null=True)
-    contenido = models.TextField()
-    aprobado = models.BooleanField(default=False)
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'blog_comentarios'
-        ordering = ['fecha_creacion']
-
-    def __str__(self):
-        return f"Comentario de {self.autor_nombre} en artículo {self.articulo_id}"

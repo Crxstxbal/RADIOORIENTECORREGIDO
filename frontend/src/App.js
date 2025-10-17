@@ -13,13 +13,12 @@ import Footer from "./components/Footer";
 
 // Páginas
 import Home from './pages/Home';
-import Programming from './pages/Programming';
-import News from './pages/News';
-import Contact from './pages/Contact';
-import Subscription from './pages/Subscription';
-import Blog from './pages/Blog';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Programacion from './pages/Programacion';
+import Articulos from './pages/Articulos'; // Nueva página unificada
+import Contacto from './pages/Contacto';
+import Suscripcion from './pages/Suscripcion';
+import IniciarSesion from './pages/IniciarSesion';
+import Registro from './pages/Registro';
 import Emergente from './components/Emergente';
 import Reproductor from './pages/reproductor';
 
@@ -56,14 +55,15 @@ function App() {
             {/* Layout principal con navbar, radio, chat y footer */}
             <Route element={<LayoutPrincipal />}>
               <Route path="/" element={<Home />} />
-              <Route path="/programacion" element={<Programming />} />
-              <Route path="/noticias" element={<News />} />
-              <Route path="/contacto" element={<Contact />} />
-              <Route path="/suscripcion" element={<Subscription />} />
-              <Route path="/blog" element={<Blog />} />
+              <Route path="/programacion" element={<Programacion />} />
+              <Route path="/articulos" element={<Articulos />} />
+              <Route path="/noticias" element={<Articulos />} /> {/* Redirecciona a artículos */}
+              <Route path="/blog" element={<Articulos />} /> {/* Redirecciona a artículos HAR QUE ARREGLARLO*/}
+              <Route path="/contacto" element={<Contacto />} />
+              <Route path="/suscripcion" element={<Suscripcion />} />
               <Route path="/emergente" element={<Emergente />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/registro" element={<Register />} />
+              <Route path="/login" element={<IniciarSesion />} />
+              <Route path="/registro" element={<Registro />} />
             </Route>
 
             {/* Layout full screen solo para el reproductor */}

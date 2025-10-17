@@ -6,11 +6,11 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from django.contrib import messages
 from datetime import datetime, timedelta
-from apps.users.models import User, Role
-from apps.blog.models import BlogPost, BlogComment
-from apps.radio.models import Program, News, RadioStation
+from apps.users.models import User
+from apps.blog.models import Categoria, Articulo
+from apps.radio.models import Programa, EstacionRadio
 from apps.chat.models import ChatMessage
-from apps.contact.models import ContactMessage, Subscription
+from apps.contact.models import Contacto, Suscripcion, Estado
 from apps.emergente.models import BandaEmergente 
 
 
@@ -23,21 +23,21 @@ def dashboard_home(request):
     """Dashboard principal con métricas generales"""
     # Estadísticas generales
     total_users = User.objects.count()
-    total_posts = BlogPost.objects.count()
-    total_programs = Program.objects.count()
-    total_subscriptions = Subscription.objects.count()
+    total_posts = Articulo.objects.count()
+    total_programs = Programa.objects.count()
+    total_subscriptions = Suscripcion.objects.count()
     
     # Estadísticas de la última semana
     last_week = timezone.now() - timedelta(days=7)
     new_users_week = User.objects.filter(fecha_creacion__gte=last_week).count()
-    new_posts_week = BlogPost.objects.filter(fecha_creacion__gte=last_week).count()
+    new_posts_week = Articulo.objects.filter(fecha_creacion__gte=last_week).count()
     new_messages_week = ChatMessage.objects.filter(fecha_envio__gte=last_week).count()
     
     # Artículos más populares (por fecha de publicación reciente)
-    popular_posts = BlogPost.objects.filter(publicado=True).order_by('-fecha_publicacion')[:5]
+    popular_posts = Articulo.objects.filter(publicado=True).order_by('-fecha_publicacion')[:5]
     
     # Mensajes de contacto recientes
-    recent_contacts = ContactMessage.objects.order_by('-fecha_envio')[:5]
+    recent_contacts = Contacto.objects.order_by('-fecha_envio')[:5]
     
     context = {
         'total_users': total_users,
@@ -64,23 +64,21 @@ def dashboard_users(request):
 @user_passes_test(is_staff_user)
 def dashboard_blog(request):
     """Gestión del blog"""
-    posts = BlogPost.objects.all().order_by('-fecha_creacion')
+    posts = Articulo.objects.all().order_by('-fecha_creacion')
     return render(request, 'dashboard/blog.html', {'posts': posts})
 
 @login_required
 @user_passes_test(is_staff_user)
 def dashboard_radio(request):
     """Gestión de radio y programas"""
-    programs = Program.objects.all().order_by('hora_inicio')
-    news = News.objects.all().order_by('-fecha_creacion')[:10]
+    programs = Programa.objects.all().order_by('nombre')
     try:
-        station = RadioStation.objects.first()
-    except RadioStation.DoesNotExist:
+        station = EstacionRadio.objects.first()
+    except EstacionRadio.DoesNotExist:
         station = None
     
     context = {
         'programs': programs,
-        'news': news,
         'station': station,
     }
     return render(request, 'dashboard/radio.html', context)
@@ -110,7 +108,7 @@ def dashboard_analytics(request):
     posts_by_month = []
     for i in range(6):
         date = timezone.now() - timedelta(days=30*i)
-        count = BlogPost.objects.filter(
+        count = Articulo.objects.filter(
             fecha_creacion__year=date.year,
             fecha_creacion__month=date.month
         ).count()
@@ -154,10 +152,10 @@ def api_dashboard_stats(request):
     """API endpoint para estadísticas del dashboard"""
     stats = {
         'users': User.objects.count(),
-        'posts': BlogPost.objects.count(),
-        'programs': Program.objects.count(),
+        'posts': Articulo.objects.count(),
+        'programs': Programa.objects.count(),
         'messages': ChatMessage.objects.count(),
-        'subscriptions': Subscription.objects.count(),
+        'subscriptions': Suscripcion.objects.count(),
     }
     return JsonResponse(stats)
 
@@ -175,10 +173,10 @@ def create_user(request):
         
         try:
             user = User.objects.create_user(
-                correo=correo,
-                usuario=usuario,
+                email=correo,
+                username=usuario,
                 password=password,
-                nombre=nombre,
+                first_name=nombre,
                 is_staff=is_staff
             )
             messages.success(request, f'Usuario {usuario} creado exitosamente')
@@ -243,16 +241,17 @@ def create_post(request):
         imagen_url = request.POST.get('imagen_url')
         
         try:
-            post = BlogPost.objects.create(
+            # Obtener la categoría por ID
+            categoria_obj = Categoria.objects.get(id=categoria) if categoria else None
+            
+            post = Articulo.objects.create(
                 titulo=titulo,
                 contenido=contenido,
                 resumen=resumen,
-                categoria=categoria,
-                tags=tags,
+                categoria=categoria_obj,
                 publicado=publicado,
                 imagen_url=imagen_url,
-                autor_id=request.user.id,
-                autor_nombre=request.user.nombre
+                autor=request.user
             )
             messages.success(request, f'Artículo "{titulo}" creado exitosamente')
         except Exception as e:
@@ -314,13 +313,9 @@ def create_program(request):
         activo = request.POST.get('activo') == 'on'
         
         try:
-            program = Program.objects.create(
+            program = Programa.objects.create(
                 nombre=nombre,
                 descripcion=descripcion,
-                conductor=conductor,
-                hora_inicio=hora_inicio,
-                hora_fin=hora_fin,
-                dias_semana=dias_semana,
                 activo=activo
             )
             messages.success(request, f'Programa "{nombre}" creado exitosamente')
@@ -381,14 +376,17 @@ def create_news(request):
         publicado = request.POST.get('publicado') == 'on'
         
         try:
-            news = News.objects.create(
+            # Obtener categoría de noticias
+            categoria_noticias = Categoria.objects.get_or_create(nombre='Noticias')[0]
+            
+            # Crear artículo de noticias
+            news = Articulo.objects.create(
                 titulo=titulo,
                 contenido=contenido,
-                categoria=categoria,
+                categoria=categoria_noticias,
                 imagen_url=imagen_url,
                 publicado=publicado,
-                autor_id=request.user.id,
-                autor_nombre=request.user.nombre
+                autor=request.user
             )
             messages.success(request, f'Noticia "{titulo}" creada exitosamente')
         except Exception as e:
@@ -432,13 +430,16 @@ def delete_message(request, message_id):
 @user_passes_test(is_staff_user)
 def update_station(request):
     """Actualizar configuración de la estación"""
-    station = RadioStation.objects.first()
+    station = EstacionRadio.objects.first()
     
     if request.method == 'POST':
         station.nombre = request.POST.get('nombre', station.nombre)
         station.descripcion = request.POST.get('descripcion', station.descripcion)
         station.stream_url = request.POST.get('stream_url', station.stream_url)
-        station.activo = request.POST.get('activo') == 'on'
+        # Actualizar otros campos si existen en el formulario
+        station.telefono = request.POST.get('telefono', station.telefono)
+        station.email = request.POST.get('email', station.email)
+        station.direccion = request.POST.get('direccion', station.direccion)
         
         station.save()
         messages.success(request, 'Configuración de estación actualizada exitosamente')
@@ -452,21 +453,63 @@ def update_station(request):
 @user_passes_test(is_staff_user)
 def dashboard_emergentes(request):
     """Gestión de bandas emergentes"""
-    bandas = BandaEmergente.objects.all().order_by('-fecha_envio')
-    return render(request, 'dashboard/emergente.html', {'bandas': bandas})
+    bandas = BandaEmergente.objects.select_related(
+        'estado', 'genero', 'usuario', 'comuna__ciudad__pais'
+    ).prefetch_related('integrantes', 'links').order_by('-fecha_envio')
+    
+    # Obtener todos los estados disponibles para bandas
+    estados_disponibles = Estado.objects.filter(tipo_entidad='banda').order_by('nombre')
+    
+    # Estadísticas por estado
+    stats_estados = {}
+    for estado in estados_disponibles:
+        count = bandas.filter(estado=estado).count()
+        stats_estados[estado.nombre] = count
+    
+    context = {
+        'bandas': bandas,
+        'estados_disponibles': estados_disponibles,
+        'stats_estados': stats_estados,
+        'total_bandas': bandas.count()
+    }
+    
+    return render(request, 'dashboard/emergente.html', context)
 
 
 @login_required
 @user_passes_test(is_staff_user)
 def cambiar_estado_banda(request, banda_id, nuevo_estado):
-    """Cambiar el estado de una banda (pendiente, aprobado, rechazado)"""
+    """Cambiar el estado de una banda usando la tabla Estado normalizada"""
     banda = get_object_or_404(BandaEmergente, id=banda_id)
-    if nuevo_estado in dict(BandaEmergente.ESTADOS):
-        banda.estado = nuevo_estado
+    
+    # Mapear nombres de estados a los de la base de datos
+    estados_mapping = {
+        'aprobado': 'Aprobada',
+        'rechazado': 'Rechazada',
+        'pendiente': 'Recibida',
+        'revision': 'En Revisión'
+    }
+    
+    nombre_estado = estados_mapping.get(nuevo_estado, nuevo_estado)
+    
+    try:
+        # Buscar el estado en la tabla Estado
+        estado_obj = Estado.objects.get(
+            nombre__iexact=nombre_estado,
+            tipo_entidad='banda'
+        )
+        
+        banda.estado = estado_obj
+        banda.revisado_por = request.user
+        banda.fecha_revision = timezone.now()
         banda.save()
-        messages.success(request, f"Estado de '{banda.nombre_banda}' actualizado a {nuevo_estado}.")
-    else:
-        messages.error(request, "Estado inválido.")
+        
+        messages.success(request, f"Estado de '{banda.nombre_banda}' actualizado a {estado_obj.nombre}.")
+    except Estado.DoesNotExist:
+        messages.error(request, f"Estado '{nombre_estado}' no encontrado.")
+    except Exception as e:
+        messages.error(request, f"Error al actualizar estado: {str(e)}")
+    
     return redirect('dashboard_emergentes')
 
 

@@ -1,26 +1,94 @@
-import React, { useState } from 'react';
-import { Upload, Music, Users, Link, Send } from 'lucide-react';
-import './emergente.css'; // Importamos los estilos externos
+import React, { useState, useEffect } from 'react';
+import { Upload, Music, Users, Link, Send, X, Plus } from 'lucide-react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import './emergente.css';
 
 const Emergente = () => {
     const [formData, setFormData] = useState({
         nombre_banda: '',
-        integrantes: '',
+        integrantes: [],
         genero: '',
-        ciudad: '',
-        correo_contacto: '',
+        comuna: '',
+        email_contacto: '',
         telefono_contacto: '',
         mensaje: '',
-        links: '',
-        press_kit: null
+        links: [],
+        documento_presentacion: ''
     });
 
     const [isLoading, setIsLoading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [errors, setErrors] = useState({});
+    const [generos, setGeneros] = useState([]);
+    const [comunas, setComunas] = useState([]);
+    const [newIntegrante, setNewIntegrante] = useState('');
+    const [newLink, setNewLink] = useState({ tipo: '', url: '' });
 
     const token = localStorage.getItem('token');
     const isLoggedIn = Boolean(token);
+
+    // Cargar géneros y comunas
+    useEffect(() => {
+        const cargarDatos = async () => {
+            try {
+                // Cargar géneros musicales
+                const generosResponse = await axios.get('/api/radio/api/generos/');
+                setGeneros(generosResponse.data);
+                
+                // Cargar comunas
+                const comunasResponse = await axios.get('/api/ubicacion/comunas/');
+                setComunas(comunasResponse.data);
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+                // Fallback con datos por defecto
+                setGeneros([
+                    { id: 1, nombre: 'Rock' },
+                    { id: 2, nombre: 'Pop' },
+                    { id: 3, nombre: 'Reggaeton' },
+                    { id: 4, nombre: 'Cumbia' }
+                ]);
+            }
+        };
+        
+        cargarDatos();
+    }, []);
+
+    // Funciones para manejar integrantes
+    const agregarIntegrante = () => {
+        if (newIntegrante.trim()) {
+            setFormData(prev => ({
+                ...prev,
+                integrantes: [...prev.integrantes, newIntegrante.trim()]
+            }));
+            setNewIntegrante('');
+        }
+    };
+
+    const eliminarIntegrante = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            integrantes: prev.integrantes.filter((_, i) => i !== index)
+        }));
+    };
+
+    // Funciones para manejar links
+    const agregarLink = () => {
+        if (newLink.tipo && newLink.url.trim()) {
+            setFormData(prev => ({
+                ...prev,
+                links: [...prev.links, { ...newLink }]
+            }));
+            setNewLink({ tipo: '', url: '' });
+        }
+    };
+
+    const eliminarLink = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            links: prev.links.filter((_, i) => i !== index)
+        }));
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -37,99 +105,144 @@ const Emergente = () => {
         }
     };
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        setFormData(prev => ({
+    const handleLinkChange = (e) => {
+        const { name, value } = e.target;
+        setNewLink(prev => ({
             ...prev,
-            press_kit: file
+            [name]: value
         }));
     };
 
     const validateForm = () => {
         const newErrors = {};
         if (!formData.nombre_banda.trim()) newErrors.nombre_banda = 'El nombre de la banda es requerido';
-        if (!formData.genero.trim()) newErrors.genero = 'El género musical es requerido';
-        if (!formData.correo_contacto.trim()) {
-            newErrors.correo_contacto = 'El correo electrónico es requerido';
-        } else if (!/\S+@\S+\.\S+/.test(formData.correo_contacto)) {
-            newErrors.correo_contacto = 'Por favor ingresa un correo electrónico válido';
+        if (!formData.genero) newErrors.genero = 'El género musical es requerido';
+        if (!formData.email_contacto.trim()) {
+            newErrors.email_contacto = 'El correo electrónico es requerido';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email_contacto)) {
+            newErrors.email_contacto = 'Por favor ingresa un correo electrónico válido';
         }
         if (!formData.mensaje.trim()) newErrors.mensaje = 'El mensaje es requerido';
+        if (formData.integrantes.length === 0) newErrors.integrantes = 'Debes agregar al menos un integrante';
         return newErrors;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('🚀 Iniciando envío del formulario...');
+        console.log('📝 Datos del formulario:', formData);
+        console.log('🔑 Token disponible:', !!token);
+        console.log('👤 Usuario logueado:', isLoggedIn);
 
-        // Validación de sesión
+        // Limpiar errores previos
+        setErrors({});
+
         if (!isLoggedIn) {
-            setErrors({ general: 'Debes iniciar sesión para enviar tu propuesta.' });
+            const errorMsg = 'Debes iniciar sesión para enviar tu propuesta.';
+            setErrors({ general: errorMsg });
+            toast.error(errorMsg);
             return;
         }
 
         const newErrors = validateForm();
         if (Object.keys(newErrors).length > 0) {
+            console.log('❌ Errores de validación:', newErrors);
             setErrors(newErrors);
+            toast.error('Por favor corrige los errores en el formulario.');
             return;
         }
 
         setIsLoading(true);
 
         try {
-            const formDataToSend = new FormData();
-            Object.keys(formData).forEach(key => {
-                if (formData[key] !== null && formData[key] !== '') {
-                    formDataToSend.append(key, formData[key]);
-                }
-            });
+            const dataToSend = {
+                nombre_banda: formData.nombre_banda.trim(),
+                email_contacto: formData.email_contacto.trim(),
+                telefono_contacto: formData.telefono_contacto?.trim() || '',
+                mensaje: formData.mensaje.trim(),
+                documento_presentacion: formData.documento_presentacion?.trim() || '',
+                genero: parseInt(formData.genero),
+                comuna: formData.comuna ? parseInt(formData.comuna) : null,
+                integrantes_data: formData.integrantes.filter(i => i.trim()),
+                links_data: formData.links.filter(l => l.tipo && l.url.trim())
+            };
 
-            const response = await fetch('http://localhost:8000/api/emergentes/', {
-                method: 'POST',
-                body: formDataToSend,
+            console.log('📤 Enviando datos:', dataToSend);
+
+            const response = await axios.post('/api/emergentes/api/bandas/', dataToSend, {
                 headers: {
-                    'Accept': 'application/json',
-                    'Authorization': `Token ${token}` // token siempre que haya sesión
-                },
-                credentials: 'same-origin',
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json'
+                }
             });
 
-            const text = await response.text();
-            let data;
-            try { data = JSON.parse(text); } catch { data = text; }
-
-            if (!response.ok) {
-                let userMessage = 'Hubo un error al enviar el formulario. Revisa los datos ingresados.';
-                if (data && typeof data === 'object') {
-                    const firstKey = Object.keys(data)[0];
-                    if (firstKey) {
-                        const firstError = data[firstKey][0];
-                        userMessage = firstError;
-                    }
-                }
-                setErrors({ general: userMessage });
-                return;
-            }
-
-            console.log('Banda registrada:', data);
+            console.log('✅ Respuesta exitosa:', response.data);
+            toast.success('¡Propuesta enviada exitosamente! Te contactaremos pronto.');
             setSubmitted(true);
+            
+            // Limpiar formulario
             setFormData({
                 nombre_banda: '',
-                integrantes: '',
+                integrantes: [],
                 genero: '',
-                ciudad: '',
-                correo_contacto: '',
+                comuna: '',
+                email_contacto: '',
                 telefono_contacto: '',
                 mensaje: '',
-                links: '',
-                press_kit: null
+                links: [],
+                documento_presentacion: ''
             });
 
         } catch (error) {
-            console.error('Fetch error:', error);
-            setErrors({ general: 'Error al enviar el formulario. Revisa la consola o la red.' });
+            console.error('❌ Error completo:', error);
+            console.error('📄 Respuesta del servidor:', error.response?.data);
+            console.error('🔢 Código de estado:', error.response?.status);
+            
+            let errorMessage = 'Error al enviar la propuesta. Inténtalo de nuevo.';
+            
+            if (error.response?.data) {
+                const errorData = error.response.data;
+                console.log('📋 Datos del error:', errorData);
+                
+                if (typeof errorData === 'object') {
+                    // Mostrar errores específicos de campos
+                    setErrors(errorData);
+                    
+                    // Crear mensaje de error más específico
+                    const firstError = Object.values(errorData)[0];
+                    if (Array.isArray(firstError)) {
+                        errorMessage = firstError[0];
+                    } else if (typeof firstError === 'string') {
+                        errorMessage = firstError;
+                    }
+                } else {
+                    errorMessage = errorData.toString();
+                }
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            toast.error(errorMessage);
+            console.log('🚨 Error mostrado al usuario:', errorMessage);
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const resetForm = () => {
+        setSubmitted(false);
+        setFormData({
+            nombre_banda: '',
+            integrantes: [],
+            genero: '',
+            comuna: '',
+            email_contacto: '',
+            telefono_contacto: '',
+            mensaje: '',
+            links: [],
+            documento_presentacion: ''
+        });
+        setErrors({});
     };
 
     if (submitted) {
@@ -147,9 +260,9 @@ const Emergente = () => {
                     <p>Gracias por enviar tu propuesta. Nuestro equipo revisará tu información y nos pondremos en contacto contigo pronto.</p>
                     <br />
                     <div className="buttons-container">
-                        <button onClick={() => setSubmitted(false)}>Enviar Otra Propuesta</button>
+                        <button onClick={resetForm}>Enviar Otra Propuesta</button>
                         <button 
-                            onClick={() => window.location.href = 'http://localhost:3000'} 
+                            onClick={() => window.location.href = '/'} 
                             style={{ marginLeft: '10px' }}
                         >
                             Ir a Página Principal
@@ -183,25 +296,25 @@ const Emergente = () => {
                     <div className="info-section">
                         <div className="card">
                             <div className="card-header">
-                                <h3 className="card-title">
-                                    <Music className="icon-red" />
-                                    ¿Qué Necesitas Enviar?
-                                </h3>
+                                <Users className="icon" />
+                                <h3>¿Por qué participar?</h3>
                             </div>
-                            <ul className="info-list">
-                                <li><Music className="icon-red" /> Información básica de la banda</li>
-                                <li><Users className="icon-red" /> Lista de integrantes</li>
-                                <li><Link className="icon-red" /> Enlaces a tu música</li>
-                                <li><Upload className="icon-red" /> Press kit (opcional)</li>
+                            <ul className="benefits-list">
+                                <li>Exposición en nuestra programación</li>
+                                <li>Entrevistas en vivo</li>
+                                <li>Promoción en redes sociales</li>
+                                <li>Conexión con otros artistas</li>
+                                <li>Apoyo al talento local</li>
                             </ul>
                         </div>
 
                         <div className="card">
                             <div className="card-header">
-                                <h3 className="card-title">Proceso de Selección</h3>
+                                <Link className="icon" />
+                                <h3>Proceso de Selección</h3>
                             </div>
-                            <div className="steps">
-                                <div className="step"><span>1</span> Envías tu propuesta</div>
+                            <div className="process-steps">
+                                <div className="step"><span>1</span> Envías tu información</div>
                                 <div className="step"><span>2</span> Revisamos tu material</div>
                                 <div className="step"><span>3</span> Te contactamos</div>
                             </div>
@@ -218,6 +331,7 @@ const Emergente = () => {
                             {errors.general && <div className="error-box">{errors.general}</div>}
 
                             <form onSubmit={handleSubmit}>
+                                {/* Nombre de la banda */}
                                 <div className="form-group">
                                     <label>Nombre de la Banda *</label>
                                     <input
@@ -226,56 +340,178 @@ const Emergente = () => {
                                         value={formData.nombre_banda}
                                         onChange={handleChange}
                                         className={errors.nombre_banda ? 'error' : ''}
+                                        placeholder="Ingresa el nombre de tu banda"
                                     />
                                     {errors.nombre_banda && <p className="error-text">{errors.nombre_banda}</p>}
                                 </div>
 
+                                {/* Integrantes */}
                                 <div className="form-group">
-                                    <label>Integrantes</label>
-                                    <textarea name="integrantes" value={formData.integrantes} onChange={handleChange} />
+                                    <label>Integrantes *</label>
+                                    <div className="integrantes-section">
+                                        <div className="add-section">
+                                            <input
+                                                type="text"
+                                                value={newIntegrante}
+                                                onChange={(e) => setNewIntegrante(e.target.value)}
+                                                placeholder="Nombre del integrante"
+                                                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), agregarIntegrante())}
+                                            />
+                                            <button type="button" onClick={agregarIntegrante} className="btn btn-primary btn-small">
+                                                <Plus size={16} />
+                                                Agregar
+                                            </button>
+                                        </div>
+                                        {formData.integrantes.length > 0 && (
+                                            <div className="integrantes-list">
+                                                {formData.integrantes.map((integrante, index) => (
+                                                    <div key={index} className="integrante-item">
+                                                        <span>{integrante}</span>
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => eliminarIntegrante(index)}
+                                                            className="btn-remove"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {errors.integrantes && <p className="error-text">{errors.integrantes}</p>}
                                 </div>
 
                                 <div className="form-row">
+                                    {/* Género Musical */}
                                     <div className="form-group">
                                         <label>Género Musical *</label>
-                                        <input
-                                            type="text"
+                                        <select
                                             name="genero"
                                             value={formData.genero}
                                             onChange={handleChange}
                                             className={errors.genero ? 'error' : ''}
-                                        />
+                                        >
+                                            <option value="">Selecciona un género</option>
+                                            {generos.map((genero) => (
+                                                <option key={genero.id} value={genero.id}>
+                                                    {genero.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
                                         {errors.genero && <p className="error-text">{errors.genero}</p>}
                                     </div>
+
+                                    {/* Comuna */}
                                     <div className="form-group">
-                                        <label>Ciudad</label>
-                                        <input type="text" name="ciudad" value={formData.ciudad} onChange={handleChange} />
+                                        <label>Comuna</label>
+                                        <select
+                                            name="comuna"
+                                            value={formData.comuna}
+                                            onChange={handleChange}
+                                        >
+                                            <option value="">Selecciona una comuna</option>
+                                            {comunas.map((comuna) => (
+                                                <option key={comuna.id} value={comuna.id}>
+                                                    {comuna.nombre}, {comuna.ciudad_nombre}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
 
                                 <div className="form-row">
+                                    {/* Email */}
                                     <div className="form-group">
                                         <label>Correo Electrónico *</label>
                                         <input
                                             type="email"
-                                            name="correo_contacto"
-                                            value={formData.correo_contacto}
+                                            name="email_contacto"
+                                            value={formData.email_contacto}
                                             onChange={handleChange}
-                                            className={errors.correo_contacto ? 'error' : ''}
+                                            className={errors.email_contacto ? 'error' : ''}
+                                            placeholder="banda@ejemplo.com"
                                         />
-                                        {errors.correo_contacto && <p className="error-text">{errors.correo_contacto}</p>}
+                                        {errors.email_contacto && <p className="error-text">{errors.email_contacto}</p>}
                                     </div>
+
+                                    {/* Teléfono */}
                                     <div className="form-group">
                                         <label>Teléfono</label>
-                                        <input type="tel" name="telefono_contacto" value={formData.telefono_contacto} onChange={handleChange} />
+                                        <input
+                                            type="tel"
+                                            name="telefono_contacto"
+                                            value={formData.telefono_contacto}
+                                            onChange={handleChange}
+                                            placeholder="+56 9 1234 5678"
+                                        />
                                     </div>
                                 </div>
 
+                                {/* Links */}
                                 <div className="form-group">
-                                    <label>Enlaces a tu Música</label>
-                                    <textarea name="links" value={formData.links} onChange={handleChange} />
+                                    <label>Links (Redes Sociales, Música, etc.)</label>
+                                    <div className="links-section">
+                                        <div className="add-link">
+                                            <select
+                                                name="tipo"
+                                                value={newLink.tipo}
+                                                onChange={handleLinkChange}
+                                            >
+                                                <option value="">Tipo de link</option>
+                                                <option value="spotify">Spotify</option>
+                                                <option value="youtube">YouTube</option>
+                                                <option value="instagram">Instagram</option>
+                                                <option value="facebook">Facebook</option>
+                                                <option value="soundcloud">SoundCloud</option>
+                                                <option value="website">Sitio Web</option>
+                                                <option value="otro">Otro</option>
+                                            </select>
+                                            <input
+                                                type="url"
+                                                name="url"
+                                                value={newLink.url}
+                                                onChange={handleLinkChange}
+                                                placeholder="https://..."
+                                            />
+                                            <button type="button" onClick={agregarLink} className="btn-add">
+                                                <Plus size={16} />
+                                            </button>
+                                        </div>
+                                        {formData.links.length > 0 && (
+                                            <div className="links-list">
+                                                {formData.links.map((link, index) => (
+                                                    <div key={index} className="link-item">
+                                                        <span className="link-type">{link.tipo}</span>
+                                                        <span className="link-url">{link.url}</span>
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => eliminarLink(index)}
+                                                            className="btn-remove"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
+                                {/* Documento de presentación */}
+                                <div className="form-group">
+                                    <label>Documento de Presentación (URL)</label>
+                                    <input
+                                        type="url"
+                                        name="documento_presentacion"
+                                        value={formData.documento_presentacion}
+                                        onChange={handleChange}
+                                        placeholder="https://drive.google.com/... o enlace a tu EPK"
+                                    />
+                                    <small>Enlace a tu EPK, portfolio o material promocional</small>
+                                </div>
+
+                                {/* Mensaje */}
                                 <div className="form-group">
                                     <label>Mensaje *</label>
                                     <textarea
@@ -283,22 +519,19 @@ const Emergente = () => {
                                         value={formData.mensaje}
                                         onChange={handleChange}
                                         className={errors.mensaje ? 'error' : ''}
+                                        rows="4"
+                                        placeholder="Cuéntanos sobre tu banda, tu música y por qué quieres participar..."
                                     />
                                     {errors.mensaje && <p className="error-text">{errors.mensaje}</p>}
                                 </div>
 
-                                <div className="form-group">
-                                    <label>Press Kit (PDF, DOC, ZIP - Opcional)</label>
-                                    <input type="file" name="press_kit" onChange={handleFileChange} accept=".pdf,.doc,.docx,.zip,.rar" />
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    className="submit-btn"
-                                    disabled={isLoading || !isLoggedIn}
+                                <button 
+                                    type="submit" 
+                                    className="btn btn-primary" 
+                                    disabled={isLoading}
                                 >
-                                    {isLoading ? <div className="spinner"></div> : <Send className="icon" />}
-                                    {isLoading ? ' Enviando...' : isLoggedIn ? ' Enviar Propuesta' : 'Debes iniciar sesión'}
+                                    <Send size={16} />
+                                    {isLoading ? 'Enviando...' : 'Enviar Propuesta'}
                                 </button>
                             </form>
                         </div>

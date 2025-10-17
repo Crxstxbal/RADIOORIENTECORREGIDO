@@ -4,6 +4,12 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h2><i class="fas fa-guitar text-danger me-2"></i> Bandas Emergentes</h2>
+  <div class="d-flex gap-2">
+    <span class="badge bg-primary">Total: {{ total_bandas }}</span>
+    {% for estado, count in stats_estados.items %}
+      <span class="badge bg-secondary">{{ estado }}: {{ count }}</span>
+    {% endfor %}
+  </div>
 </div>
 
 <div class="card">
@@ -18,36 +24,68 @@
             <th>Contacto</th>
             <th>Estado</th>
             <th>Fecha Envío</th>
+            <th>Revisado Por</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {% for banda in bandas %}
           <tr>
-            <td>{{ banda.nombre_banda }}</td>
-            <td>{{ banda.genero }}</td>
-            <td>{{ banda.ciudad }}</td>
             <td>
-              <div><i class="fas fa-envelope me-1 text-muted"></i> {{ banda.correo_contacto }}</div>
-              <div><i class="fas fa-phone me-1 text-muted"></i> {{ banda.telefono_contacto|default:"No especificado" }}</div>
+              <strong>{{ banda.nombre_banda }}</strong>
+              {% if banda.integrantes.exists %}
+                <br><small class="text-muted">
+                  <i class="fas fa-users me-1"></i>
+                  {% for integrante in banda.integrantes.all %}
+                    {{ integrante.integrante.nombre }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                </small>
+              {% endif %}
+            </td>
+            <td>{{ banda.genero.nombre }}</td>
+            <td>
+              {% if banda.comuna %}
+                {{ banda.comuna.nombre }}, {{ banda.comuna.ciudad.nombre }}
+              {% else %}
+                <span class="text-muted">No especificada</span>
+              {% endif %}
+            </td>
+            <td>
+              <div><i class="fas fa-envelope me-1 text-muted"></i> {{ banda.email_contacto }}</div>
+              {% if banda.telefono_contacto %}
+                <div><i class="fas fa-phone me-1 text-muted"></i> {{ banda.telefono_contacto }}</div>
+              {% endif %}
             </td>
             <td>
               <span class="badge 
-                {% if banda.estado == 'pendiente' %} bg-warning
-                {% elif banda.estado == 'aprobado' %} bg-success
-                {% elif banda.estado == 'rechazado' %} bg-danger
+                {% if banda.estado.nombre == 'Recibida' %} bg-warning
+                {% elif banda.estado.nombre == 'En Revisión' %} bg-info
+                {% elif banda.estado.nombre == 'Aprobada' %} bg-success
+                {% elif banda.estado.nombre == 'Rechazada' %} bg-danger
                 {% endif %}">
-                {{ banda.get_estado_display }}
+                {{ banda.estado.nombre }}
               </span>
             </td>
             <td>{{ banda.fecha_envio|date:"d/m/Y H:i" }}</td>
             <td>
+              {% if banda.revisado_por %}
+                <small>{{ banda.revisado_por.get_full_name|default:banda.revisado_por.username }}</small>
+                <br><small class="text-muted">{{ banda.fecha_revision|date:"d/m/Y H:i" }}</small>
+              {% else %}
+                <span class="text-muted">Pendiente</span>
+              {% endif %}
+            </td>
+            <td>
               <!-- Botones de estado -->
-              <a href="{% url 'cambiar_estado_banda' banda.id 'aprobado' %}" class="btn btn-sm btn-success">
-                <i class="fas fa-check"></i>
-              </a>
-              <a href="{% url 'cambiar_estado_banda' banda.id 'rechazado' %}" class="btn btn-sm btn-danger">
-                <i class="fas fa-times"></i>
+              <div class="btn-group" role="group">
+                <a href="{% url 'cambiar_estado_banda' banda.id 'revision' %}" class="btn btn-sm btn-info" title="En Revisión">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{% url 'cambiar_estado_banda' banda.id 'aprobado' %}" class="btn btn-sm btn-success" title="Aprobar">
+                  <i class="fas fa-check"></i>
+                </a>
+                <a href="{% url 'cambiar_estado_banda' banda.id 'rechazado' %}" class="btn btn-sm btn-danger" title="Rechazar">
+                  <i class="fas fa-times"></i>
               </a>
               <a href="{% url 'cambiar_estado_banda' banda.id 'pendiente' %}" class="btn btn-sm btn-secondary">
                 <i class="fas fa-clock"></i>
@@ -94,48 +132,96 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
-        <p><strong>Integrantes:</strong> {{ banda.integrantes|default:"No especificado" }}</p>
-        <p><strong>Género:</strong> {{ banda.genero }}</p>
-        <p><strong>Ciudad:</strong> {{ banda.ciudad|default:"No especificada" }}</p>
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>Integrantes:</strong></p>
+            {% if banda.integrantes.exists %}
+              <ul class="list-unstyled">
+                {% for integrante in banda.integrantes.all %}
+                  <li><i class="fas fa-user me-2"></i>{{ integrante.integrante.nombre }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-muted">No especificados</p>
+            {% endif %}
+            
+            <p><strong>Género:</strong> {{ banda.genero.nombre }}</p>
+            <p><strong>Ubicación:</strong> 
+              {% if banda.comuna %}
+                {{ banda.comuna.nombre }}, {{ banda.comuna.ciudad.nombre }}, {{ banda.comuna.ciudad.pais.nombre }}
+              {% else %}
+                <span class="text-muted">No especificada</span>
+              {% endif %}
+            </p>
+          </div>
+          <div class="col-md-6">
+            <p><strong>Contacto:</strong></p>
+            <p><i class="fas fa-envelope me-1 text-muted"></i> {{ banda.email_contacto }}</p>
+            {% if banda.telefono_contacto %}
+              <p><i class="fas fa-phone me-1 text-muted"></i> {{ banda.telefono_contacto }}</p>
+            {% endif %}
+            
+            <p><strong>Estado:</strong> 
+              <span class="badge 
+                {% if banda.estado.nombre == 'Recibida' %} bg-warning
+                {% elif banda.estado.nombre == 'En Revisión' %} bg-info
+                {% elif banda.estado.nombre == 'Aprobada' %} bg-success
+                {% elif banda.estado.nombre == 'Rechazada' %} bg-danger
+                {% endif %}">
+                {{ banda.estado.nombre }}
+              </span>
+            </p>
+          </div>
+        </div>
+        
         <hr>
-        <p><strong>Contacto:</strong></p>
-        <p><i class="fas fa-envelope me-1 text-muted"></i> {{ banda.correo_contacto }}</p>
-        <p><i class="fas fa-phone me-1 text-muted"></i> {{ banda.telefono_contacto|default:"No especificado" }}</p>
-        <hr>
-        <p><strong>Mensaje:</strong><br>{{ banda.mensaje }}</p>
-        {% if banda.links %}
-          <p><strong>Links:</strong><br>{{ banda.links|linebreaks }}</p>
+        <p><strong>Mensaje:</strong></p>
+        <div class="bg-light p-3 rounded">{{ banda.mensaje }}</div>
+        
+        {% if banda.links.exists %}
+          <hr>
+          <p><strong>Enlaces:</strong></p>
+          <div class="d-flex flex-wrap gap-2">
+            {% for link in banda.links.all %}
+              <a href="{{ link.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-external-link-alt me-1"></i>{{ link.tipo|title }}
+              </a>
+            {% endfor %}
+          </div>
         {% endif %}
-        {% if banda.press_kit %}
-          <p><strong>Press Kit:</strong> 
-            <a href="{{ banda.press_kit.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-              <i class="fas fa-download"></i> Descargar
-            </a>
-          </p>
+        
+        {% if banda.documento_presentacion %}
+          <hr>
+          <p><strong>Documento de Presentación:</strong></p>
+          <a href="{{ banda.documento_presentacion }}" target="_blank" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-download"></i> Descargar
+          </a>
         {% endif %}
+        
         <hr>
-        <p><strong>Fecha de envío:</strong> {{ banda.fecha_envio|date:"d/m/Y H:i" }}</p>
-        <p><strong>Estado actual:</strong> 
-          <span class="badge 
-            {% if banda.estado == 'pendiente' %} bg-warning
-            {% elif banda.estado == 'aprobado' %} bg-success
-            {% elif banda.estado == 'rechazado' %} bg-danger
-            {% endif %}">
-            {{ banda.get_estado_display }}
-          </span>
-        </p>
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>Fecha de envío:</strong> {{ banda.fecha_envio|date:"d/m/Y H:i" }}</p>
+          </div>
+          <div class="col-md-6">
+            {% if banda.fecha_revision %}
+              <p><strong>Fecha de revisión:</strong> {{ banda.fecha_revision|date:"d/m/Y H:i" }}</p>
+              <p><strong>Revisado por:</strong> {{ banda.revisado_por.get_full_name|default:banda.revisado_por.username }}</p>
+            {% endif %}
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
+        <a href="{% url 'cambiar_estado_banda' banda.id 'revision' %}" class="btn btn-info">
+          <i class="fas fa-eye"></i> En Revisión
+        </a>
         <a href="{% url 'cambiar_estado_banda' banda.id 'aprobado' %}" class="btn btn-success">
           <i class="fas fa-check"></i> Aprobar
         </a>
         <a href="{% url 'cambiar_estado_banda' banda.id 'rechazado' %}" class="btn btn-danger">
           <i class="fas fa-times"></i> Rechazar
         </a>
-        <a href="{% url 'cambiar_estado_banda' banda.id 'pendiente' %}" class="btn btn-secondary">
-          <i class="fas fa-clock"></i> Pendiente
-        </a>
-        <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
       </div>
     </div>
   </div>

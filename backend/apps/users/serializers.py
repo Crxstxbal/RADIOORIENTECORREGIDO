@@ -5,8 +5,6 @@ from .models import User
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True)
-    email = serializers.EmailField(write_only=True)     # alias de correo
-    username = serializers.CharField(write_only=True)   # alias de usuario
 
     class Meta:
         model = User
@@ -21,31 +19,25 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
 
-        correo = validated_data.pop('email')
-        usuario = validated_data.pop('username')
-        nombre = f"{validated_data.get('first_name', '')} {validated_data.get('last_name', '')}".strip()
-
         user = User.objects.create_user(
-            correo=correo,
-            usuario=usuario,
+            email=validated_data['email'],
+            username=validated_data['username'],
             password=password,
-            nombre=nombre,
-            **validated_data
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
         )
         return user
-
 
 class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
 
     def validate(self, attrs):
-        correo = attrs.get('email')
+        email = attrs.get('email')
         password = attrs.get('password')
 
-        if correo and password:
-            # Django usa USERNAME_FIELD = 'correo'
-            user = authenticate(username=correo, password=password)
+        if email and password:
+            user = authenticate(username=email, password=password)
             if not user:
                 raise serializers.ValidationError('Credenciales inválidas.')
             if not user.is_active:
@@ -56,10 +48,20 @@ class UserLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Email y contraseña son requeridos.')
 
 class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(read_only=True)
+    
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'nombre', 'first_name', 'last_name', 'is_active', 'is_staff', 'fecha_creacion')
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'full_name', 'is_active', 'is_staff', 'fecha_creacion')
         read_only_fields = ('id', 'is_active', 'is_staff', 'fecha_creacion')
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
+
+# Serializers de compatibilidad para el frontend existente
+class UserLegacySerializer(serializers.ModelSerializer):
+    """Serializer para mantener compatibilidad con el frontend existente"""
+    correo = serializers.CharField(source='email', read_only=True)
+    usuario = serializers.CharField(source='username', read_only=True)
+    nombre = serializers.CharField(source='full_name', read_only=True)
+    
+    class Meta:
+        model = User
+        fields = ('id', 'correo', 'usuario', 'nombre', 'first_name', 'last_name', 'is_active', 'is_staff', 'fecha_creacion')

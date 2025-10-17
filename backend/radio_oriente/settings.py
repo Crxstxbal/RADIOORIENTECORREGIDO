@@ -25,13 +25,17 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     # 'channels',  # Comentado temporalmente
+    
+    # Apps normalizadas
+    'apps.ubicacion',
     'apps.users',
     'apps.radio',
     'apps.blog',
     'apps.chat',
     'apps.contact',
-    'dashboard',
     'apps.emergente',
+    'apps.publicidad',
+    'dashboard',
 ]
 
 MIDDLEWARE = [
@@ -67,28 +71,29 @@ WSGI_APPLICATION = 'radio_oriente.wsgi.application'
 # ASGI_APPLICATION = 'radio_oriente.asgi.application'  # Comentado temporalmente
 
 # Database configuration
-USE_SUPABASE = config('USE_SUPABASE', default=False, cast=bool)
+USE_SQLITE = config('USE_SQLITE', default=True, cast=bool)
 
-if USE_SUPABASE:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('SUPABASE_DB_NAME', default='postgres'),
-            'USER': config('SUPABASE_DB_USER', default='postgres'),
-            'PASSWORD': config('SUPABASE_DB_PASSWORD', default=''),
-            'HOST': config('SUPABASE_DB_HOST', default='aws-0-sa-east-1.pooler.supabase.com'),
-            'PORT': config('SUPABASE_DB_PORT', default='6543'),
-            'OPTIONS': {
-                'sslmode': 'require',
-            },
-        }
-    }
-else:
-    # SQLite para desarrollo local
+if USE_SQLITE:
+    # SQLite con estructura normalizada
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': BASE_DIR / 'radio_oriente_normalized.db',
+        }
+    }
+else:
+    # PostgreSQL (para producción o si se prefiere)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME', default='radio_oriente_db'),
+            'USER': config('DB_USER', default='postgres'),
+            'PASSWORD': config('DB_PASSWORD', default=''),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
+            'OPTIONS': {
+                'sslmode': config('DB_SSLMODE', default='prefer'),
+            },
         }
     }
 
@@ -159,3 +164,8 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Custom user model
 AUTH_USER_MODEL = 'users.User'
+
+# Login URLs
+LOGIN_URL = '/dashboard/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/dashboard/login/'

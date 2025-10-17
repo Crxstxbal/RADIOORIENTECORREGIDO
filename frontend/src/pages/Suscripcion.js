@@ -7,7 +7,7 @@ import './Pages.css';
 const Subscription = () => {
   const [formData, setFormData] = useState({
     email: '',
-    name: ''
+    nombre: ''
   });
   const [loading, setLoading] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -24,10 +24,14 @@ const Subscription = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/contact/subscribe/', formData);
-      toast.success(response.data.message);
+      // Obtener token de autenticación si existe
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Token ${token}` } : {};
+      
+      const response = await axios.post('/api/contact/api/suscripciones/', formData, { headers });
+      toast.success('Suscripción exitosa. ¡Gracias por unirte!');
       setIsSubscribed(true);
-      setFormData({ email: '', name: '' });
+      setFormData({ email: '', nombre: '' });
     } catch (error) {
       const message = error.response?.data?.message || 'Error al suscribirse';
       toast.error(message);
@@ -129,14 +133,14 @@ const Subscription = () => {
 
                 <form onSubmit={handleSubmit} className="subscription-form">
                   <div className="form-group">
-                    <label htmlFor="name" className="form-label">
+                    <label htmlFor="nombre" className="form-label">
                       Nombre (Opcional)
                     </label>
                     <input
                       type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
+                      id="nombre"
+                      name="nombre"
+                      value={formData.nombre}
                       onChange={handleChange}
                       className="form-input"
                       placeholder="Tu nombre completo"

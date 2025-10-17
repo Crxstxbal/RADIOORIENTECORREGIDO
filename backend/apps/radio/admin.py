@@ -1,23 +1,37 @@
 from django.contrib import admin
-from .models import RadioStation, Program, News
+from .models import EstacionRadio, GeneroMusical, Conductor, Programa, HorarioPrograma, ProgramaConductor
 
-@admin.register(RadioStation)
-class RadioStationAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'activa', 'listeners_count')
-    list_editable = ('activa',)
-    readonly_fields = ('fecha_creacion', 'fecha_actualizacion')
+@admin.register(EstacionRadio)
+class EstacionRadioAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'listeners_count', 'telefono', 'email')
+    search_fields = ('nombre', 'descripcion')
 
-@admin.register(Program)
-class ProgramAdmin(admin.ModelAdmin):
-    list_display = ('nombre_programa', 'conductor', 'dia_semana', 'hora_inicio', 'hora_fin', 'activo')
+@admin.register(GeneroMusical)
+class GeneroMusicalAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'descripcion')
+    search_fields = ('nombre',)
+
+@admin.register(Conductor)
+class ConductorAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'apellido', 'apodo', 'email', 'activo')
+    list_filter = ('activo',)
+    list_editable = ('activo',)
+    search_fields = ('nombre', 'apellido', 'apodo', 'email')
+
+@admin.register(Programa)
+class ProgramaAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'activo')
+    list_filter = ('activo',)
+    list_editable = ('activo',)
+    search_fields = ('nombre', 'descripcion')
+
+@admin.register(HorarioPrograma)
+class HorarioProgramaAdmin(admin.ModelAdmin):
+    list_display = ('programa', 'dia_semana', 'hora_inicio', 'hora_fin', 'activo')
     list_filter = ('dia_semana', 'activo')
     list_editable = ('activo',)
-    search_fields = ('nombre_programa', 'conductor')
 
-@admin.register(News)
-class NewsAdmin(admin.ModelAdmin):
-    list_display = ('titulo', 'autor_nombre', 'destacada', 'publicada', 'fecha_publicacion')
-    list_filter = ('destacada', 'publicada', 'fecha_publicacion')
-    list_editable = ('destacada', 'publicada')
-    search_fields = ('titulo', 'contenido')
-    readonly_fields = ('fecha_creacion', 'fecha_actualizacion')
+@admin.register(ProgramaConductor)
+class ProgramaConductorAdmin(admin.ModelAdmin):
+    list_display = ('programa', 'conductor')
+    list_filter = ('programa',)

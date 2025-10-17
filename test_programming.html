@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Programación</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .program { border: 1px solid #ccc; margin: 10px 0; padding: 10px; }
+        .day { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Test de Programación - Radio Oriente FM</h1>
+    <div id="status">Cargando...</div>
+    <div id="programs"></div>
+    <div id="schedules"></div>
+
+    <script>
+        async function testAPI() {
+            const statusDiv = document.getElementById('status');
+            const programsDiv = document.getElementById('programs');
+            const schedulesDiv = document.getElementById('schedules');
+
+            try {
+                // Test programas
+                statusDiv.innerHTML = '<span class="success">Probando API de programas...</span>';
+                const programsResponse = await fetch('http://127.0.0.1:8000/api/radio/api/programas/');
+                const programsData = await programsResponse.json();
+                
+                programsDiv.innerHTML = '<h2>Programas:</h2><pre>' + JSON.stringify(programsData, null, 2) + '</pre>';
+
+                // Test horarios
+                statusDiv.innerHTML = '<span class="success">Probando API de horarios...</span>';
+                const schedulesResponse = await fetch('http://127.0.0.1:8000/api/radio/api/horarios/');
+                const schedulesData = await schedulesResponse.json();
+                
+                schedulesDiv.innerHTML = '<h2>Horarios:</h2><pre>' + JSON.stringify(schedulesData, null, 2) + '</pre>';
+
+                statusDiv.innerHTML = '<span class="success">✅ APIs funcionando correctamente</span>';
+
+                // Mostrar programación organizada
+                const daysOfWeek = {
+                    0: 'Domingo', 1: 'Lunes', 2: 'Martes', 3: 'Miércoles',
+                    4: 'Jueves', 5: 'Viernes', 6: 'Sábado'
+                };
+
+                let programmingHTML = '<h2>Programación Organizada:</h2>';
+                
+                for (let day = 0; day <= 6; day++) {
+                    const daySchedules = schedulesData.filter(s => s.dia_semana === day);
+                    programmingHTML += `<div class="day"><h3>${daysOfWeek[day]}</h3>`;
+                    
+                    if (daySchedules.length > 0) {
+                        daySchedules.forEach(schedule => {
+                            const program = programsData.find(p => p.id === schedule.programa);
+                            programmingHTML += `
+                                <div class="program">
+                                    <strong>${program ? program.nombre : 'Programa no encontrado'}</strong><br>
+                                    ${schedule.hora_inicio} - ${schedule.hora_fin}<br>
+                                    ${program ? program.descripcion : 'Sin descripción'}
+                                </div>
+                            `;
+                        });
+                    } else {
+                        programmingHTML += '<p>No hay programas para este día</p>';
+                    }
+                    
+                    programmingHTML += '</div>';
+                }
+
+                document.body.innerHTML += programmingHTML;
+
+            } catch (error) {
+                statusDiv.innerHTML = '<span class="error">❌ Error: ' + error.message + '</span>';
+                console.error('Error:', error);
+            }
+        }
+
+        testAPI();
+    </script>
+</body>
+</html>
