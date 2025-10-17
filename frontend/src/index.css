@@ -12,6 +12,7 @@
   --color-red-light: #ef4444;
   --color-black: #000000;
   --color-white: #ffffff;
+  --color-gray-50: #f9fafb;
   --color-gray-100: #f3f4f6;
   --color-gray-200: #e5e7eb;
   --color-gray-300: #d1d5db;
@@ -21,6 +22,19 @@
   --color-gray-700: #374151;
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
+  
+  /* Light mode (default) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --text-primary: #000000;
+  --text-secondary: #4b5563;
+  --text-tertiary: #6b7280;
+  --border-color: #e5e7eb;
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
 }
 
 body {
@@ -29,9 +43,99 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--color-white);
-  color: var(--color-black);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode support */
+html.dark {
+  color-scheme: dark;
+  
+  /* Dark mode variables - gris oscuro en lugar de negro */
+  --bg-primary: #2a2a2a;
+  --bg-secondary: #333333;
+  --bg-tertiary: #3d3d3d;
+  --text-primary: #ffffff;
+  --text-secondary: #e5e7eb;
+  --text-tertiary: #d1d5db;
+  --border-color: #4b5563;
+  --card-bg: #333333;
+  --card-border: #4b5563;
+  --input-bg: #3d3d3d;
+  --input-border: #4b5563;
+}
+
+html.dark body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Inputs, textareas y selects en dark mode */
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--input-border) !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: var(--text-tertiary) !important;
+  opacity: 0.7;
+}
+
+html.dark input:focus,
+html.dark textarea:focus,
+html.dark select:focus {
+  background-color: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--color-red) !important;
+  outline: none;
+}
+
+/* Inputs deshabilitados en dark mode */
+html.dark input:disabled,
+html.dark textarea:disabled,
+html.dark select:disabled {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-tertiary) !important;
+  opacity: 0.6;
+}
+
+/* Autofill en dark mode */
+html.dark input:-webkit-autofill,
+html.dark input:-webkit-autofill:hover,
+html.dark input:-webkit-autofill:focus,
+html.dark textarea:-webkit-autofill,
+html.dark textarea:-webkit-autofill:hover,
+html.dark textarea:-webkit-autofill:focus,
+html.dark select:-webkit-autofill,
+html.dark select:-webkit-autofill:hover,
+html.dark select:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-primary) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
+  box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
+  border-color: var(--input-border) !important;
+}
+
+/* Labels de formularios en dark mode */
+html.dark label {
+  color: var(--text-primary) !important;
+}
+
+/* Textos de ayuda y descripciones en formularios */
+html.dark .form-text,
+html.dark .help-text,
+html.dark small {
+  color: var(--text-secondary) !important;
+}
+
+/* Legends en fieldsets */
+html.dark legend {
+  color: var(--text-primary) !important;
 }
 
 code {
@@ -141,3 +245,128 @@ code {
 .rounded { border-radius: 0.5rem; }
 .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
 .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+
+/* ============================================
+   RESPONSIVE DESIGN - Global Styles
+   ============================================ */
+
+/* Base responsive */
+* {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Container responsive */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 2rem;
+  }
+}
+
+/* Typography responsive */
+@media (max-width: 768px) {
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+  h4 { font-size: 1.25rem; }
+  h5 { font-size: 1.125rem; }
+  h6 { font-size: 1rem; }
+  
+  .text-3xl { font-size: 1.5rem; }
+  .text-2xl { font-size: 1.25rem; }
+  .text-xl { font-size: 1.125rem; }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  
+  body {
+    font-size: 0.95rem;
+  }
+}
+
+/* Spacing responsive */
+@media (max-width: 768px) {
+  .mt-8, .py-8 { margin-top: 1.5rem; padding-top: 1.5rem; }
+  .mb-8, .py-8 { margin-bottom: 1.5rem; padding-bottom: 1.5rem; }
+  .gap-8 { gap: 1.5rem; }
+}
+
+@media (max-width: 480px) {
+  .mt-4, .py-4 { margin-top: 0.75rem; padding-top: 0.75rem; }
+  .mb-4, .py-4 { margin-bottom: 0.75rem; padding-bottom: 0.75rem; }
+  .gap-4 { gap: 0.75rem; }
+}
+
+/* Buttons responsive */
+@media (max-width: 480px) {
+  .btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9rem;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Grid responsive */
+@media (max-width: 1024px) {
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-cols-2,
+  .grid-cols-3 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  
+  .grid {
+    gap: 1rem;
+  }
+}
+
+/* Utility classes responsive */
+@media (max-width: 768px) {
+  .hidden-mobile {
+    display: none !important;
+  }
+  
+  .visible-mobile {
+    display: block !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .hidden-desktop {
+    display: none !important;
+  }
+  
+  .visible-desktop {
+    display: block !important;
+  }
+}

@@ -219,7 +219,7 @@
 
 <!-- Modal para agregar programa -->
 <div class="modal fade" id="addProgramModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Nuevo Programa</h5>
@@ -236,24 +236,70 @@
                         <label for="descripcion" class="form-label">Descripción</label>
                         <textarea class="form-control" name="descripcion" rows="3"></textarea>
                     </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Días de Emisión *</label>
+                        <div class="row g-2">
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="1" id="dia-lunes-add">
+                                    <label class="form-check-label" for="dia-lunes-add">Lunes</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="2" id="dia-martes-add">
+                                    <label class="form-check-label" for="dia-martes-add">Martes</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="3" id="dia-miercoles-add">
+                                    <label class="form-check-label" for="dia-miercoles-add">Miércoles</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="4" id="dia-jueves-add">
+                                    <label class="form-check-label" for="dia-jueves-add">Jueves</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="5" id="dia-viernes-add">
+                                    <label class="form-check-label" for="dia-viernes-add">Viernes</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="6" id="dia-sabado-add">
+                                    <label class="form-check-label" for="dia-sabado-add">Sábado</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="0" id="dia-domingo-add">
+                                    <label class="form-check-label" for="dia-domingo-add">Domingo</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="hora_inicio" class="form-label">Hora de Inicio</label>
+                                <label for="hora_inicio" class="form-label">Hora de Inicio *</label>
                                 <input type="time" class="form-control" name="hora_inicio" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="hora_fin" class="form-label">Hora de Fin</label>
+                                <label for="hora_fin" class="form-label">Hora de Fin *</label>
                                 <input type="time" class="form-control" name="hora_fin" required>
                             </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="dias_semana" class="form-label">Días de la Semana</label>
-                        <input type="text" class="form-control" name="dias_semana" placeholder="Ej: Lunes a Viernes">
-                    </div>
+                    
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" name="activo" id="activo" checked>
                         <label class="form-check-label" for="activo">Programa activo</label>
@@ -309,62 +355,9 @@
     </div>
 </div>
 
-<!-- Modal para agregar programa -->
-<div class="modal fade" id="addProgramModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Nuevo Programa</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="post" action="{% url 'create_program' %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="nombre" class="form-label">Nombre del Programa</label>
-                        <input type="text" class="form-control" name="nombre" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="descripcion" class="form-label">Descripción</label>
-                        <textarea class="form-control" name="descripcion" rows="3"></textarea>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="hora_inicio" class="form-label">Hora de Inicio</label>
-                                <input type="time" class="form-control" name="hora_inicio" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="hora_fin" class="form-label">Hora de Fin</label>
-                                <input type="time" class="form-control" name="hora_fin" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="dias_semana" class="form-label">Días de la Semana</label>
-                        <input type="text" class="form-control" name="dias_semana" placeholder="Ej: Lunes a Viernes">
-                    </div>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" name="activo" id="activo" checked>
-                        <label class="form-check-label" for="activo">
-                            Programa activo
-                        </label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Crear Programa</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <!-- Modal para editar programa -->
 <div class="modal fade" id="editProgramModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Editar Programa</h5>
@@ -381,24 +374,70 @@
                         <label for="edit-descripcion" class="form-label">Descripción</label>
                         <textarea class="form-control" name="descripcion" id="edit-descripcion" rows="3"></textarea>
                     </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Días de Emisión *</label>
+                        <div class="row g-2">
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="1" id="dia-lunes-edit">
+                                    <label class="form-check-label" for="dia-lunes-edit">Lunes</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="2" id="dia-martes-edit">
+                                    <label class="form-check-label" for="dia-martes-edit">Martes</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="3" id="dia-miercoles-edit">
+                                    <label class="form-check-label" for="dia-miercoles-edit">Miércoles</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="4" id="dia-jueves-edit">
+                                    <label class="form-check-label" for="dia-jueves-edit">Jueves</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="5" id="dia-viernes-edit">
+                                    <label class="form-check-label" for="dia-viernes-edit">Viernes</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="6" id="dia-sabado-edit">
+                                    <label class="form-check-label" for="dia-sabado-edit">Sábado</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="dias[]" value="0" id="dia-domingo-edit">
+                                    <label class="form-check-label" for="dia-domingo-edit">Domingo</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="edit-hora-inicio" class="form-label">Hora de Inicio</label>
+                                <label for="edit-hora-inicio" class="form-label">Hora de Inicio *</label>
                                 <input type="time" class="form-control" name="hora_inicio" id="edit-hora-inicio" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="edit-hora-fin" class="form-label">Hora de Fin</label>
+                                <label for="edit-hora-fin" class="form-label">Hora de Fin *</label>
                                 <input type="time" class="form-control" name="hora_fin" id="edit-hora-fin" required>
                             </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="edit-dias" class="form-label">Días de la Semana</label>
-                        <input type="text" class="form-control" name="dias_semana" id="edit-dias">
-                    </div>
+                    
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" name="activo" id="edit-activo">
                         <label class="form-check-label" for="edit-activo">
@@ -437,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit-activo').checked = activo;
             
             // Actualizar la acción del formulario
-            document.getElementById('editProgramForm').action = `/dashboard/radio/edit/${programId}/`;
+            document.getElementById('editProgramForm').action = `/dashboard/radio/edit-program/${programId}/`;
         });
     });
 });

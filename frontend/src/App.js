@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { AudioProvider } from './contexts/AudioContext'; // <-- Importa tu AudioProvider
+import { ThemeProvider } from './contexts/ThemeContext';
 import './App.css';
 
 // Componentes
@@ -47,9 +48,10 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <AudioProvider> {/* <-- AudioProvider envuelve todo */}
-        <Router>
+    <ThemeProvider>
+      <AuthProvider>
+        <AudioProvider> {/* <-- AudioProvider envuelve todo */}
+          <Router>
 
           <Routes>
             {/* Layout principal con navbar, radio, chat y footer */}
@@ -83,8 +85,9 @@ function App() {
             }}
           />
         </Router>
-      </AudioProvider>
-    </AuthProvider>
+        </AudioProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

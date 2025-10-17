@@ -18,16 +18,18 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: var(--color-black);
+  color: var(--text-primary);
 }
 
 .form-input {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid var(--color-gray-300);
+  border: 2px solid var(--input-border);
   border-radius: 0.5rem;
   font-size: 1rem;
-  transition: border-color 0.2s ease;
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  transition: border-color 0.2s ease, background-color 0.3s ease;
 }
 
 .form-input:focus {
@@ -38,12 +40,14 @@
 .form-textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid var(--color-gray-300);
+  border: 2px solid var(--input-border);
   border-radius: 0.5rem;
   font-size: 1rem;
   min-height: 120px;
   resize: vertical;
-  transition: border-color 0.2s ease;
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  transition: border-color 0.2s ease, background-color 0.3s ease;
 }
 
 .form-textarea:focus {
@@ -54,11 +58,12 @@
 .form-select {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid var(--color-gray-300);
+  border: 2px solid var(--input-border);
   border-radius: 0.5rem;
   font-size: 1rem;
-  background-color: white;
-  transition: border-color 0.2s ease;
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  transition: border-color 0.2s ease, background-color 0.3s ease;
 }
 
 .form-select:focus {
@@ -68,11 +73,12 @@
 
 /* Card Styles */
 .card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 0.75rem;
   padding: 1.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--card-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .card-header {
@@ -84,7 +90,7 @@
 .card-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-black);
+  color: var(--text-primary);
 }
 
 /* Grid Styles */

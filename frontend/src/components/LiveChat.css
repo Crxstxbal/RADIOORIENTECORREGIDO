@@ -357,3 +357,82 @@
     padding: 0.75rem;
   }
 }
+
+/* ============================================
+   DARK MODE STYLES - LiveChat
+   ============================================ */
+
+html.dark .chat-window {
+  background: var(--card-bg);
+  border-color: var(--card-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+html.dark .online-users {
+  background: var(--bg-tertiary);
+  border-bottom-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+html.dark .auth-required {
+  color: var(--text-secondary);
+}
+
+html.dark .no-messages {
+  color: var(--text-tertiary);
+}
+
+html.dark .no-messages svg {
+  color: var(--text-tertiary);
+}
+
+html.dark .message-content {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+html.dark .message.own .message-content {
+  background: var(--color-red);
+  color: var(--color-white);
+}
+
+html.dark .message.other .message-author {
+  color: var(--color-red);
+}
+
+html.dark .message-form {
+  border-top-color: var(--border-color);
+}
+
+html.dark .message-input {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border-color: var(--input-border);
+}
+
+html.dark .message-input:focus {
+  background-color: var(--input-bg);
+  border-color: var(--color-red);
+}
+
+html.dark .message-input:disabled {
+  background: var(--bg-tertiary);
+}
+
+html.dark .message-input::placeholder {
+  color: var(--text-tertiary);
+  opacity: 0.7;
+}
+
+/* Scrollbar en dark mode */
+html.dark .messages-list::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+}
+
+html.dark .messages-list::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+}
+
+html.dark .messages-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}

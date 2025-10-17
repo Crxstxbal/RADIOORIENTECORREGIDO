@@ -21,13 +21,39 @@
             --danger-color: #ef4444;
             --warning-color: #f59e0b;
             --info-color: #3b82f6;
-            --light-color: #f8fafc;
-            --dark-color: #1e293b;
+            
+            /* Light mode (default) */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #000000;
+            --text-secondary: #475569;
+            --text-tertiary: #64748b;
+            --border-color: #e2e8f0;
+            --card-bg: #ffffff;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --navbar-bg: #ffffff;
+        }
+        
+        html.dark {
+            /* Dark mode - gris oscuro */
+            --bg-primary: #2a2a2a;
+            --bg-secondary: #333333;
+            --bg-tertiary: #3d3d3d;
+            --text-primary: #ffffff;
+            --text-secondary: #e5e7eb;
+            --text-tertiary: #d1d5db;
+            --border-color: #4b5563;
+            --card-bg: #333333;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --navbar-bg: #1a1a1a;
         }
 
         body {
-            background-color: var(--light-color);
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .sidebar {
@@ -39,6 +65,18 @@
             width: 250px;
             z-index: 1000;
             transition: all 0.3s ease;
+        }
+        
+        /* Overlay para cerrar sidebar en móvil */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
         }
 
         .sidebar .nav-link {
@@ -65,7 +103,9 @@
         .card {
             border: none;
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            box-shadow: var(--card-shadow);
             transition: all 0.3s ease;
         }
 
@@ -110,18 +150,323 @@
             background-color: rgba(220, 38, 38, 0.05);
         }
 
+        /* Theme toggle button */
+        .theme-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: rgba(220, 38, 38, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(220, 38, 38, 0.3);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .theme-toggle-btn:hover {
+            background: rgba(220, 38, 38, 0.15);
+            border-color: rgba(220, 38, 38, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .theme-toggle-btn:active {
+            transform: translateY(0);
+        }
+        
+        .theme-toggle-btn i {
+            transition: transform 0.3s ease;
+        }
+        
+        .theme-toggle-btn:hover i {
+            transform: rotate(20deg) scale(1.1);
+        }
+        
+        /* Dark mode specific styles */
+        html.dark .navbar {
+            background-color: var(--navbar-bg) !important;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        html.dark .table {
+            color: var(--text-primary);
+            --bs-table-bg: var(--card-bg);
+            --bs-table-striped-bg: var(--bg-tertiary);
+            --bs-table-hover-bg: var(--bg-tertiary);
+        }
+        
+        html.dark .form-control,
+        html.dark .form-select {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+        
+        html.dark .form-control:focus,
+        html.dark .form-select:focus {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--primary-color);
+        }
+        
+        html.dark .modal-content {
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+        }
+        
+        html.dark .dropdown-menu {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+        }
+        
+        html.dark .dropdown-item {
+            color: var(--text-primary);
+        }
+        
+        html.dark .dropdown-item:hover {
+            background-color: var(--bg-tertiary);
+        }
+        
+        /* Card headers en dark mode */
+        html.dark .card-header {
+            background-color: var(--bg-tertiary) !important;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        html.dark .card-title {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Textos y elementos específicos */
+        html.dark .text-muted {
+            color: var(--text-tertiary) !important;
+        }
+        
+        html.dark .bg-light {
+            background-color: var(--bg-tertiary) !important;
+        }
+        
+        html.dark .border-bottom {
+            border-color: var(--border-color) !important;
+        }
+        
+        /* Badges en dark mode */
+        html.dark .badge {
+            color: #ffffff !important;
+        }
+        
+        /* Headings en dark mode */
+        html.dark h1, html.dark h2, html.dark h3, 
+        html.dark h4, html.dark h5, html.dark h6 {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Párrafos y textos generales */
+        html.dark p, html.dark span, html.dark div {
+            color: var(--text-primary);
+        }
+        
+        /* Textos pequeños */
+        html.dark .text-xs, html.dark .small {
+            color: var(--text-secondary) !important;
+        }
+        
+        /* Strong y bold */
+        html.dark strong, html.dark .font-weight-bold {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Table headers */
+        html.dark thead th {
+            color: var(--text-primary) !important;
+            background-color: var(--bg-tertiary) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        html.dark tbody td {
+            color: var(--text-primary) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        /* Botones outline en dark mode */
+        html.dark .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        html.dark .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            color: #ffffff;
+        }
+        
+        /* Links en dark mode */
+        html.dark a {
+            color: var(--primary-color);
+        }
+        
+        html.dark a:hover {
+            color: var(--danger-color);
+        }
+        
+        /* Iconos de Font Awesome */
+        html.dark .fas, html.dark .far, html.dark .fab {
+            color: inherit;
+        }
+        
+        /* Alert messages */
+        html.dark .alert {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+        
+        /* Canvas y gráficos - fondo transparente */
+        html.dark canvas {
+            background-color: transparent !important;
+        }
+        
+        /* Navbar brand en dark mode */
+        html.dark .navbar-brand {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Nav links en navbar superior */
+        html.dark .nav-link {
+            color: var(--text-primary) !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .container-fluid {
+                padding: 0 1rem;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+        }
+        
         @media (max-width: 768px) {
             .sidebar {
                 margin-left: -250px;
+                width: 250px;
+                position: fixed;
+                transition: margin-left 0.3s ease;
+                z-index: 1001;
             }
             
             .sidebar.show {
                 margin-left: 0;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            }
+            
+            .sidebar.show ~ .sidebar-overlay {
+                display: block;
             }
             
             .main-content {
                 margin-left: 0;
+                padding: 1rem;
             }
+            
+            .navbar {
+                padding: 0.75rem 1rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
+            
+            .table-responsive {
+                font-size: 0.9rem;
+            }
+            
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .theme-toggle-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            
+            .stat-card .card-body {
+                padding: 1rem;
+            }
+            
+            .stat-card .h5 {
+                font-size: 1.25rem;
+            }
+            
+            .stat-card .text-xs {
+                font-size: 0.75rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 200px;
+            }
+            
+            .main-content {
+                padding: 0.75rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1rem;
+            }
+            
+            .card {
+                border-radius: 0.5rem;
+            }
+            
+            .card-body {
+                padding: 0.875rem;
+            }
+            
+            .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.85rem;
+            }
+            
+            .theme-toggle-btn {
+                padding: 0.35rem 0.7rem;
+                font-size: 0.75rem;
+            }
+            
+            .theme-toggle-text {
+                display: none;
+            }
+            
+            .table {
+                font-size: 0.85rem;
+            }
+            
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+            
+            h1 { font-size: 1.75rem; }
+            h2 { font-size: 1.5rem; }
+            h3 { font-size: 1.25rem; }
+            h4 { font-size: 1.1rem; }
+            h5 { font-size: 1rem; }
         }
     </style>
 </head>
@@ -189,6 +534,9 @@
             </ul>
         </div>
     </nav>
+    
+    <!-- Overlay para cerrar sidebar en móvil -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Main Content -->
     <div class="main-content">
@@ -201,7 +549,13 @@
                 
                 <span class="navbar-brand mb-0 h1">{% block page_title %}Dashboard{% endblock %}</span>
                 
-                <div class="navbar-nav ms-auto">
+                <div class="navbar-nav ms-auto d-flex align-items-center gap-3">
+                    <!-- Theme Toggle Button -->
+                    <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggle">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                        <span id="themeText">Oscuro</span>
+                    </button>
+                    
                     <div class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user-circle me-1"></i>
@@ -294,6 +648,116 @@
             setTimeout(() => {
                 alertDiv.remove();
             }, 5000);
+        }
+        
+        // Theme toggle functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.classList.contains('dark') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            if (newTheme === 'dark') {
+                html.classList.add('dark');
+            } else {
+                html.classList.remove('dark');
+            }
+            
+            localStorage.setItem('dashboardTheme', newTheme);
+            updateThemeButton(newTheme);
+            updateChartColors(newTheme);
+        }
+        
+        function updateThemeButton(theme) {
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            
+            if (theme === 'dark') {
+                icon.className = 'fas fa-sun';
+                text.textContent = 'Claro';
+            } else {
+                icon.className = 'fas fa-moon';
+                text.textContent = 'Oscuro';
+            }
+        }
+        
+        // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('dashboardTheme') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+            updateThemeButton(savedTheme);
+            updateChartColors(savedTheme);
+            
+            // Sidebar toggle functionality for mobile
+            const sidebarToggle = document.querySelector('.navbar-toggler');
+            const sidebar = document.querySelector('.sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebarToggle && sidebar && sidebarOverlay) {
+                // Toggle sidebar
+                sidebarToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    sidebar.classList.toggle('show');
+                    if (sidebar.classList.contains('show')) {
+                        sidebarOverlay.style.display = 'block';
+                    } else {
+                        sidebarOverlay.style.display = 'none';
+                    }
+                });
+                
+                // Close sidebar when clicking on overlay
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.style.display = 'none';
+                });
+                
+                // Close sidebar when clicking on a link (optional)
+                const sidebarLinks = sidebar.querySelectorAll('.nav-link');
+                sidebarLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth <= 768) {
+                            sidebar.classList.remove('show');
+                            sidebarOverlay.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+        
+        // Update Chart.js default colors based on theme
+        function updateChartColors(theme) {
+            if (typeof Chart !== 'undefined') {
+                const textColor = theme === 'dark' ? '#ffffff' : '#000000';
+                const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+                
+                Chart.defaults.color = textColor;
+                Chart.defaults.borderColor = gridColor;
+                Chart.defaults.scale.grid.color = gridColor;
+                
+                // Actualizar gráficos existentes si los hay
+                Object.values(Chart.instances).forEach(chart => {
+                    if (chart.options.scales) {
+                        if (chart.options.scales.x) {
+                            chart.options.scales.x.ticks = chart.options.scales.x.ticks || {};
+                            chart.options.scales.x.ticks.color = textColor;
+                            chart.options.scales.x.grid = chart.options.scales.x.grid || {};
+                            chart.options.scales.x.grid.color = gridColor;
+                        }
+                        if (chart.options.scales.y) {
+                            chart.options.scales.y.ticks = chart.options.scales.y.ticks || {};
+                            chart.options.scales.y.ticks.color = textColor;
+                            chart.options.scales.y.grid = chart.options.scales.y.grid || {};
+                            chart.options.scales.y.grid.color = gridColor;
+                        }
+                    }
+                    if (chart.options.plugins && chart.options.plugins.legend) {
+                        chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
+                        chart.options.plugins.legend.labels.color = textColor;
+                    }
+                    chart.update();
+                });
+            }
         }
     </script>
     

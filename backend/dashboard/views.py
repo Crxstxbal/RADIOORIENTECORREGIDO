@@ -8,7 +8,7 @@ from django.contrib import messages
 from datetime import datetime, timedelta
 from apps.users.models import User
 from apps.blog.models import Categoria, Articulo
-from apps.radio.models import Programa, EstacionRadio
+from apps.radio.models import Programa, EstacionRadio, HorarioPrograma
 from apps.chat.models import ChatMessage
 from apps.contact.models import Contacto, Suscripcion, Estado
 from apps.emergente.models import BandaEmergente 
@@ -306,19 +306,31 @@ def create_program(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
         descripcion = request.POST.get('descripcion')
-        conductor = request.POST.get('conductor')
         hora_inicio = request.POST.get('hora_inicio')
         hora_fin = request.POST.get('hora_fin')
-        dias_semana = request.POST.get('dias_semana')
+        dias = request.POST.getlist('dias[]')  # Obtener lista de días seleccionados
         activo = request.POST.get('activo') == 'on'
         
         try:
+            # Crear el programa
             program = Programa.objects.create(
                 nombre=nombre,
                 descripcion=descripcion,
                 activo=activo
             )
-            messages.success(request, f'Programa "{nombre}" creado exitosamente')
+            
+            # Crear horarios para cada día seleccionado
+            if dias and hora_inicio and hora_fin:
+                for dia in dias:
+                    HorarioPrograma.objects.create(
+                        programa=program,
+                        dia_semana=int(dia),
+                        hora_inicio=hora_inicio,
+                        hora_fin=hora_fin,
+                        activo=True
+                    )
+            
+            messages.success(request, f'Programa "{nombre}" creado exitosamente con {len(dias)} horarios')
         except Exception as e:
             messages.error(request, f'Error al crear programa: {str(e)}')
     
@@ -328,19 +340,35 @@ def create_program(request):
 @user_passes_test(is_staff_user)
 def edit_program(request, program_id):
     """Editar programa de radio"""
-    program = get_object_or_404(Program, id=program_id)
+    program = get_object_or_404(Programa, id=program_id)
     
     if request.method == 'POST':
         program.nombre = request.POST.get('nombre')
         program.descripcion = request.POST.get('descripcion')
-        program.conductor = request.POST.get('conductor')
-        program.hora_inicio = request.POST.get('hora_inicio')
-        program.hora_fin = request.POST.get('hora_fin')
-        program.dias_semana = request.POST.get('dias_semana')
         program.activo = request.POST.get('activo') == 'on'
+        
+        hora_inicio = request.POST.get('hora_inicio')
+        hora_fin = request.POST.get('hora_fin')
+        dias = request.POST.getlist('dias[]')
         
         try:
             program.save()
+            
+            # Actualizar horarios: eliminar los existentes y crear nuevos
+            if dias and hora_inicio and hora_fin:
+                # Eliminar horarios antiguos
+                program.horarios.all().delete()
+                
+                # Crear nuevos horarios
+                for dia in dias:
+                    HorarioPrograma.objects.create(
+                        programa=program,
+                        dia_semana=int(dia),
+                        hora_inicio=hora_inicio,
+                        hora_fin=hora_fin,
+                        activo=True
+                    )
+            
             messages.success(request, f'Programa "{program.nombre}" actualizado exitosamente')
         except Exception as e:
             messages.error(request, f'Error al actualizar programa: {str(e)}')
@@ -351,7 +379,7 @@ def edit_program(request, program_id):
 @user_passes_test(is_staff_user)
 def delete_program(request, program_id):
     """Eliminar programa de radio"""
-    program = get_object_or_404(Program, id=program_id)
+    program = get_object_or_404(Programa, id=program_id)
     
     if request.method == 'POST':
         nombre = program.nombre

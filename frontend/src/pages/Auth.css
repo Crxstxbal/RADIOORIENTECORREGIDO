@@ -142,3 +142,41 @@
     font-size: 1.5rem;
   }
 }
+
+/* ============================================
+   DARK MODE STYLES - Auth Pages
+   ============================================ */
+
+html.dark .auth-page {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+}
+
+html.dark .auth-card {
+  background: var(--card-bg);
+  border-color: var(--card-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+html.dark .auth-title {
+  color: var(--text-primary);
+}
+
+html.dark .auth-subtitle {
+  color: var(--text-secondary);
+}
+
+html.dark .auth-footer {
+  border-top-color: var(--border-color);
+}
+
+html.dark .auth-footer p {
+  color: var(--text-secondary);
+}
+
+html.dark .password-toggle {
+  color: var(--text-tertiary);
+}
+
+html.dark .password-toggle:hover {
+  color: var(--color-red);
+}

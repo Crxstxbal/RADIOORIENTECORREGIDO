@@ -262,15 +262,57 @@
 }
 
 /* Diseño responsivo */
+@media (max-width: 1024px) {
+  .programming-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .contact-content {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  
+  /* Suscripción en tablet */
+  .subscription-content {
+    grid-template-columns: 1fr !important;
+    gap: 3rem;
+  }
+  
+  .benefits-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .featured-news-grid,
+  .featured-posts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;
     text-align: center;
     gap: 0.5rem;
+    padding: 1.5rem 0;
+    margin-bottom: 2rem;
   }
 
   .page-title {
     font-size: 2rem;
+  }
+  
+  .page-subtitle {
+    font-size: 1rem;
+  }
+  
+  .page-icon {
+    width: 40px;
+    height: 40px;
   }
 
   .programming-grid {
@@ -295,6 +337,212 @@
   .program-meta {
     flex-direction: row;
     justify-content: space-between;
+  }
+  
+  .news-grid,
+  .posts-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .contact-form-container,
+  .subscription-form-container {
+    padding: 1.5rem;
+  }
+  
+  /* Suscripción en móvil */
+  .subscription-content {
+    gap: 2rem;
+  }
+  
+  .benefits-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .stat-card {
+    padding: 1rem 0.75rem;
+  }
+  
+  .stat-number {
+    font-size: 1.25rem;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 1rem 0;
+    margin-bottom: 1.5rem;
+  }
+  
+  .page-title {
+    font-size: 1.75rem;
+  }
+  
+  .page-subtitle {
+    font-size: 0.95rem;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .day-schedule,
+  .contact-item,
+  .benefit-card {
+    padding: 1rem;
+  }
+  
+  .program-card {
+    padding: 0.75rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .contact-form-container,
+  .subscription-form-container {
+    padding: 1.25rem;
+  }
+  
+  .form-title {
+    font-size: 1.5rem;
+  }
+  
+  .modal-content {
+    padding: 1.5rem;
+  }
+  
+  .modal-title {
+    font-size: 1.5rem;
+  }
+  
+  /* Suscripción responsive mejorado */
+  .subscription-page {
+    padding: 1.5rem 0;
+  }
+  
+  .subscription-content {
+    gap: 1.5rem;
+  }
+  
+  .benefit-card {
+    padding: 1.25rem;
+  }
+  
+  .benefit-title {
+    font-size: 1rem;
+  }
+  
+  .benefit-description {
+    font-size: 0.875rem;
+  }
+  
+  .benefit-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .stat-number {
+    font-size: 1.25rem;
+  }
+  
+  .stat-label {
+    font-size: 0.8rem;
+  }
+  
+  .stats-section {
+    padding: 1.5rem 1rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .stat-number {
+    font-size: 1.5rem;
+  }
+  
+  .stat-label {
+    font-size: 0.875rem;
+  }
+  
+  .form-title {
+    font-size: 1.5rem;
+  }
+  
+  .subscribe-btn {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Responsive adicional para suscripción en móvil muy pequeño */
+@media (max-width: 360px) {
+  .subscription-content {
+    gap: 1.5rem;
+  }
+  
+  .benefits-grid {
+    gap: 1rem;
+  }
+  
+  .benefit-card {
+    padding: 1rem;
+  }
+  
+  .benefit-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .subscription-form-container {
+    padding: 1rem;
+  }
+  
+  .stats-section {
+    padding: 1rem 0.75rem;
+  }
+  
+  .stats-grid {
+    gap: 0.5rem;
+  }
+  
+  .stat-card {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .stat-number {
+    font-size: 1.25rem;
+    word-break: keep-all;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
   }
 }
 
@@ -538,11 +786,26 @@
   align-items: start;
 }
 
+.subscription-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
 .benefits-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
   margin-bottom: 3rem;
+}
+
+/* Asegurar que benefits-grid sea responsive */
+@media (max-width: 640px) {
+  .benefits-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
 }
 
 .benefit-card {
@@ -596,6 +859,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
+  width: 100%;
 }
 
 .stat-card {
@@ -793,4 +1057,108 @@
   color: var(--color-gray-600);
   margin-bottom: 1rem;
   line-height: 1.6;
+}
+
+/* ============================================
+   DARK MODE STYLES - Aplicar a todas las páginas
+   ============================================ */
+
+/* Títulos y textos generales */
+html.dark .page-title,
+html.dark .section-title,
+html.dark .day-title,
+html.dark .program-title,
+html.dark .contact-item h3,
+html.dark .business-hours h3,
+html.dark .benefit-title,
+html.dark .stats-title,
+html.dark .form-title,
+html.dark .news-title,
+html.dark .featured-news-title,
+html.dark .post-title,
+html.dark .featured-post-title,
+html.dark .modal-title {
+  color: var(--text-primary);
+}
+
+/* Subtítulos y textos secundarios */
+html.dark .page-subtitle,
+html.dark .program-description,
+html.dark .program-time,
+html.dark .program-host,
+html.dark .contact-item p,
+html.dark .day,
+html.dark .time,
+html.dark .benefit-description,
+html.dark .stat-label,
+html.dark .form-description,
+html.dark .privacy-note,
+html.dark .news-excerpt,
+html.dark .featured-news-excerpt,
+html.dark .post-excerpt,
+html.dark .featured-post-excerpt,
+html.dark .modal-text,
+html.dark .meta-item {
+  color: var(--text-secondary);
+}
+
+/* Cards y contenedores */
+html.dark .day-schedule,
+html.dark .contact-item,
+html.dark .contact-form-container,
+html.dark .benefit-card,
+html.dark .stat-card,
+html.dark .subscription-form-container,
+html.dark .news-card,
+html.dark .featured-news-card,
+html.dark .post-card,
+html.dark .featured-post-card,
+html.dark .news-modal,
+html.dark .post-modal {
+  background: var(--card-bg);
+  border-color: var(--card-border);
+}
+
+/* Program cards */
+html.dark .program-card {
+  background: var(--bg-tertiary);
+  border-color: var(--card-border);
+}
+
+/* Business hours y stats section */
+html.dark .business-hours,
+html.dark .stats-section {
+  background: var(--bg-tertiary);
+  border-color: var(--card-border);
+}
+
+/* Loading container */
+html.dark .loading-container {
+  color: var(--text-secondary);
+}
+
+/* Spinner */
+html.dark .spinner-large {
+  border-color: var(--border-color);
+  border-top-color: var(--color-red);
+}
+
+/* No programs message */
+html.dark .no-programs {
+  color: var(--text-tertiary);
+}
+
+/* Modal overlay - más oscuro en dark mode */
+html.dark .news-modal-overlay,
+html.dark .post-modal-overlay {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+/* Success message */
+html.dark .success-message h3 {
+  color: var(--text-primary);
+}
+
+html.dark .success-message p {
+  color: var(--text-secondary);
 }

@@ -54,11 +54,43 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def correo(self):
         return self.email
-    
+
+    @correo.setter
+    def correo(self, value):
+        # Permitir asignar correo desde código antiguo (e.g., user.correo = ...)
+        if value is None:
+            self.email = ''
+        else:
+            self.email = value
+
     @property
     def usuario(self):
         return self.username
-    
+
+    @usuario.setter
+    def usuario(self, value):
+        # Permitir asignar username desde código antiguo (e.g., user.usuario = ...)
+        if value is None:
+            self.username = ''
+        else:
+            self.username = value
+
     @property
     def nombre(self):
         return self.full_name
+
+    @nombre.setter
+    def nombre(self, value):
+        # Permitir asignar el nombre completo (e.g., user.nombre = "Juan Pérez")
+        # Se divide en first_name y last_name: primer token -> first_name, resto -> last_name
+        if not value:
+            self.first_name = ''
+            self.last_name = ''
+            return
+        parts = str(value).strip().split()
+        if len(parts) == 1:
+            self.first_name = parts[0]
+            self.last_name = ''
+        else:
+            self.first_name = parts[0]
+            self.last_name = ' '.join(parts[1:])

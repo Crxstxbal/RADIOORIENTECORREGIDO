@@ -7,6 +7,12 @@
   z-index: 1000;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+html.dark .navbar {
+  background-color: #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .container {
@@ -94,7 +100,7 @@
 }
 
 .mobile-nav {
-  display: none;
+  display: flex;
   flex-direction: column;
   gap: 1rem;
   padding: 1rem 0;
@@ -149,18 +155,134 @@
   transform: translateY(-1px);
 }
 
+/* Theme toggle - Diseño elegante y moderno */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  color: var(--color-white);
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.theme-toggle:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.theme-toggle svg {
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover svg {
+  transform: rotate(20deg) scale(1.1);
+}
+
+.theme-toggle.mobile {
+  justify-content: center;
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.theme-toggle-text {
+  margin-left: 0.25rem;
+  font-weight: 500;
+}
+
 /* Responsive Design */
+
+/* Ocultar menú móvil en desktop */
+@media (min-width: 769px) {
+  .mobile-nav {
+    display: none !important;
+  }
+  
+  .mobile-menu-btn {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .nav-links {
+    gap: 1.5rem;
+  }
+  
+  .nav-logo {
+    margin-right: 2rem;
+  }
+}
+
 @media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+  
   .desktop {
-    display: none;
+    display: none !important;
   }
 
   .mobile-menu-btn {
     display: block;
+    margin-left: auto;
   }
+  
+  .nav-logo {
+    margin-right: auto;
+  }
+  
+  .logo-text {
+    font-size: 1.1rem;
+  }
+  
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+  }
+}
 
-  .mobile-nav {
-    display: flex;
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0.75rem 0;
+  }
+  
+  .container {
+    padding: 0 0.75rem;
+  }
+  
+  .logo-text {
+    font-size: 1rem;
+  }
+  
+  .logo-icon {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .mobile-nav-link {
+    padding: 0.5rem 0;
+    font-size: 0.95rem;
+  }
+  
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
   }
 }
 

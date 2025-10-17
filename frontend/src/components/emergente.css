@@ -385,3 +385,200 @@
 .add-section button {
   flex-shrink: 0;
 }
+
+/* ============================================
+   DARK MODE STYLES - Emergente
+   ============================================ */
+
+html.dark .emergente-container {
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+}
+
+html.dark .gradient-text {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+html.dark .card {
+  background: var(--card-bg);
+  border-color: var(--card-border);
+}
+
+html.dark .card-title {
+  color: var(--text-primary);
+}
+
+html.dark .info-list li,
+html.dark .steps .step {
+  color: var(--text-secondary);
+}
+
+html.dark .form-group label {
+  color: var(--text-primary);
+}
+
+html.dark .form-group input,
+html.dark .form-group select,
+html.dark .form-group textarea {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border-color: var(--input-border);
+}
+
+html.dark .form-group input:focus,
+html.dark .form-group select:focus,
+html.dark .form-group textarea:focus {
+  background-color: var(--input-bg);
+  border-color: var(--color-red);
+}
+
+html.dark .form-group input.error,
+html.dark .form-group select.error,
+html.dark .form-group textarea.error {
+  background-color: var(--bg-tertiary);
+  border-color: #ef4444;
+}
+
+html.dark .error-box {
+  background-color: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #ef4444;
+}
+
+html.dark .integrante-item,
+html.dark .link-item {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+html.dark .success-container {
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+}
+
+html.dark .success-card {
+  background: var(--card-bg);
+  color: var(--text-primary);
+}
+
+html.dark .success-card h2 {
+  color: var(--color-red);
+}
+
+html.dark .success-card p {
+  color: var(--text-secondary);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - Emergente
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .emergente-container {
+    padding: 1.5rem;
+  }
+  
+  .gradient-text {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .emergente-container {
+    padding: 1rem;
+  }
+  
+  .emergente-header {
+    margin-bottom: 2rem;
+  }
+  
+  .gradient-text {
+    font-size: 1.75rem;
+  }
+  
+  .logo-circle {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .card {
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .add-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .add-section button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .emergente-container {
+    padding: 0.75rem;
+  }
+  
+  .gradient-text {
+    font-size: 1.5rem;
+  }
+  
+  .logo-circle {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .card {
+    padding: 1rem;
+    border-radius: 0.5rem;
+  }
+  
+  .card-title {
+    font-size: 1rem;
+  }
+  
+  .form-group label {
+    font-size: 0.8rem;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 0.625rem;
+    font-size: 0.95rem;
+  }
+  
+  .submit-btn {
+    padding: 0.875rem;
+    font-size: 0.95rem;
+  }
+  
+  .btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.8rem;
+  }
+  
+  .info-list li,
+  .steps .step {
+    font-size: 0.9rem;
+  }
+  
+  .success-card h2 {
+    font-size: 1.25rem;
+  }
+  
+  .success-icon {
+    width: 60px;
+    height: 60px;
+  }
+}

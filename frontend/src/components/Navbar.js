@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { Menu, X, Radio, User } from "lucide-react";
+import { Menu, X, Radio, User, Sun, Moon } from "lucide-react";
+import { useTheme } from "../contexts/ThemeContext";
 import "./Navbar.css";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout, isAuthenticated } = useAuth();
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   const navItems = [
     { name: "Inicio", path: "/" },
@@ -51,6 +53,14 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
+            <button
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label="Cambiar tema"
+              title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
           </div>
 
           {/* Sección autenticación desktop */}
@@ -93,6 +103,15 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
+            <button
+              className="theme-toggle mobile"
+              onClick={() => { toggleTheme(); setIsOpen(false); }}
+              aria-label="Cambiar tema"
+              title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              <span className="theme-toggle-text">{theme === 'dark' ? 'Claro' : 'Oscuro'}</span>
+            </button>
             <div className="mobile-auth">
               {isAuthenticated ? (
                 <>
