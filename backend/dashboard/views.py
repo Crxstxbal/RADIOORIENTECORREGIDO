@@ -6,6 +6,7 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from django.contrib import messages
 from datetime import datetime, timedelta
+
 from apps.users.models import User
 from apps.articulos.models import Articulo, Categoria
 from apps.radio.models import Programa, EstacionRadio, HorarioPrograma
@@ -576,22 +577,27 @@ def cambiar_estado_banda(request, banda_id, nuevo_estado):
 
 @login_required
 @user_passes_test(is_staff_user)
-def delete_banda(request, banda_id):
-    """Eliminar una banda emergente"""
-    banda = get_object_or_404(BandaEmergente, id=banda_id)
-    if request.method == 'POST':
-        nombre = banda.nombre_banda
-        try:
-            banda.delete()
-            messages.success(request, f"Banda '{nombre}' eliminada exitosamente.")
-        except Exception as e:
-            messages.error(request, f"Error al eliminar banda: {str(e)}")
-    return redirect('dashboard_emergentes')
-
-
-@login_required
-@user_passes_test(is_staff_user)
 def view_banda(request, banda_id):
     """Ver detalle completo de una banda emergente"""
     banda = get_object_or_404(BandaEmergente, id=banda_id)
     return render(request, 'dashboard/emergente_detail.html', {'banda': banda})
+
+
+@login_required
+@user_passes_test(is_staff_user)
+def eliminar_banda_emergente(request, banda_id):
+    """Eliminar banda emergente"""
+    if request.method != 'POST':
+        return redirect('dashboard_emergentes')
+    
+    try:
+        banda = BandaEmergente.objects.get(id=banda_id)
+        nombre_banda = banda.nombre_banda
+        banda.delete()
+        messages.success(request, f'Banda "{nombre_banda}" eliminada correctamente.')
+    except BandaEmergente.DoesNotExist:
+        messages.error(request, 'La banda no existe.')
+    except Exception as e:
+        messages.error(request, f'Error al eliminar: {str(e)}')
+    
+    return redirect('dashboard_emergentes')

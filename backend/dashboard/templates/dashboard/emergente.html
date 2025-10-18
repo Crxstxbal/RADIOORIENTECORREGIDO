@@ -76,33 +76,36 @@
               {% endif %}
             </td>
             <td>
-              <!-- Botones de estado -->
-              <div class="btn-group" role="group">
-                <a href="{% url 'cambiar_estado_banda' banda.id 'revision' %}" class="btn btn-sm btn-info" title="En Revisión">
-                  <i class="fas fa-eye"></i>
-                </a>
-                <a href="{% url 'cambiar_estado_banda' banda.id 'aprobado' %}" class="btn btn-sm btn-success" title="Aprobar">
-                  <i class="fas fa-check"></i>
-                </a>
-                <a href="{% url 'cambiar_estado_banda' banda.id 'rechazado' %}" class="btn btn-sm btn-danger" title="Rechazar">
-                  <i class="fas fa-times"></i>
-              </a>
-              <a href="{% url 'cambiar_estado_banda' banda.id 'pendiente' %}" class="btn btn-sm btn-secondary">
-                <i class="fas fa-clock"></i>
-              </a>
+              <div class="d-flex flex-wrap gap-1">
+                <!-- Botones de estado -->
+                <div class="btn-group" role="group">
+                  <a href="{% url 'cambiar_estado_banda' banda.id 'revision' %}" class="btn btn-sm btn-info" title="En Revisión">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a href="{% url 'cambiar_estado_banda' banda.id 'aprobado' %}" class="btn btn-sm btn-success" title="Aprobar">
+                    <i class="fas fa-check"></i>
+                  </a>
+                  <a href="{% url 'cambiar_estado_banda' banda.id 'rechazado' %}" class="btn btn-sm btn-danger" title="Rechazar">
+                    <i class="fas fa-times"></i>
+                  </a>
+                  <a href="{% url 'cambiar_estado_banda' banda.id 'pendiente' %}" class="btn btn-sm btn-secondary" title="Marcar como Pendiente">
+                    <i class="fas fa-clock"></i>
+                  </a>
+                </div>
 
-              <!-- Botón de detalle -->
-              <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#bandaModal{{ banda.id }}">
-                <i class="fas fa-eye"></i>
-              </button>
-
-              <!-- Eliminar -->
-              <form method="POST" action="{% url 'delete_banda' banda.id %}" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar esta banda?');">
-                  <i class="fas fa-trash"></i>
+                <!-- Botón de detalle -->
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bandaModal{{ banda.id }}" title="Ver detalles">
+                  <i class="fas fa-search-plus"></i>
                 </button>
-              </form>
+
+                <!-- Eliminar -->
+                <form method="POST" action="{% url 'eliminar_banda_emergente' banda.id %}" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar esta banda?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </form>
+              </div>
             </td>
           </tr>
           {% empty %}

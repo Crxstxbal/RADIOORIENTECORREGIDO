@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Radio, Users, Music, Newspaper } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Radio, Users, Music, Newspaper, Calendar, User, Tag, ArrowRight } from "lucide-react";
 import axios from "axios";
 import "./Home.css";
 
 const Home = () => {
+  const navigate = useNavigate();
   const [featuredArticles, setFeaturedArticles] = useState([]);
   const [radioStation, setRadioStation] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -17,10 +18,37 @@ const Home = () => {
           axios.get("/api/radio/station/"),
         ]);
 
-        // Filtrar artículos destacados
+        // Obtener artículos publicados ordenados por fecha
         const articles = articlesResponse.data.results || articlesResponse.data || [];
-        const featured = articles.filter(article => article.destacado && article.publicado).slice(0, 3);
-        setFeaturedArticles(featured);
+        const publishedArticles = articles.filter(article => article.publicado);
+        
+        // Obtener fecha de hoy (solo año, mes, día)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Filtrar artículos del día
+        const todayArticles = publishedArticles.filter(article => {
+          const articleDate = new Date(article.fecha_publicacion || article.fecha_creacion);
+          articleDate.setHours(0, 0, 0, 0);
+          return articleDate.getTime() === today.getTime();
+        });
+        
+        // Si hay al menos 3 del día, usar esos; si no, usar los últimos 3
+        let articlesToShow;
+        if (todayArticles.length >= 3) {
+          articlesToShow = todayArticles.slice(0, 3);
+        } else {
+          // Ordenar por fecha descendente y tomar los últimos 3
+          articlesToShow = publishedArticles
+            .sort((a, b) => {
+              const dateA = new Date(a.fecha_publicacion || a.fecha_creacion);
+              const dateB = new Date(b.fecha_publicacion || b.fecha_creacion);
+              return dateB - dateA;
+            })
+            .slice(0, 3);
+        }
+        
+        setFeaturedArticles(articlesToShow);
         setRadioStation(stationResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -31,6 +59,10 @@ const Home = () => {
 
     fetchData();
   }, []);
+
+  const handleArticleClick = (articleId) => {
+    navigate('/articulos', { state: { selectedArticleId: articleId } });
+  };
 
   return (
     <div className="home-page">
@@ -120,35 +152,74 @@ const Home = () => {
               <div className="spinner"></div>
               <p>Cargando artículos...</p>
             </div>
-          ) : (
-            <div className="news-grid">
-              {featuredArticles.map((article) => (
-                <article key={article.id} className="news-card">
-                  {(article.imagen_destacada || article.imagen_portada || article.imagen_url) && (
-                    <img
-                      src={article.imagen_destacada || article.imagen_portada || article.imagen_url}
-                      alt={article.titulo}
-                      className="news-image"
-                    />
-                  )}
-                  <div className="news-content">
-                    <h3 className="news-title">{article.titulo}</h3>
-                    <p className="news-excerpt">{article.resumen || article.contenido.substring(0, 120) + '...'}</p>
-                    <div className="news-meta">
-                      <span className="news-date">
-                        {new Date(article.fecha_publicacion || article.fecha_creacion).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                </article>
-              ))}
+          ) : featuredArticles.length === 0 ? (
+            <div style={{textAlign: 'center', padding: '3rem'}}>
+              <Newspaper size={48} style={{color: 'var(--color-gray-400)', marginBottom: '1rem'}} />
+              <h3>No hay artículos disponibles</h3>
+              <p>Pronto tendremos nuevas noticias para ti.</p>
             </div>
+          ) : (
+            <>
+              <div className="news-grid">
+                {featuredArticles.map((article) => {
+                  // Función para obtener thumbnail
+                  const getThumbnail = (article) => {
+                    return article.imagen_thumbnail || article.imagen_url || article.imagen_portada;
+                  };
+                  
+                  return (
+                    <article 
+                      key={article.id} 
+                      className="news-card"
+                      onClick={() => handleArticleClick(article.id)}
+                      style={{cursor: 'pointer'}}
+                    >
+                      {getThumbnail(article) && (
+                        <img
+                          src={getThumbnail(article)}
+                          alt={article.titulo}
+                          className="news-image"
+                        />
+                      )}
+                      <div className="news-content">
+                        <div className="meta-item" style={{marginBottom: '1rem'}}>
+                          <Tag size={14} />
+                          <span>{article.categoria?.nombre || 'Sin categoría'}</span>
+                        </div>
+                        <h3 className="news-title">{article.titulo}</h3>
+                        <p className="news-excerpt">
+                          {article.resumen || article.contenido.substring(0, 120) + '...'}
+                        </p>
+                        <div className="news-meta">
+                          <div className="meta-item">
+                            <User size={14} />
+                            <span>{article.autor_nombre || 'Radio Oriente'}</span>
+                          </div>
+                          <div className="meta-item">
+                            <Calendar size={14} />
+                            <span>
+                              {new Date(article.fecha_publicacion || article.fecha_creacion).toLocaleDateString('es-ES', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              
+              <div style={{textAlign: 'center', marginTop: '3rem'}}>
+                <Link to="/articulos" className="btn btn-primary" style={{display: 'inline-flex', alignItems: 'center', gap: '0.5rem'}}>
+                  Ver más artículos
+                  <ArrowRight size={20} />
+                </Link>
+              </div>
+            </>
           )}
-          <div className="text-center mt-8">
-            <Link to="/articulos" className="btn btn-outline">
-              Ver todos los artículos
-            </Link>
-          </div>
         </div>
       </section>
 

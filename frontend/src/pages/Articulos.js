@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { BookOpen, Calendar, User, Eye, Tag, Filter } from 'lucide-react';
 import axios from 'axios';
 import './Pages.css';
 
 const Articles = () => {
+  const location = useLocation();
   const [articles, setArticles] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +40,18 @@ const Articles = () => {
 
     fetchData();
   }, []);
+
+  // Abrir modal automáticamente si viene del Home
+  useEffect(() => {
+    if (location.state?.selectedArticleId && articles.length > 0) {
+      const article = articles.find(a => a.id === location.state.selectedArticleId);
+      if (article) {
+        setSelectedArticle(article);
+        // Limpiar el estado para evitar que se abra nuevamente
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location.state, articles]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -264,8 +278,36 @@ const Articles = () => {
                   </div>
                 )}
                 
-                <div className="modal-text">
-                  <div dangerouslySetInnerHTML={{ __html: selectedArticle.contenido }} />
+                <div style={{display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'flex-start'}}>
+                  {/* Imagen thumbnail cuadrada */}
+                  {getArticleThumbnail(selectedArticle) && (
+                    <div style={{flex: '0 0 300px', maxWidth: '300px'}}>
+                      <img 
+                        src={getArticleThumbnail(selectedArticle)} 
+                        alt={selectedArticle.titulo}
+                        style={{
+                          width: '100%',
+                          aspectRatio: '1/1',
+                          objectFit: 'cover',
+                          borderRadius: '0.5rem',
+                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
+                      <p style={{
+                        marginTop: '0.5rem',
+                        fontSize: '0.875rem',
+                        color: 'var(--color-gray-500)',
+                        textAlign: 'center'
+                      }}>
+                        {selectedArticle.categoria?.nombre || 'Artículo'}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Contenido del artículo */}
+                  <div className="modal-text" style={{flex: '1', minWidth: '300px'}}>
+                    <div dangerouslySetInnerHTML={{ __html: selectedArticle.contenido }} />
+                  </div>
                 </div>
                 
                 {/* Video embebido si existe */}

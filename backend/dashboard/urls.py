@@ -15,7 +15,7 @@ urlpatterns = [
     # Bandas Emergentes CRUD
     path('emergentes/', views.dashboard_emergentes, name='dashboard_emergentes'),
     path('emergentes/<int:banda_id>/<str:nuevo_estado>/', views.cambiar_estado_banda, name='cambiar_estado_banda'),
-    path('emergentes/<int:banda_id>/eliminar/', views.delete_banda, name='delete_banda'),
+    path('emergentes/borrar/<int:banda_id>/', views.eliminar_banda_emergente, name='eliminar_banda_emergente'),
     path('emergentes/<int:banda_id>/detalle/', views.view_banda, name='view_banda'),
 
     
