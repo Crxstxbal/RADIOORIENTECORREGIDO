@@ -6,7 +6,7 @@ urlpatterns = [
     path('login/', views.dashboard_login, name='dashboard_login'),
     path('logout/', views.dashboard_logout, name='dashboard_logout'),
     path('users/', views.dashboard_users, name='dashboard_users'),
-    path('blog/', views.dashboard_blog, name='dashboard_blog'),
+    path('articulos/', views.dashboard_articulos, name='dashboard_articulos'),
     path('radio/', views.dashboard_radio, name='dashboard_radio'),
     path('chat/', views.dashboard_chat, name='dashboard_chat'),
     path('analytics/', views.dashboard_analytics, name='dashboard_analytics'),
@@ -24,10 +24,10 @@ urlpatterns = [
     path('users/edit/<int:user_id>/', views.edit_user, name='edit_user'),
     path('users/delete/<int:user_id>/', views.delete_user, name='delete_user'),
     
-    # Blog CRUD
-    path('blog/create/', views.create_post, name='create_post'),
-    path('blog/edit/<int:post_id>/', views.edit_post, name='edit_post'),
-    path('blog/delete/<int:post_id>/', views.delete_post, name='delete_post'),
+    # Articulos CRUD
+    path('articulos/create/', views.create_articulo, name='create_articulo'),
+    path('articulos/edit/<int:articulo_id>/', views.edit_articulo, name='edit_articulo'),
+    path('articulos/delete/<int:articulo_id>/', views.delete_articulo, name='delete_articulo'),
     
     # Radio CRUD
     path('radio/create-program/', views.create_program, name='create_program'),

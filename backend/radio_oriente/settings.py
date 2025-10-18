@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'apps.ubicacion',
     'apps.users',
     'apps.radio',
-    'apps.blog',
+    'apps.articulos',  # Renombrado de apps.blog
     'apps.chat',
     'apps.contact',
     'apps.emergente',

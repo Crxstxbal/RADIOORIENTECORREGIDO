@@ -24,8 +24,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Campos principales (siguiendo el esquema PostgreSQL)
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(max_length=254, unique=True)
-    first_name = models.CharField(max_length=150)
-    last_name = models.CharField(max_length=150)
+    first_name = models.CharField(max_length=150, blank=True, default='')
+    last_name = models.CharField(max_length=150, blank=True, default='')
     
     # Campos de Django Auth
     is_staff = models.BooleanField(default=False)
@@ -36,7 +36,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
     
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    REQUIRED_FIELDS = ['username']
     
     class Meta:
         db_table = 'usuario'

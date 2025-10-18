@@ -13,7 +13,7 @@ const Home = () => {
     const fetchData = async () => {
       try {
         const [articlesResponse, stationResponse] = await Promise.all([
-          axios.get("/api/blog/articulos/"),
+          axios.get("/api/articulos/api/articulos/"),
           axios.get("/api/radio/station/"),
         ]);
 
@@ -124,9 +124,9 @@ const Home = () => {
             <div className="news-grid">
               {featuredArticles.map((article) => (
                 <article key={article.id} className="news-card">
-                  {article.imagen_url && (
+                  {(article.imagen_destacada || article.imagen_portada || article.imagen_url) && (
                     <img
-                      src={article.imagen_url}
+                      src={article.imagen_destacada || article.imagen_portada || article.imagen_url}
                       alt={article.titulo}
                       className="news-image"
                     />

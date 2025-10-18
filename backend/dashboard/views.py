@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.contrib import messages
 from datetime import datetime, timedelta
 from apps.users.models import User
-from apps.blog.models import Categoria, Articulo
+from apps.articulos.models import Articulo, Categoria
 from apps.radio.models import Programa, EstacionRadio, HorarioPrograma
 from apps.chat.models import ChatMessage
 from apps.contact.models import Contacto, Suscripcion, Estado
@@ -62,10 +62,11 @@ def dashboard_users(request):
 
 @login_required
 @user_passes_test(is_staff_user)
-def dashboard_blog(request):
-    """Gestión del blog"""
-    posts = Articulo.objects.all().order_by('-fecha_creacion')
-    return render(request, 'dashboard/blog.html', {'posts': posts})
+def dashboard_articulos(request):
+    """Gestión de artículos"""
+    articulos = Articulo.objects.select_related('autor', 'categoria').all().order_by('-fecha_creacion')
+    categorias = Categoria.objects.all().order_by('nombre')
+    return render(request, 'dashboard/articulos.html', {'articulos': articulos, 'categorias': categorias})
 
 @login_required
 @user_passes_test(is_staff_user)
@@ -226,77 +227,109 @@ def delete_user(request, user_id):
     
     return redirect('dashboard_users')
 
-# CRUD Operations for Blog Posts
+# CRUD Operations for Articulos
 @login_required
 @user_passes_test(is_staff_user)
-def create_post(request):
-    """Crear nuevo artículo del blog"""
+def create_articulo(request):
+    """Crear nuevo artículo con soporte multimedia"""
     if request.method == 'POST':
         titulo = request.POST.get('titulo')
         contenido = request.POST.get('contenido')
         resumen = request.POST.get('resumen')
         categoria = request.POST.get('categoria')
-        tags = request.POST.get('tags')
         publicado = request.POST.get('publicado') == 'on'
         imagen_url = request.POST.get('imagen_url')
+        video_url = request.POST.get('video_url')
+        
+        # Obtener archivos subidos
+        imagen_portada = request.FILES.get('imagen_portada')
+        imagen_thumbnail = request.FILES.get('imagen_thumbnail')
+        archivo_adjunto = request.FILES.get('archivo_adjunto')
         
         try:
             # Obtener la categoría por ID
-            categoria_obj = Categoria.objects.get(id=categoria) if categoria else None
+            if categoria:
+                categoria_obj = Categoria.objects.get(id=categoria)
+            else:
+                # Crear categoría por defecto si no existe
+                categoria_obj, _ = Categoria.objects.get_or_create(
+                    nombre='General',
+                    defaults={'descripcion': 'Categoría general'}
+                )
             
-            post = Articulo.objects.create(
+            articulo = Articulo.objects.create(
                 titulo=titulo,
                 contenido=contenido,
                 resumen=resumen,
                 categoria=categoria_obj,
                 publicado=publicado,
                 imagen_url=imagen_url,
+                video_url=video_url,
+                imagen_portada=imagen_portada,
+                imagen_thumbnail=imagen_thumbnail,
+                archivo_adjunto=archivo_adjunto,
                 autor=request.user
             )
             messages.success(request, f'Artículo "{titulo}" creado exitosamente')
         except Exception as e:
             messages.error(request, f'Error al crear artículo: {str(e)}')
     
-    return redirect('dashboard_blog')
+    return redirect('dashboard_articulos')
 
 @login_required
 @user_passes_test(is_staff_user)
-def edit_post(request, post_id):
-    """Editar artículo del blog"""
-    post = get_object_or_404(BlogPost, id=post_id)
+def edit_articulo(request, articulo_id):
+    """Editar artículo con soporte multimedia"""
+    articulo = get_object_or_404(Articulo, id=articulo_id)
     
     if request.method == 'POST':
-        post.titulo = request.POST.get('titulo')
-        post.contenido = request.POST.get('contenido')
-        post.resumen = request.POST.get('resumen')
-        post.categoria = request.POST.get('categoria')
-        post.tags = request.POST.get('tags')
-        post.publicado = request.POST.get('publicado') == 'on'
-        post.imagen_url = request.POST.get('imagen_url')
+        articulo.titulo = request.POST.get('titulo')
+        articulo.contenido = request.POST.get('contenido')
+        articulo.resumen = request.POST.get('resumen')
+        categoria_id = request.POST.get('categoria')
+        articulo.publicado = request.POST.get('publicado') == 'on'
+        articulo.imagen_url = request.POST.get('imagen_url')
+        articulo.video_url = request.POST.get('video_url')
+        
+        # Actualizar archivos si se proporcionan nuevos
+        imagen_portada = request.FILES.get('imagen_portada')
+        if imagen_portada:
+            articulo.imagen_portada = imagen_portada
+        
+        imagen_thumbnail = request.FILES.get('imagen_thumbnail')
+        if imagen_thumbnail:
+            articulo.imagen_thumbnail = imagen_thumbnail
+            
+        archivo_adjunto = request.FILES.get('archivo_adjunto')
+        if archivo_adjunto:
+            articulo.archivo_adjunto = archivo_adjunto
         
         try:
-            post.save()
-            messages.success(request, f'Artículo "{post.titulo}" actualizado exitosamente')
+            # Actualizar categoría si se proporciona
+            if categoria_id:
+                articulo.categoria = Categoria.objects.get(id=categoria_id)
+            articulo.save()
+            messages.success(request, f'Artículo "{articulo.titulo}" actualizado exitosamente')
         except Exception as e:
             messages.error(request, f'Error al actualizar artículo: {str(e)}')
     
-    return redirect('dashboard_blog')
+    return redirect('dashboard_articulos')
 
 @login_required
 @user_passes_test(is_staff_user)
-def delete_post(request, post_id):
-    """Eliminar artículo del blog"""
-    post = get_object_or_404(BlogPost, id=post_id)
+def delete_articulo(request, articulo_id):
+    """Eliminar artículo"""
+    articulo = get_object_or_404(Articulo, id=articulo_id)
     
     if request.method == 'POST':
-        titulo = post.titulo
+        titulo = articulo.titulo
         try:
-            post.delete()
+            articulo.delete()
             messages.success(request, f'Artículo "{titulo}" eliminado exitosamente')
         except Exception as e:
             messages.error(request, f'Error al eliminar artículo: {str(e)}')
     
-    return redirect('dashboard_blog')
+    return redirect('dashboard_articulos')
 
 # CRUD Operations for Radio Programs
 @login_required
@@ -426,7 +459,7 @@ def create_news(request):
 @user_passes_test(is_staff_user)
 def delete_news(request, news_id):
     """Eliminar noticia"""
-    news = get_object_or_404(News, id=news_id)
+    news = get_object_or_404(Articulo, id=news_id)
     
     if request.method == 'POST':
         titulo = news.titulo

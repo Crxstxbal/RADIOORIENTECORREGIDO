@@ -14,12 +14,12 @@ const Articles = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Cargar artículos
-        const articlesResponse = await axios.get('/api/blog/articulos/');
+        // Cargar artículos desde nueva API
+        const articlesResponse = await axios.get('/api/articulos/api/articulos/');
         setArticles(articlesResponse.data.results || articlesResponse.data);
         
         // Cargar categorías
-        const categoriesResponse = await axios.get('/api/blog/categorias/');
+        const categoriesResponse = await axios.get('/api/articulos/api/categorias/');
         setCategories(categoriesResponse.data.results || categoriesResponse.data);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -53,6 +53,18 @@ const Articles = () => {
 
   const closeModal = () => {
     setSelectedArticle(null);
+  };
+
+  // Función auxiliar para obtener la imagen thumbnail (para tarjetas)
+  const getArticleThumbnail = (article) => {
+    // Priorizar thumbnail, luego imagen_url
+    return article.imagen_thumbnail || article.imagen_url || article.imagen_portada;
+  };
+
+  // Función auxiliar para obtener la imagen banner (para modal)
+  const getArticleBanner = (article) => {
+    // Priorizar portada, luego imagen_url
+    return article.imagen_portada || article.imagen_url;
   };
 
   // Filtrar artículos
@@ -130,8 +142,8 @@ const Articles = () => {
                         className="featured-news-card"
                         onClick={() => handleArticleClick(article)}
                       >
-                        {article.imagen_url && (
-                          <img src={article.imagen_url} alt={article.titulo} className="featured-news-image" />
+                        {getArticleThumbnail(article) && (
+                          <img src={getArticleThumbnail(article)} alt={article.titulo} className="featured-news-image" />
                         )}
                         <div className="featured-news-content">
                           <div className="meta-item" style={{marginBottom: '1rem'}}>
@@ -182,8 +194,8 @@ const Articles = () => {
                         className="news-card"
                         onClick={() => handleArticleClick(article)}
                       >
-                        {article.imagen_url && (
-                          <img src={article.imagen_url} alt={article.titulo} className="news-image" />
+                        {getArticleThumbnail(article) && (
+                          <img src={getArticleThumbnail(article)} alt={article.titulo} className="news-image" />
                         )}
                         <div className="news-content">
                           <div className="meta-item" style={{marginBottom: '1rem'}}>
@@ -223,8 +235,8 @@ const Articles = () => {
             <div className="news-modal" onClick={(e) => e.stopPropagation()}>
               <button className="modal-close" onClick={closeModal}>×</button>
               
-              {selectedArticle.imagen_url && (
-                <img src={selectedArticle.imagen_url} alt={selectedArticle.titulo} className="modal-image" />
+              {getArticleBanner(selectedArticle) && (
+                <img src={getArticleBanner(selectedArticle)} alt={selectedArticle.titulo} className="modal-image" />
               )}
               
               <div className="modal-content">
@@ -255,6 +267,38 @@ const Articles = () => {
                 <div className="modal-text">
                   <div dangerouslySetInnerHTML={{ __html: selectedArticle.contenido }} />
                 </div>
+                
+                {/* Video embebido si existe */}
+                {selectedArticle.video_url && (
+                  <div style={{marginTop: '2rem'}}>
+                    <h3 style={{marginBottom: '1rem', fontSize: '1.25rem', fontWeight: '600'}}>Video relacionado</h3>
+                    <div style={{position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden'}}>
+                      <iframe
+                        src={selectedArticle.video_url.includes('youtube.com') || selectedArticle.video_url.includes('youtu.be') 
+                          ? selectedArticle.video_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')
+                          : selectedArticle.video_url}
+                        style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', borderRadius: '0.5rem'}}
+                        allowFullScreen
+                        title="Video del artículo"
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Archivo adjunto si existe */}
+                {selectedArticle.archivo_adjunto && (
+                  <div style={{marginTop: '2rem', padding: '1rem', backgroundColor: 'var(--color-gray-50)', borderRadius: '0.5rem'}}>
+                    <h3 style={{marginBottom: '0.5rem', fontSize: '1.125rem', fontWeight: '600'}}>📎 Archivo adjunto</h3>
+                    <a 
+                      href={selectedArticle.archivo_adjunto}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{color: 'var(--color-red)', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: '0.5rem'}}
+                    >
+                      <span>Descargar archivo</span>
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           </div>
