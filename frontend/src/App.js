@@ -20,6 +20,8 @@ import Contacto from './pages/Contacto';
 import Suscripcion from './pages/Suscripcion';
 import IniciarSesion from './pages/IniciarSesion';
 import Registro from './pages/Registro';
+import RecuperarContrasena from './pages/RecuperarContrasena';
+import ResetearContrasena from './pages/ResetearContrasena';
 import Emergente from './components/Emergente';
 import Reproductor from './pages/reproductor';
 
@@ -64,8 +66,11 @@ function App() {
               <Route path="/contacto" element={<Contacto />} />
               <Route path="/suscripcion" element={<Suscripcion />} />
               <Route path="/emergente" element={<Emergente />} />
-              <Route path="/login" element={<IniciarSesion />} />
+              <Route path="/iniciar-sesion" element={<IniciarSesion />} />
+              <Route path="/login" element={<IniciarSesion />} /> {/* Redirección de compatibilidad */}
               <Route path="/registro" element={<Registro />} />
+              <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
+              <Route path="/resetear-contrasena/:uid/:token" element={<ResetearContrasena />} />
             </Route>
 
             {/* Layout full screen solo para el reproductor */}

@@ -10,7 +10,9 @@ def auth_info(request):
             'login': '/api/auth/login/',
             'logout': '/api/auth/logout/',
             'profile': '/api/auth/profile/',
-            'update_profile': '/api/auth/profile/update/'
+            'update_profile': '/api/auth/profile/update/',
+            'password_reset_request': '/api/auth/password-reset/',
+            'password_reset_confirm': '/api/auth/password-reset-confirm/'
         }
     })
 
@@ -23,4 +25,7 @@ urlpatterns = [
     path('profile/update/', views.update_profile, name='update_profile'),
     # Endpoints de compatibilidad
     path('profile/legacy/', views.profile_legacy, name='profile_legacy'),
+    # Endpoints para recuperación de contraseña
+    path('password-reset/', views.password_reset_request, name='password_reset_request'),
+    path('password-reset-confirm/', views.password_reset_confirm, name='password_reset_confirm'),
 ]

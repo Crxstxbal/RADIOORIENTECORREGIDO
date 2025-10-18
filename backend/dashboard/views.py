@@ -11,7 +11,7 @@ from apps.users.models import User
 from apps.articulos.models import Articulo, Categoria
 from apps.radio.models import Programa, EstacionRadio, HorarioPrograma
 from apps.chat.models import ChatMessage
-from apps.contact.models import Contacto, Suscripcion, Estado
+from apps.contact.models import Contacto, Suscripcion, Estado, TipoAsunto
 from apps.emergente.models import BandaEmergente 
 
 
@@ -589,7 +589,7 @@ def eliminar_banda_emergente(request, banda_id):
     """Eliminar banda emergente"""
     if request.method != 'POST':
         return redirect('dashboard_emergentes')
-    
+
     try:
         banda = BandaEmergente.objects.get(id=banda_id)
         nombre_banda = banda.nombre_banda
@@ -599,5 +599,113 @@ def eliminar_banda_emergente(request, banda_id):
         messages.error(request, 'La banda no existe.')
     except Exception as e:
         messages.error(request, f'Error al eliminar: {str(e)}')
-    
+
     return redirect('dashboard_emergentes')
+
+
+# ===============================
+# Contactos (CRUD + Estado)
+# ===============================
+@login_required
+@user_passes_test(is_staff_user)
+def dashboard_contactos(request):
+    """Gestión de contactos"""
+    # Obtener parámetros de filtro
+    estado_filter = request.GET.get('estado')
+    tipo_filter = request.GET.get('tipo')
+    search_query = request.GET.get('q')
+
+    # Query base
+    contactos = Contacto.objects.select_related(
+        'tipo_asunto', 'estado', 'usuario', 'respondido_por'
+    ).order_by('-fecha_envio')
+
+    # Aplicar filtros
+    if estado_filter:
+        contactos = contactos.filter(estado_id=estado_filter)
+    if tipo_filter:
+        contactos = contactos.filter(tipo_asunto_id=tipo_filter)
+    if search_query:
+        contactos = contactos.filter(
+            Q(nombre__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(mensaje__icontains=search_query)
+        )
+
+    # Estadísticas
+    total_contactos = Contacto.objects.count()
+
+    # Contactos pendientes (estado Recibida o Pendiente)
+    contactos_pendientes = Contacto.objects.filter(
+        Q(estado__nombre__iexact='Recibida') | Q(estado__nombre__iexact='Pendiente')
+    ).count()
+
+    # Contactos respondidos
+    contactos_respondidos = Contacto.objects.filter(
+        estado__nombre__iexact='Respondida'
+    ).count()
+
+    # Contactos de esta semana
+    last_week = timezone.now() - timedelta(days=7)
+    contactos_semana = Contacto.objects.filter(fecha_envio__gte=last_week).count()
+
+    # Obtener estados y tipos de asunto disponibles
+    estados_disponibles = Estado.objects.filter(tipo_entidad='contacto').order_by('nombre')
+    tipos_asunto = TipoAsunto.objects.all().order_by('nombre')
+
+    context = {
+        'contactos': contactos,
+        'total_contactos': total_contactos,
+        'contactos_pendientes': contactos_pendientes,
+        'contactos_respondidos': contactos_respondidos,
+        'contactos_semana': contactos_semana,
+        'estados_disponibles': estados_disponibles,
+        'tipos_asunto': tipos_asunto,
+    }
+
+    return render(request, 'dashboard/contactos.html', context)
+
+
+@login_required
+@user_passes_test(is_staff_user)
+def update_contacto(request, contacto_id):
+    """Actualizar estado de un contacto"""
+    contacto = get_object_or_404(Contacto, id=contacto_id)
+
+    if request.method == 'POST':
+        nuevo_estado_id = request.POST.get('estado')
+
+        try:
+            nuevo_estado = Estado.objects.get(id=nuevo_estado_id, tipo_entidad='contacto')
+            contacto.estado = nuevo_estado
+
+            # Si el estado es "Respondida", marcar fecha y usuario
+            if nuevo_estado.nombre.lower() == 'respondida':
+                contacto.fecha_respuesta = timezone.now()
+                contacto.respondido_por = request.user
+
+            contacto.save()
+            messages.success(request, f"Estado del contacto actualizado a '{nuevo_estado.nombre}'.")
+        except Estado.DoesNotExist:
+            messages.error(request, "Estado no encontrado.")
+        except Exception as e:
+            messages.error(request, f"Error al actualizar contacto: {str(e)}")
+
+    return redirect('dashboard_contactos')
+
+
+@login_required
+@user_passes_test(is_staff_user)
+def delete_contacto(request, contacto_id):
+    """Eliminar un contacto"""
+    contacto = get_object_or_404(Contacto, id=contacto_id)
+
+    if request.method == 'POST':
+        nombre = contacto.nombre
+        try:
+            contacto.delete()
+            messages.success(request, f"Contacto de '{nombre}' eliminado exitosamente.")
+        except Exception as e:
+            messages.error(request, f"Error al eliminar contacto: {str(e)}")
+
+    return redirect('dashboard_contactos')

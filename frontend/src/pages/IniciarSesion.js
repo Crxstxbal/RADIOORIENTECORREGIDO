@@ -87,6 +87,12 @@ const Login = () => {
                 </div>
               </div>
 
+              <div style={{ textAlign: 'right', marginTop: '-0.5rem', marginBottom: '1rem' }}>
+                <Link to="/recuperar-contrasena" className="auth-link" style={{ fontSize: '0.9rem' }}>
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
+
               <button
                 type="submit"
                 className="btn btn-primary auth-submit"

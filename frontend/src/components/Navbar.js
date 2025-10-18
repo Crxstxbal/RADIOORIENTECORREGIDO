@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { Menu, X, Radio, User, Sun, Moon } from "lucide-react";
+import { Menu, X, Radio, User, Sun, Moon, LayoutDashboard } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import "./Navbar.css";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, isAdmin } = useAuth();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
 
@@ -53,6 +53,18 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
+            {/* Link Dashboard solo para administradores */}
+            {isAdmin && (
+              <a
+                href="http://localhost:8000/dashboard/"
+                className="nav-link dashboard-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <LayoutDashboard size={18} />
+                Dashboard
+              </a>
+            )}
             <button
               className="theme-toggle"
               onClick={toggleTheme}
@@ -103,6 +115,19 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
+            {/* Link Dashboard solo para administradores - Mobile */}
+            {isAdmin && (
+              <a
+                href="http://localhost:8000/dashboard/"
+                className="mobile-nav-link dashboard-link"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsOpen(false)}
+              >
+                <LayoutDashboard size={18} />
+                Dashboard
+              </a>
+            )}
             <button
               className="theme-toggle mobile"
               onClick={() => { toggleTheme(); setIsOpen(false); }}

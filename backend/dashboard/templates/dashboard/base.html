@@ -516,10 +516,17 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_emergentes' %}active{% endif %}" 
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_emergentes' %}active{% endif %}"
                     href="{% url 'dashboard_emergentes' %}">
                         <i class="fas fa-guitar me-2"></i>
                         Emergentes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_contactos' %}active{% endif %}"
+                    href="{% url 'dashboard_contactos' %}">
+                        <i class="fas fa-envelope me-2"></i>
+                        Contactos
                     </a>
                 </li>
 

@@ -1,0 +1,275 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Contactos - Radio Oriente FM{% endblock %}
+{% block page_title %}Gestión de Contactos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-xs mb-1">Total Contactos</p>
+                            <h5 class="mb-0">{{ total_contactos }}</h5>
+                        </div>
+                        <i class="fas fa-envelope fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card users">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-xs mb-1">Pendientes</p>
+                            <h5 class="mb-0">{{ contactos_pendientes }}</h5>
+                        </div>
+                        <i class="fas fa-clock fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card posts">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-xs mb-1">Respondidos</p>
+                            <h5 class="mb-0">{{ contactos_respondidos }}</h5>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card programs">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-xs mb-1">Esta Semana</p>
+                            <h5 class="mb-0">{{ contactos_semana }}</h5>
+                        </div>
+                        <i class="fas fa-calendar-week fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Estado</label>
+                            <select name="estado" class="form-select" onchange="this.form.submit()">
+                                <option value="">Todos</option>
+                                {% for estado in estados_disponibles %}
+                                <option value="{{ estado.id }}" {% if request.GET.estado == estado.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ estado.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Tipo de Asunto</label>
+                            <select name="tipo" class="form-select" onchange="this.form.submit()">
+                                <option value="">Todos</option>
+                                {% for tipo in tipos_asunto %}
+                                <option value="{{ tipo.id }}" {% if request.GET.tipo == tipo.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ tipo.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Buscar</label>
+                            <input type="text" name="q" class="form-control" placeholder="Nombre o email..." value="{{ request.GET.q }}">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-2"></i>Buscar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contactos Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-inbox me-2"></i>
+                        Mensajes de Contacto
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Tipo de Asunto</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contacto in contactos %}
+                                <tr>
+                                    <td>#{{ contacto.id }}</td>
+                                    <td>{{ contacto.nombre }}</td>
+                                    <td>
+                                        <a href="mailto:{{ contacto.email }}">{{ contacto.email }}</a>
+                                    </td>
+                                    <td>{{ contacto.telefono|default:"-" }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ contacto.tipo_asunto.nombre }}</span>
+                                    </td>
+                                    <td>
+                                        {% if contacto.estado.nombre == 'Recibida' or contacto.estado.nombre == 'Pendiente' %}
+                                            <span class="badge bg-warning text-dark">{{ contacto.estado.nombre }}</span>
+                                        {% elif contacto.estado.nombre == 'Respondida' %}
+                                            <span class="badge bg-success">{{ contacto.estado.nombre }}</span>
+                                        {% elif contacto.estado.nombre == 'En Revisión' %}
+                                            <span class="badge bg-info">{{ contacto.estado.nombre }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ contacto.estado.nombre }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ contacto.fecha_envio|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewModal{{ contacto.id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal{{ contacto.id }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteItem('{% url 'delete_contacto' contacto.id %}', '{{ contacto.nombre }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- View Modal -->
+                                <div class="modal fade" id="viewModal{{ contacto.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Detalles del Contacto #{{ contacto.id }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <strong>Nombre:</strong> {{ contacto.nombre }}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Email:</strong> {{ contacto.email }}
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <strong>Teléfono:</strong> {{ contacto.telefono|default:"No proporcionado" }}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Tipo de Asunto:</strong> {{ contacto.tipo_asunto.nombre }}
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <strong>Estado:</strong> {{ contacto.estado.nombre }}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Fecha de Envío:</strong> {{ contacto.fecha_envio|date:"d/m/Y H:i" }}
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-12">
+                                                        <strong>Mensaje:</strong>
+                                                        <p class="mt-2 p-3 bg-light rounded">{{ contacto.mensaje }}</p>
+                                                    </div>
+                                                </div>
+                                                {% if contacto.respondido_por %}
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <strong>Respondido por:</strong> {{ contacto.respondido_por.full_name }}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Fecha de Respuesta:</strong> {{ contacto.fecha_respuesta|date:"d/m/Y H:i" }}
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                                <a href="mailto:{{ contacto.email }}" class="btn btn-primary">
+                                                    <i class="fas fa-reply me-2"></i>Responder por Email
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Edit Modal -->
+                                <div class="modal fade" id="editModal{{ contacto.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form method="POST" action="{% url 'update_contacto' contacto.id %}">
+                                                {% csrf_token %}
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Editar Estado - {{ contacto.nombre }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Estado</label>
+                                                        <select name="estado" class="form-select" required>
+                                                            {% for estado in estados_disponibles %}
+                                                            <option value="{{ estado.id }}" {% if contacto.estado.id == estado.id %}selected{% endif %}>
+                                                                {{ estado.nombre }}
+                                                            </option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                        No hay mensajes de contacto registrados
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

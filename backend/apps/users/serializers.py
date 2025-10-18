@@ -1,5 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .models import User
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -61,7 +64,41 @@ class UserLegacySerializer(serializers.ModelSerializer):
     correo = serializers.CharField(source='email', read_only=True)
     usuario = serializers.CharField(source='username', read_only=True)
     nombre = serializers.CharField(source='full_name', read_only=True)
-    
+
     class Meta:
         model = User
         fields = ('id', 'correo', 'usuario', 'nombre', 'first_name', 'last_name', 'is_active', 'is_staff', 'fecha_creacion')
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """Serializer para solicitar el reseteo de contraseña"""
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        try:
+            user = User.objects.get(email=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("No existe un usuario con este correo electrónico.")
+        return value
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """Serializer para confirmar el reseteo de contraseña con token"""
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    new_password_confirm = serializers.CharField(write_only=True)
+    uid = serializers.CharField()
+    token = serializers.CharField()
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password_confirm']:
+            raise serializers.ValidationError({"new_password": "Las contraseñas no coinciden."})
+
+        try:
+            uid = urlsafe_base64_decode(attrs['uid']).decode()
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            raise serializers.ValidationError({"uid": "Token inválido."})
+
+        if not default_token_generator.check_token(user, attrs['token']):
+            raise serializers.ValidationError({"token": "Token inválido o expirado."})
+
+        attrs['user'] = user
+        return attrs

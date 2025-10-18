@@ -18,7 +18,11 @@ urlpatterns = [
     path('emergentes/borrar/<int:banda_id>/', views.eliminar_banda_emergente, name='eliminar_banda_emergente'),
     path('emergentes/<int:banda_id>/detalle/', views.view_banda, name='view_banda'),
 
-    
+    # Contactos CRUD
+    path('contactos/', views.dashboard_contactos, name='dashboard_contactos'),
+    path('contactos/<int:contacto_id>/update/', views.update_contacto, name='update_contacto'),
+    path('contactos/<int:contacto_id>/delete/', views.delete_contacto, name='delete_contacto'),
+
     # User CRUD
     path('users/create/', views.create_user, name='create_user'),
     path('users/edit/<int:user_id>/', views.edit_user, name='edit_user'),

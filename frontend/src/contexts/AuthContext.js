@@ -116,7 +116,8 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateProfile,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    isAdmin: user?.is_staff || false  // Campo para verificar si es administrador
   };
 
   return (
