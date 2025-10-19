@@ -1,18 +1,24 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login, logout
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q
 from django.utils import timezone
+from django.core.paginator import Paginator
 from django.contrib import messages
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from django.core import serializers
 from datetime import datetime, timedelta
+import json
 
 from apps.users.models import User
 from apps.articulos.models import Articulo, Categoria
-from apps.radio.models import Programa, EstacionRadio, HorarioPrograma
+from apps.radio.models import Programa, EstacionRadio, HorarioPrograma, GeneroMusical
 from apps.chat.models import ChatMessage
 from apps.contact.models import Contacto, Suscripcion, Estado, TipoAsunto
-from apps.emergente.models import BandaEmergente 
+from apps.emergente.models import BandaEmergente, BandaLink, Integrante, BandaIntegrante
+from apps.ubicacion.models import Pais, Ciudad, Comuna
 
 
 def is_staff_user(user):
@@ -513,30 +519,113 @@ def update_station(request):
 # ===============================
 @login_required
 @user_passes_test(is_staff_user)
+def get_comunas_ajax(request):
+    """Vista para obtener las comunas de una región mediante AJAX"""
+    region_id = request.GET.get('region_id')
+    if region_id:
+        comunas = Comuna.objects.filter(region_id=region_id).order_by('nombre')
+        data = {
+            'comunas': [{'id': c.id, 'nombre': c.nombre} for c in comunas]
+        }
+        return JsonResponse(data)
+    return JsonResponse({'error': 'No se proporcionó el ID de la región'}, status=400)
+
+@login_required
+@user_passes_test(is_staff_user)
+def crear_banda_emergente(request):
+    """Vista para crear una nueva banda emergente"""
+    if request.method == 'POST':
+        form = BandaEmergenteForm(request.POST, request.FILES)
+        if form.is_valid():
+            banda = form.save(commit=False)
+            banda.usuario = request.user
+            banda.save()
+            messages.success(request, 'Banda creada exitosamente')
+            return redirect('dashboard_emergentes')
+    else:
+        form = BandaEmergenteForm()
+    
+    return render(request, 'dashboard/emergentes/form_banda.html', {
+        'form': form,
+        'titulo': 'Nueva Banda Emergente'
+    })
+
+@login_required
+@user_passes_test(is_staff_user)
+def editar_banda_emergente(request, banda_id):
+    """Vista para editar una banda emergente existente"""
+    banda = get_object_or_404(BandaEmergente, id=banda_id)
+    
+    if request.method == 'POST':
+        form = BandaEmergenteForm(request.POST, request.FILES, instance=banda)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Banda actualizada exitosamente')
+            return redirect('dashboard_emergentes')
+    else:
+        form = BandaEmergenteForm(instance=banda)
+    
+    return render(request, 'dashboard/emergentes/form_banda.html', {
+        'form': form,
+        'titulo': f'Editar {banda.nombre_banda}'
+    })
+
+@login_required
+@user_passes_test(is_staff_user)
 def dashboard_emergentes(request):
     """Gestión de bandas emergentes"""
+    # Obtener todas las bandas con sus relaciones
     bandas = BandaEmergente.objects.select_related(
-        'estado', 'genero', 'usuario', 'comuna__ciudad__pais'
-    ).prefetch_related('integrantes', 'links').order_by('-fecha_envio')
+        'genero', 'usuario', 'estado', 'comuna', 'comuna__ciudad', 'comuna__ciudad__pais'
+    ).prefetch_related('integrantes__integrante', 'links').order_by('-fecha_envio')
     
-    # Obtener todos los estados disponibles para bandas
-    estados_disponibles = Estado.objects.filter(tipo_entidad='banda').order_by('nombre')
+    # Filtros
+    estado = request.GET.get('estado')
+    genero = request.GET.get('genero')
+    busqueda = request.GET.get('q')
     
-    # Estadísticas por estado
-    stats_estados = {}
-    for estado in estados_disponibles:
-        count = bandas.filter(estado=estado).count()
-        stats_estados[estado.nombre] = count
+    if estado:
+        bandas = bandas.filter(estado__nombre=estado)
+    
+    if genero:
+        bandas = bandas.filter(genero_id=genero)
+    
+    if busqueda:
+        bandas = bandas.filter(
+            Q(nombre_banda__icontains=busqueda) |
+            Q(email_contacto__icontains=busqueda) |
+            Q(comuna__nombre__icontains=busqueda) |
+            Q(comuna__ciudad__nombre__icontains=busqueda)
+        )
+    
+    # Obtener estadísticas de estados para el filtro
+    stats_estados = BandaEmergente.objects.values('estado__nombre').annotate(
+        total=Count('id')
+    ).order_by('estado__nombre')
+    
+    # Convertir a diccionario para el template
+    stats_estados = {item['estado__nombre']: item['total'] for item in stats_estados}
+    
+    # Paginación
+    paginator = Paginator(bandas, 20)  # 20 bandas por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Obtener géneros para el filtro
+    generos = GeneroMusical.objects.filter(bandas_emergentes__isnull=False).distinct()
     
     context = {
-        'bandas': bandas,
-        'estados_disponibles': estados_disponibles,
+        'bandas': page_obj,
+        'total_bandas': paginator.count,
+        'estados': Estado.objects.all(),
+        'generos': generos,
+        'estado_actual': estado,
+        'genero_actual': int(genero) if genero and genero.isdigit() else None,
+        'busqueda': busqueda or '',
         'stats_estados': stats_estados,
-        'total_bandas': bandas.count()
     }
     
     return render(request, 'dashboard/emergente.html', context)
-
 
 @login_required
 @user_passes_test(is_staff_user)
@@ -600,6 +689,65 @@ def eliminar_banda_emergente(request, banda_id):
     except Exception as e:
         messages.error(request, f'Error al eliminar: {str(e)}')
 
+    return redirect('dashboard_emergentes')
+
+
+# Las vistas para crear y editar bandas emergentes se manejarán en el frontend
+@login_required
+@user_passes_test(is_staff_user)
+@require_http_methods(["POST"])
+def agregar_genero(request):
+    """Agregar un nuevo género musical"""
+    nombre = request.POST.get('nombre')
+    descripcion = request.POST.get('descripcion', '')
+    
+    if not nombre:
+        messages.error(request, 'El nombre del género es obligatorio.')
+        return redirect('dashboard_emergentes')
+    
+    try:
+        # Verificar si ya existe un género con el mismo nombre (insensible a mayúsculas/minúsculas)
+        if GeneroMusical.objects.filter(nombre__iexact=nombre).exists():
+            messages.warning(request, f'El género "{nombre}" ya existe.')
+        else:
+            # Crear el nuevo género
+            genero = GeneroMusical.objects.create(
+                nombre=nombre,
+                descripcion=descripcion
+            )
+            messages.success(request, f'Género "{genero.nombre}" creado exitosamente.')
+    except Exception as e:
+        messages.error(request, f'Error al crear el género: {str(e)}')
+    
+    return redirect('dashboard_emergentes')
+
+
+@login_required
+@user_passes_test(is_staff_user)
+def eliminar_genero(request, genero_id):
+    """Eliminar un género musical"""
+    if request.method != 'POST':
+        messages.error(request, 'Método no permitido')
+        return redirect('dashboard_emergentes')
+        
+    try:
+        genero = GeneroMusical.objects.get(id=genero_id)
+        nombre_genero = genero.nombre
+        
+        # Verificar si hay bandas usando este género
+        if genero.bandas_emergentes.exists():
+            # Eliminar pero mantener la relación
+            genero.delete()
+            messages.success(request, f'Género "{nombre_genero}" eliminado. Las bandas existentes mantendrán este género.')
+        else:
+            genero.delete()
+            messages.success(request, f'Género "{nombre_genero}" eliminado correctamente.')
+            
+    except GeneroMusical.DoesNotExist:
+        messages.error(request, 'El género no existe o ya ha sido eliminado.')
+    except Exception as e:
+        messages.error(request, f'Error al eliminar el género: {str(e)}')
+    
     return redirect('dashboard_emergentes')
 
 

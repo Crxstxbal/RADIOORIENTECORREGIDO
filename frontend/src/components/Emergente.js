@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Music, Users, Link, Send, X, Plus } from 'lucide-react';
+import { 
+  FaSpotify, 
+  FaYoutube, 
+  FaInstagram, 
+  FaFacebook, 
+  FaSoundcloud,
+  FaGlobe,
+  FaLink
+} from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import './emergente.css';
@@ -9,6 +18,8 @@ const Emergente = () => {
         nombre_banda: '',
         integrantes: [],
         genero: '',
+        pais: '',
+        ciudad: '',
         comuna: '',
         email_contacto: '',
         telefono_contacto: '',
@@ -21,26 +32,81 @@ const Emergente = () => {
     const [submitted, setSubmitted] = useState(false);
     const [errors, setErrors] = useState({});
     const [generos, setGeneros] = useState([]);
+    const [paises, setPaises] = useState([]);
+    const [ciudades, setCiudades] = useState([]);
     const [comunas, setComunas] = useState([]);
+    const [isLoadingCiudades, setIsLoadingCiudades] = useState(false);
+    const [isLoadingComunas, setIsLoadingComunas] = useState(false);
     const [newIntegrante, setNewIntegrante] = useState('');
     const [newLink, setNewLink] = useState({ tipo: '', url: '' });
 
     const token = localStorage.getItem('token');
     const isLoggedIn = Boolean(token);
 
-    // Cargar géneros y comunas
+    // Cargar países al iniciar
     useEffect(() => {
-        const cargarDatos = async () => {
+        const inicializarDatos = async () => {
             try {
-                // Cargar géneros musicales
-                const generosResponse = await axios.get('/api/radio/api/generos/');
-                setGeneros(generosResponse.data);
+                // Verificar si hay países
+                const paisesResponse = await axios.get('/api/ubicacion/paises/');
                 
-                // Cargar comunas
-                const comunasResponse = await axios.get('/api/ubicacion/comunas/');
-                setComunas(comunasResponse.data);
+                // Si no hay países o no está Chile, reiniciar datos desde API
+                const chile = paisesResponse.data?.find(p => p.nombre === 'Chile');
+                
+                if (!chile) {
+                    console.log('Chile no encontrado, cargando datos desde API...');
+                    const loadingToast = toast.loading('Cargando regiones y comunas de Chile desde API oficial...');
+                    
+                    try {
+                        const response = await axios.post('/api/ubicacion/paises/reiniciar_datos_chile/');
+                        toast.dismiss(loadingToast);
+                        toast.success(`✅ ${response.data.message}\n📍 ${response.data.regiones_creadas} regiones\n🏘️ ${response.data.comunas_creadas} comunas`);
+                        
+                        // Recargar países
+                        const paisesActualizados = await axios.get('/api/ubicacion/paises/');
+                        setPaises(paisesActualizados.data);
+                    } catch (apiError) {
+                        toast.dismiss(loadingToast);
+                        console.error('Error al cargar desde API:', apiError);
+                        toast.error('No se pudieron cargar los datos desde la API');
+                    }
+                } else {
+                    // Chile existe, verificar si tiene regiones
+                    const ciudadesResponse = await axios.get('/api/ubicacion/ciudades/por_pais/', {
+                        params: { pais_id: chile.id }
+                    });
+                    
+                    // Si no hay regiones o hay muy pocas, recargar desde API
+                    if (!ciudadesResponse.data || ciudadesResponse.data.length < 10) {
+                        console.log('Pocas o ninguna región, recargando desde API...');
+                        const loadingToast = toast.loading('Actualizando datos desde API oficial de Chile...');
+                        
+                        try {
+                            const response = await axios.post('/api/ubicacion/paises/reiniciar_datos_chile/');
+                            toast.dismiss(loadingToast);
+                            toast.success(`✅ Datos actualizados: ${response.data.regiones_creadas} regiones, ${response.data.comunas_creadas} comunas`);
+                        } catch (apiError) {
+                            toast.dismiss(loadingToast);
+                            console.error('Error al actualizar desde API:', apiError);
+                        }
+                    }
+                    
+                    setPaises(paisesResponse.data);
+                }
             } catch (error) {
-                console.error('Error al cargar datos:', error);
+                console.error('Error al inicializar datos:', error);
+                toast.error('Error al cargar la lista de países');
+            }
+        };
+
+        // Cargar géneros musicales
+        const cargarGeneros = async () => {
+            try {
+                const response = await axios.get('/api/radio/api/generos/');
+                setGeneros(response.data);
+            } catch (error) {
+                console.error('Error al cargar géneros musicales:', error);
+                toast.error('Error al cargar la lista de géneros musicales');
                 // Fallback con datos por defecto
                 setGeneros([
                     { id: 1, nombre: 'Rock' },
@@ -50,9 +116,101 @@ const Emergente = () => {
                 ]);
             }
         };
-        
-        cargarDatos();
+
+        inicializarDatos();
+        cargarGeneros();
     }, []);
+
+    // Cargar ciudades cuando se selecciona un país
+    useEffect(() => {
+        const cargarCiudades = async () => {
+            if (!formData.pais) {
+                setCiudades([]);
+                setComunas([]);
+                setFormData(prev => ({
+                    ...prev,
+                    ciudad: '',
+                    comuna: ''
+                }));
+                return;
+            }
+
+            setIsLoadingCiudades(true);
+            try {
+                console.log('Solicitando ciudades para país ID:', formData.pais);
+                const response = await axios.get('/api/ubicacion/ciudades/por_pais/', {
+                    params: {
+                        pais_id: formData.pais
+                    }
+                });
+                console.log('Respuesta de ciudades:', response.data);
+                
+                // La respuesta ya debería ser un array
+                const ciudadesData = Array.isArray(response.data) ? response.data : [];
+                
+                setCiudades(ciudadesData);
+                
+                // Resetear ciudad y comuna cuando cambia el país
+                setFormData(prev => ({
+                    ...prev,
+                    ciudad: '',
+                    comuna: ''
+                }));
+            } catch (error) {
+                console.error('Error al cargar ciudades:', error);
+                toast.error('Error al cargar las ciudades. Intenta nuevamente.');
+                setCiudades([]);
+                setComunas([]);
+            } finally {
+                setIsLoadingCiudades(false);
+            }
+        };
+
+        cargarCiudades();
+    }, [formData.pais]);
+
+    // Cargar comunas cuando se selecciona una ciudad
+    useEffect(() => {
+        const cargarComunas = async () => {
+            if (!formData.ciudad) {
+                setComunas([]);
+                setFormData(prev => ({
+                    ...prev,
+                    comuna: ''
+                }));
+                return;
+            }
+
+            setIsLoadingComunas(true);
+            try {
+                console.log('Solicitando comunas para ciudad ID:', formData.ciudad);
+                const response = await axios.get('/api/ubicacion/comunas/por_ciudad/', {
+                    params: {
+                        ciudad_id: formData.ciudad
+                    }
+                });
+                console.log('Respuesta de comunas:', response.data);
+                
+                // La respuesta ya debería ser un array
+                const comunasData = Array.isArray(response.data) ? response.data : [];
+                setComunas(comunasData);
+                
+                // Resetear comuna cuando cambia la ciudad
+                setFormData(prev => ({
+                    ...prev,
+                    comuna: ''
+                }));
+            } catch (error) {
+                console.error('Error al cargar comunas:', error);
+                toast.error('Error al cargar las comunas. Intenta nuevamente.');
+                setComunas([]);
+            } finally {
+                setIsLoadingComunas(false);
+            }
+        };
+
+        cargarComunas();
+    }, [formData.ciudad]);
 
     // Funciones para manejar integrantes
     const agregarIntegrante = () => {
@@ -324,26 +482,27 @@ const Emergente = () => {
                     {/* Formulario */}
                     <div className="form-section">
                         <div className="card">
-                            <div className="card-header">
-                                <h3 className="card-title">Envíanos tu Información</h3>
-                            </div>
-
-                            {errors.general && <div className="error-box">{errors.general}</div>}
-
-                            <form onSubmit={handleSubmit}>
-                                {/* Nombre de la banda */}
-                                <div className="form-group">
-                                    <label>Nombre de la Banda *</label>
-                                    <input
-                                        type="text"
-                                        name="nombre_banda"
-                                        value={formData.nombre_banda}
-                                        onChange={handleChange}
-                                        className={errors.nombre_banda ? 'error' : ''}
-                                        placeholder="Ingresa el nombre de tu banda"
-                                    />
-                                    {errors.nombre_banda && <p className="error-text">{errors.nombre_banda}</p>}
+                            <div className="card-content">
+                                <div className="card-header">
+                                    <h3 className="card-title">Envíanos tu Información</h3>
                                 </div>
+
+                                {errors.general && <div className="error-box">{errors.general}</div>}
+
+                                <form onSubmit={handleSubmit}>
+                                    {/* Nombre de la banda */}
+                                    <div className="form-group">
+                                        <label>Nombre de la Banda *</label>
+                                        <input
+                                            type="text"
+                                            name="nombre_banda"
+                                            value={formData.nombre_banda}
+                                            onChange={handleChange}
+                                            className={errors.nombre_banda ? 'error' : ''}
+                                            placeholder="Ej: Los Prisioneros"
+                                        />
+                                        {errors.nombre_banda && <p className="error-text">{errors.nombre_banda}</p>}
+                                    </div>
 
                                 {/* Integrantes */}
                                 <div className="form-group">
@@ -401,25 +560,76 @@ const Emergente = () => {
                                         </select>
                                         {errors.genero && <p className="error-text">{errors.genero}</p>}
                                     </div>
+                                </div>
 
-                                    {/* Comuna */}
+                                {/* Ubicación */}
+                                <div className="form-row location-row">
                                     <div className="form-group">
-                                        <label>Comuna</label>
+                                        <label htmlFor="pais">País *</label>
                                         <select
-                                            name="comuna"
-                                            value={formData.comuna}
+                                            id="pais"
+                                            name="pais"
+                                            value={formData.pais}
                                             onChange={handleChange}
+                                            className={errors.pais ? 'error' : ''}
+                                            disabled={isLoading}
                                         >
-                                            <option value="">Selecciona una comuna</option>
-                                            {comunas.map((comuna) => (
-                                                <option key={comuna.id} value={comuna.id}>
-                                                    {comuna.nombre}, {comuna.ciudad_nombre}
+                                            <option value="">Selecciona un país</option>
+                                            {paises.map(pais => (
+                                                <option key={pais.id} value={pais.id}>
+                                                    {pais.nombre}
                                                 </option>
                                             ))}
                                         </select>
+                                        {errors.pais && <p className="error-text">{errors.pais}</p>}
+                                    </div>
+
+                                    <div className={`form-group ${isLoadingCiudades ? 'loading' : ''}`}>
+                                        <label htmlFor="ciudad">Región *</label>
+                                        <select
+                                            id="ciudad"
+                                            name="ciudad"
+                                            value={formData.ciudad}
+                                            onChange={handleChange}
+                                            className={errors.ciudad ? 'error' : ''}
+                                            disabled={!formData.pais || isLoadingCiudades}
+                                        >
+                                            <option value="">
+                                                {isLoadingCiudades ? 'Cargando regiones...' : 'Selecciona una región'}
+                                            </option>
+                                            {ciudades.map(ciudad => (
+                                                <option key={ciudad.id} value={ciudad.id}>
+                                                    {ciudad.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.ciudad && <p className="error-text">{errors.ciudad}</p>}
+                                    </div>
+
+                                    <div className={`form-group ${isLoadingComunas ? 'loading' : ''}`}>
+                                        <label htmlFor="comuna">Comuna *</label>
+                                        <select
+                                            id="comuna"
+                                            name="comuna"
+                                            value={formData.comuna}
+                                            onChange={handleChange}
+                                            className={errors.comuna ? 'error' : ''}
+                                            disabled={!formData.ciudad || isLoadingComunas}
+                                        >
+                                            <option value="">
+                                                {isLoadingComunas ? 'Cargando comunas...' : 'Selecciona una comuna'}
+                                            </option>
+                                            {comunas.map(comuna => (
+                                                <option key={comuna.id} value={comuna.id}>
+                                                    {comuna.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.comuna && <p className="error-text">{errors.comuna}</p>}
                                     </div>
                                 </div>
 
+                                {/* Contacto */}
                                 <div className="form-row">
                                     {/* Email */}
                                     <div className="form-group">
@@ -452,44 +662,68 @@ const Emergente = () => {
                                 <div className="form-group">
                                     <label>Links (Redes Sociales, Música, etc.)</label>
                                     <div className="links-section">
-                                        <div className="add-link">
-                                            <select
-                                                name="tipo"
-                                                value={newLink.tipo}
-                                                onChange={handleLinkChange}
-                                            >
-                                                <option value="">Tipo de link</option>
-                                                <option value="spotify">Spotify</option>
-                                                <option value="youtube">YouTube</option>
-                                                <option value="instagram">Instagram</option>
-                                                <option value="facebook">Facebook</option>
-                                                <option value="soundcloud">SoundCloud</option>
-                                                <option value="website">Sitio Web</option>
-                                                <option value="otro">Otro</option>
-                                            </select>
+                                        <div className="add-link-container">
+                                            <div className="select-with-icon">
+                                                <select
+                                                    name="tipo"
+                                                    value={newLink.tipo}
+                                                    onChange={handleLinkChange}
+                                                    className="link-type-select"
+                                                >
+                                                    <option value="">Tipo de link</option>
+                                                    <option value="spotify">Spotify</option>
+                                                    <option value="youtube">YouTube</option>
+                                                    <option value="instagram">Instagram</option>
+                                                    <option value="facebook">Facebook</option>
+                                                    <option value="soundcloud">SoundCloud</option>
+                                                    <option value="website">Sitio Web</option>
+                                                    <option value="otro">Otro</option>
+                                                </select>
+                                                {newLink.tipo && (
+                                                    <span className="select-icon">
+                                                        {newLink.tipo === 'spotify' && <FaSpotify data-icon="FaSpotify" />}
+                                                        {newLink.tipo === 'youtube' && <FaYoutube data-icon="FaYoutube" />}
+                                                        {newLink.tipo === 'instagram' && <FaInstagram data-icon="FaInstagram" />}
+                                                        {newLink.tipo === 'facebook' && <FaFacebook data-icon="FaFacebook" />}
+                                                        {newLink.tipo === 'soundcloud' && <FaSoundcloud data-icon="FaSoundcloud" />}
+                                                        {newLink.tipo === 'website' && <FaGlobe data-icon="FaGlobe" />}
+                                                        {newLink.tipo === 'otro' && <FaLink data-icon="FaLink" />}
+                                                    </span>
+                                                )}
+                                            </div>
                                             <input
                                                 type="url"
                                                 name="url"
                                                 value={newLink.url}
                                                 onChange={handleLinkChange}
                                                 placeholder="https://..."
+                                                className="link-url-input"
                                             />
-                                            <button type="button" onClick={agregarLink} className="btn-add">
+                                            <button 
+                                                type="button" 
+                                                onClick={agregarLink} 
+                                                className="btn btn-primary btn-small"
+                                                disabled={!newLink.tipo || !newLink.url}
+                                            >
                                                 <Plus size={16} />
+                                                Agregar
                                             </button>
                                         </div>
                                         {formData.links.length > 0 && (
                                             <div className="links-list">
                                                 {formData.links.map((link, index) => (
                                                     <div key={index} className="link-item">
-                                                        <span className="link-type">{link.tipo}</span>
-                                                        <span className="link-url">{link.url}</span>
+                                                        <div className="link-info">
+                                                            <span className="link-type-badge">{link.tipo}</span>
+                                                            <span className="link-url">{link.url}</span>
+                                                        </div>
                                                         <button 
                                                             type="button" 
                                                             onClick={() => eliminarLink(index)}
                                                             className="btn-remove"
+                                                            title="Eliminar link"
                                                         >
-                                                            <X size={14} />
+                                                            <X size={16} />
                                                         </button>
                                                     </div>
                                                 ))}
@@ -533,7 +767,8 @@ const Emergente = () => {
                                     <Send size={16} />
                                     {isLoading ? 'Enviando...' : 'Enviar Propuesta'}
                                 </button>
-                            </form>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1,11 +1,15 @@
 import React, { useContext, useEffect, useState, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, ArrowLeft } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AudioContextGlobal } from "../contexts/AudioContext";
 import FondoParticulas from "../components/fondoparticulas";
 import './reproductor.css';
 
 const Reproductor = () => {
   const { isPlaying, togglePlay, volume, setVolume, toggleMute, streamUrl } = useContext(AudioContextGlobal);
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   const [isMuted, setIsMuted] = useState(volume === 0);
   const [currentTime, setCurrentTime] = useState(
     new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -16,6 +20,10 @@ const Reproductor = () => {
   const volumeButtonRef = useRef(null);
   const sliderRef = useRef(null);
   const contentRef = useRef(null);
+  const backButtonRef = useRef(null);
+  
+  // Obtener la página anterior desde el state o usar '/' como default
+  const previousPage = location.state?.from || '/';
 
   useEffect(() => setIsMuted(volume === 0), [volume]);
 
@@ -104,12 +112,40 @@ const Reproductor = () => {
     }
   };
 
+  const handleGoBack = () => {
+    // Animación del botón
+    if (backButtonRef.current) {
+      backButtonRef.current.style.transform = 'scale(0.9) translateX(-5px)';
+      backButtonRef.current.style.transition = 'transform 0.2s ease';
+      
+      setTimeout(() => {
+        backButtonRef.current.style.transform = 'scale(1) translateX(0)';
+      }, 200);
+    }
+    
+    // Navegar a la página anterior
+    setTimeout(() => {
+      navigate(previousPage);
+    }, 300);
+  };
+
   // Si streamUrl no es string, muestra "Cargando..."
   const streamStatus = typeof streamUrl === "string" && streamUrl.length > 0 ? "En vivo" : "Cargando stream...";
 
   return (
     <div className="reproductor-page">
       <FondoParticulas />
+
+      {/* Botón de volver */}
+      <button 
+        ref={backButtonRef}
+        onClick={handleGoBack}
+        className="btn-back"
+        title="Volver"
+      >
+        <ArrowLeft size={24} />
+        <span>Volver</span>
+      </button>
 
       <div className="reproductor-content" ref={contentRef}>
         <img 

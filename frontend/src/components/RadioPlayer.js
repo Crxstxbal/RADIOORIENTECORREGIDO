@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Play, Pause, Volume2, VolumeX, ChevronDown, ChevronUp, Maximize2 } from "lucide-react";
 import { AudioContextGlobal } from "../contexts/AudioContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import './RadioPlayer.css';
 
 const RadioPlayer = () => {
   const { audioRef, isPlaying, togglePlay, volume, setVolume, toggleMute, streamUrl } = useContext(AudioContextGlobal);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [lastVolume, setLastVolume] = useState(volume);
   const [isMuted, setIsMuted] = useState(volume === 0);
@@ -73,7 +74,7 @@ const RadioPlayer = () => {
     }, 50);
 
     setTimeout(() => {
-      navigate('/reproductor');
+      navigate('/reproductor', { state: { from: location.pathname } });
       document.body.removeChild(expandOverlay);
       setIsExpanding(false);
     }, 600);

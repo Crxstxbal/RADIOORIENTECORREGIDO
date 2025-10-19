@@ -5,7 +5,7 @@ import axios from 'axios';
 import './Pages.css';
 
 const Articles = () => {
-  const location = useLocation();
+  const location = useLocation(); 
   const [articles, setArticles] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);

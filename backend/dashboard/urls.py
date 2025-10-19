@@ -14,9 +14,14 @@ urlpatterns = [
 
     # Bandas Emergentes CRUD
     path('emergentes/', views.dashboard_emergentes, name='dashboard_emergentes'),
+    path('emergentes/crear/', views.crear_banda_emergente, name='crear_banda_emergente'),
+    path('emergentes/editar/<int:banda_id>/', views.editar_banda_emergente, name='editar_banda_emergente'),
     path('emergentes/<int:banda_id>/<str:nuevo_estado>/', views.cambiar_estado_banda, name='cambiar_estado_banda'),
     path('emergentes/borrar/<int:banda_id>/', views.eliminar_banda_emergente, name='eliminar_banda_emergente'),
     path('emergentes/<int:banda_id>/detalle/', views.view_banda, name='view_banda'),
+    path('emergentes/generos/agregar/', views.agregar_genero, name='agregar_genero'),
+    path('emergentes/generos/eliminar/<int:genero_id>/', views.eliminar_genero, name='eliminar_genero'),
+    path('api/comunas/', views.get_comunas_ajax, name='get_comunas_ajax'),  # API para cargar comunas por región
 
     # Contactos CRUD
     path('contactos/', views.dashboard_contactos, name='dashboard_contactos'),
