@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
+from django.shortcuts import redirect
 
 def api_info(request):
     return JsonResponse({
@@ -21,8 +22,15 @@ def api_info(request):
         }
     })
 
+def root_redirect(request):
+    # Si el usuario está autenticado, ir al dashboard; si no, al login del dashboard
+    if request.user.is_authenticated:
+        return redirect('dashboard_home')
+    return redirect('dashboard_login')
+
 urlpatterns = [
-    path('', api_info, name='api_info'),
+    path('', root_redirect, name='root_redirect'),
+    path('info/', api_info, name='api_info'),
     path('admin/', admin.site.urls),
     path('dashboard/', include('dashboard.urls')),
     path('api/auth/', include('apps.users.urls')),

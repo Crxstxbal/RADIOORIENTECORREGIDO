@@ -73,7 +73,19 @@ def dashboard_articulos(request):
     """Gestión de artículos"""
     articulos = Articulo.objects.select_related('autor', 'categoria').all().order_by('-fecha_creacion')
     categorias = Categoria.objects.all().order_by('nombre')
-    return render(request, 'dashboard/articulos.html', {'articulos': articulos, 'categorias': categorias})
+
+    # Contadores para tarjetas: total, publicados y borradores
+    total_articles = articulos.count()
+    published_count = Articulo.objects.filter(publicado=True).count()
+    draft_count = Articulo.objects.filter(publicado=False).count()
+
+    return render(request, 'dashboard/articulos.html', {
+        'articulos': articulos,
+        'categorias': categorias,
+        'total_articles': total_articles,
+        'published_count': published_count,
+        'draft_count': draft_count,
+    })
 
 @login_required
 @user_passes_test(is_staff_user)
