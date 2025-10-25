@@ -5,6 +5,7 @@ import uuid
 class TipoAsunto(models.Model):
     """Tipos de asunto para contactos"""
     nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
     
     class Meta:
         db_table = 'tipo_asunto'

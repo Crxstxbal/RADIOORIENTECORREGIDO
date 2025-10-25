@@ -7,10 +7,26 @@ from .serializers import PaisSerializer, CiudadSerializer, ComunaSerializer, Com
 import requests
 from django.db import transaction
 import urllib3
-from .datos_chile import REGIONES_COMUNAS
 
 # Deshabilitar advertencias de SSL (solo para desarrollo)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# Helpers para consultar API externa DIVPA con fallback
+DIVPA_BASE = "https://apis.digital.gob.cl/dpa"
+
+def _fetch_divpa_regiones():
+    """Obtiene regiones desde API DIVPA. Lanza excepción si falla."""
+    url = f"{DIVPA_BASE}/regiones"
+    resp = requests.get(url, timeout=15, verify=False)
+    resp.raise_for_status()
+    return resp.json()
+
+def _fetch_divpa_comunas_por_region(codigo_region):
+    """Obtiene comunas por código de región desde API DIVPA. Lanza excepción si falla."""
+    url = f"{DIVPA_BASE}/regiones/{codigo_region}/comunas"
+    resp = requests.get(url, timeout=15, verify=False)
+    resp.raise_for_status()
+    return resp.json()
 
 class PaisViewSet(viewsets.ModelViewSet):
     """ViewSet para países"""
@@ -20,48 +36,63 @@ class PaisViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def reiniciar_datos_chile(self, request):
-        """Limpia y recarga todos los datos de Chile desde datos locales"""
+        """Limpia y recarga todos los datos de Chile desde la API externa DIVPA."""
         try:
             with transaction.atomic():
-                # Eliminar todos los datos de ubicación existentes
-                Comuna.objects.all().delete()
-                Ciudad.objects.all().delete()
-                Pais.objects.all().delete()
+                # Eliminar datos de ubicación existentes para Chile
+                Pais.objects.filter(nombre='Chile').delete() # Esto eliminará en cascada Ciudades y Comunas
                 
                 # Crear Chile
-                chile, _ = Pais.objects.get_or_create(nombre='Chile')
+                chile = Pais.objects.create(nombre='Chile')
                 
-                ciudades_creadas = 0
+                regiones_creadas = 0
                 comunas_creadas = 0
                 
-                # Cargar regiones y comunas desde datos locales
-                for nombre_region, comunas_list in REGIONES_COMUNAS.items():
-                    # Crear región como ciudad
+                # Cargar regiones desde la API
+                regiones_data = _fetch_divpa_regiones()
+                
+                for region_data in regiones_data:
+                    nombre_region = region_data.get('nombre')
+                    codigo_region = region_data.get('codigo')
+                    
+                    if not nombre_region or not codigo_region:
+                        continue
+
+                    # Crear región como Ciudad
                     ciudad, created = Ciudad.objects.get_or_create(
                         nombre=nombre_region,
                         pais=chile
                     )
                     if created:
-                        ciudades_creadas += 1
+                        regiones_creadas += 1
                     
-                    # Crear comunas de esta región
-                    for nombre_comuna in comunas_list:
+                    # Cargar comunas para esta región desde la API
+                    comunas_data = _fetch_divpa_comunas_por_region(codigo_region)
+                    for comuna_data in comunas_data:
+                        nombre_comuna = comuna_data.get('nombre')
+                        if not nombre_comuna:
+                            continue
+                        
                         _, created = Comuna.objects.get_or_create(
                             nombre=nombre_comuna,
                             ciudad=ciudad
                         )
                         if created:
                             comunas_creadas += 1
-                
-                return Response({
-                    'message': 'Datos de Chile cargados correctamente',
-                    'regiones_creadas': ciudades_creadas,
-                    'comunas_creadas': comunas_creadas
-                }, status=status.HTTP_201_CREATED)
-                
+            
+            return Response({
+                'message': 'Datos de Chile cargados correctamente desde la API externa',
+                'regiones_creadas': regiones_creadas,
+                'comunas_creadas': comunas_creadas
+            }, status=status.HTTP_201_CREATED)
+
+        except requests.RequestException as e:
+            return Response({
+                'error': f'Error al conectar con la API externa: {str(e)}'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as e:
             return Response({
-                'error': f'Error al procesar datos: {str(e)}'
+                'error': f'Error al procesar los datos: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class CiudadViewSet(viewsets.ReadOnlyModelViewSet):
@@ -70,11 +101,57 @@ class CiudadViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CiudadSerializer
     permission_classes = [permissions.AllowAny]
     
+    def list(self, request, *args, **kwargs):
+        """Lista regiones (mapeadas como ciudades) intentando sincronizar primero desde API externa.
+        Siempre devuelve datos desde BD para consistencia, con fallback automático si la API falla.
+        """
+        # Asegurar país Chile
+        chile, _ = Pais.objects.get_or_create(nombre='Chile')
+        try:
+            regiones_data = _fetch_divpa_regiones()
+            # Sincronizar regiones a BD
+            created_count = 0
+            with transaction.atomic():
+                for region in regiones_data:
+                    nombre_region = region.get('nombre') or ''
+                    if not nombre_region:
+                        continue
+                    _, created = Ciudad.objects.get_or_create(
+                        nombre=nombre_region,
+                        pais=chile
+                    )
+                    if created:
+                        created_count += 1
+        except Exception:
+            # Fallback silencioso: continuar con datos en BD
+            pass
+        # Responder siempre desde BD
+        queryset = self.filter_queryset(self.get_queryset().filter(pais=chile))
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
     @action(detail=False, methods=['get'])
     def por_pais(self, request):
         """Obtener ciudades por país"""
         pais_id = request.query_params.get('pais_id')
         if pais_id:
+            # Intentar sincronizar regiones si el país es Chile
+            try:
+                pais = Pais.objects.get(id=pais_id)
+                if pais.nombre == 'Chile':
+                    regiones_data = _fetch_divpa_regiones()
+                    with transaction.atomic():
+                        for region in regiones_data:
+                            nombre_region = region.get('nombre') or ''
+                            if not nombre_region:
+                                continue
+                            Ciudad.objects.get_or_create(
+                                nombre=nombre_region,
+                                pais=pais
+                            )
+            except Exception:
+                # Fallback silencioso si falla la API o no existe el país
+                pass
             ciudades = self.queryset.filter(pais_id=pais_id)
             serializer = self.get_serializer(ciudades, many=True)
             return Response(serializer.data)
@@ -131,6 +208,31 @@ class ComunaViewSet(viewsets.ReadOnlyModelViewSet):
         """Obtener comunas por ciudad"""
         ciudad_id = request.query_params.get('ciudad_id')
         if ciudad_id:
+            # Intentar sincronizar desde API externa usando el nombre de la región
+            try:
+                ciudad = Ciudad.objects.select_related('pais').get(id=ciudad_id)
+                if ciudad.pais.nombre == 'Chile':
+                    # Buscar código de región por nombre
+                    regiones_data = _fetch_divpa_regiones()
+                    codigo_region = None
+                    for reg in regiones_data:
+                        if (reg.get('nombre') or '').strip().lower() == ciudad.nombre.strip().lower():
+                            codigo_region = reg.get('codigo')
+                            break
+                    if codigo_region:
+                        comunas_data = _fetch_divpa_comunas_por_region(codigo_region)
+                        with transaction.atomic():
+                            for c in comunas_data:
+                                nombre_comuna = c.get('nombre') or ''
+                                if not nombre_comuna:
+                                    continue
+                                Comuna.objects.get_or_create(
+                                    nombre=nombre_comuna,
+                                    ciudad=ciudad
+                                )
+            except Exception:
+                # Fallback silencioso si falla la API o no existe la ciudad
+                pass
             comunas = self.queryset.filter(ciudad_id=ciudad_id)
             serializer = ComunaDetailSerializer(comunas, many=True)
             return Response(serializer.data)

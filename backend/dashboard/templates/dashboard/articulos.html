@@ -43,11 +43,95 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-center">
+        <div class="card text-center h-100">
             <div class="card-body">
                 <i class="fas fa-folder fa-2x text-info mb-2"></i>
-                <h5>{{ categorias|length }}</h5>
+                <h5 id="categorias-count">{{ categorias|length }}</h5>
                 <small class="text-muted">Categorías</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gestión de Categorías -->
+<div class="card mb-4 bg-light bg-opacity-10">
+    <div class="card-header bg-light bg-opacity-10 d-flex justify-content-between align-items-center border-0">
+        <h5 class="mb-0 text-body">
+            <i class="fas fa-tags text-primary me-2"></i>
+            Gestión de Categorías
+        </h5>
+        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#categoriasCollapse" aria-expanded="false" aria-controls="categoriasCollapse">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
+    <div class="collapse" id="categoriasCollapse">
+        <div class="card-body">
+            <form id="form-agregar-categoria" method="post" action="{% url 'agregar_categoria' %}" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-5">
+                    <label for="nuevaCategoria" class="form-label">Nombre de la Categoría</label>
+                    <input type="text" class="form-control" id="nuevaCategoria" name="nombre" placeholder="Ej: Noticias, Eventos, Música..." required>
+                </div>
+                <div class="col-md-5">
+                    <label for="descripcionCategoria" class="form-label">Descripción</label>
+                    <input type="text" class="form-control" id="descripcionCategoria" name="descripcion" placeholder="Breve descripción de la categoría...">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-plus me-1"></i>
+                        Agregar
+                    </button>
+                </div>
+            </form>
+            
+            <div class="mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">Todas las categorías</h6>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#listaCategorias" aria-expanded="true" aria-controls="listaCategorias">
+                        <i class="fas fa-list me-1"></i> Ver todas
+                    </button>
+                </div>
+                
+                <div class="collapse show" id="listaCategorias">
+                    <div class="card card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Descripción</th>
+                                        <th>Artículos</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lista-categorias-body">
+                                    {% for categoria in categorias %}
+                                    <tr id="categoria-row-{{ categoria.id }}">
+                                        <td><strong>{{ categoria.nombre }}</strong></td>
+                                        <td>{{ categoria.descripcion|default:"Sin descripción" }}</td>
+                                        <td>{{ categoria.articulos.count }}</td>
+                                        <td>
+                                            <form method="post" action="{% url 'eliminar_categoria' categoria.id %}" class="d-inline form-eliminar-categoria">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" {% if categoria.articulos.exists %}disabled title="No se puede eliminar una categoría con artículos"{% endif %}>
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr id="no-categorias-row">
+                                        <td colspan="4" class="text-center py-3 text-muted">
+                                            <i class="fas fa-tags fa-2x mb-2"></i>
+                                            <p class="mb-0">No hay categorías registradas</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -443,6 +527,194 @@ document.addEventListener('DOMContentLoaded', function() {
             // Actualizar la acción del formulario
             document.getElementById('editArticuloForm').action = `/dashboard/articulos/edit/${articuloId}/`;
         });
+    });
+
+    // Función para actualizar el contador de categorías
+    function updateCategoriasCount() {
+        const count = document.querySelectorAll('#lista-categorias-body tr:not(#no-categorias-row)').length;
+        const countElement = document.getElementById('categorias-count');
+        if (countElement) {
+            countElement.textContent = count;
+        }
+    }
+
+    // Función para mostrar notificaciones
+    function showNotification(message, type = 'success') {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const notification = document.createElement('div');
+        notification.className = `alert ${alertClass} alert-dismissible fade show notification`;
+        notification.role = 'alert';
+        notification.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
+                <div>${message}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        
+        const container = document.querySelector('.notification-container');
+        container.appendChild(notification);
+        
+        // Forzar el reflow para activar la animación
+        void notification.offsetWidth;
+        notification.classList.add('show');
+        
+        // Auto cerrar después de 5 segundos
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 5000);
+        
+        // Cerrar al hacer clic en el botón
+        notification.querySelector('.btn-close').addEventListener('click', () => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        });
+    }
+
+    // Manejar envío del formulario de agregar categoría
+    const formAgregarCategoria = document.getElementById('form-agregar-categoria');
+    if (formAgregarCategoria) {
+        formAgregarCategoria.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const url = this.action;
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFTTOKEN': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Agregar la nueva categoría a la tabla
+                    const tbody = document.getElementById('lista-categorias-body');
+                    const noCategoriasRow = document.getElementById('no-categorias-row');
+                    
+                    if (noCategoriasRow) {
+                        tbody.innerHTML = ''; // Eliminar el mensaje de "No hay categorías"
+                    }
+                    
+                    const newRow = document.createElement('tr');
+                    newRow.id = `categoria-row-${data.categoria.id}`;
+                    newRow.innerHTML = `
+                        <td><strong>${data.categoria.nombre}</strong></td>
+                        <td>${data.categoria.descripcion || 'Sin descripción'}</td>
+                        <td>0</td>
+                        <td>
+                            <form method="post" action="/dashboard/articulos/categorias/eliminar/${data.categoria.id}/" class="d-inline form-eliminar-categoria">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="${formData.get('csrfmiddlewaretoken')}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    `;
+                    
+                    tbody.insertBefore(newRow, tbody.firstChild);
+                    
+                    // Actualizar el contador de categorías
+                    updateCategoriasCount();
+                    
+                    // Agregar la categoría al select del formulario de artículos
+                    const selectCategoria = document.querySelector('select[name="categoria"]');
+                    if (selectCategoria) {
+                        const option = document.createElement('option');
+                        option.value = data.categoria.id;
+                        option.textContent = data.categoria.nombre;
+                        selectCategoria.appendChild(option);
+                    }
+                    
+                    // Mostrar notificación y limpiar el formulario
+                    showNotification(data.message);
+                    this.reset();
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al procesar la solicitud', 'error');
+            });
+        });
+    }
+
+    // Manejar eliminación de categorías
+    document.addEventListener('submit', function(e) {
+        if (e.target && e.target.classList.contains('form-eliminar-categoria')) {
+            e.preventDefault();
+            
+            if (!confirm('¿Está seguro de que desea eliminar esta categoría?')) {
+                return false;
+            }
+            
+            const form = e.target;
+            const url = form.action;
+            const categoriaId = url.split('/').filter(Boolean).pop();
+            const formData = new FormData(form);
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFTTOKEN': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Eliminar la fila de la tabla
+                    const row = document.getElementById(`categoria-row-${categoriaId}`);
+                    if (row) {
+                        row.remove();
+                        // Actualizar el contador de categorías
+                        updateCategoriasCount();
+                    }
+                    
+                    // Verificar si no hay más categorías
+                    const tbody = document.getElementById('lista-categorias-body');
+                    if (tbody.children.length === 0) {
+                        tbody.innerHTML = `
+                            <tr id="no-categorias-row">
+                                <td colspan="4" class="text-center py-3 text-muted">
+                                    <i class="fas fa-tags fa-2x mb-2"></i>
+                                    <p class="mb-0">No hay categorías registradas</p>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    
+                    // Eliminar la opción del select de categorías
+                    const selectCategoria = document.querySelector('select[name="categoria"]');
+                    if (selectCategoria) {
+                        const option = selectCategoria.querySelector(`option[value="${categoriaId}"]`);
+                        if (option) {
+                            option.remove();
+                        }
+                    }
+                    
+                    showNotification(data.message);
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al procesar la solicitud', 'error');
+            });
+            
+            return false;
+        }
     });
 });
 </script>

@@ -68,7 +68,6 @@ class PublicidadWeb(models.Model):
 class PublicidadRadial(models.Model):
     """Publicidad radial específica"""
     publicidad = models.OneToOneField(Publicidad, on_delete=models.CASCADE, related_name='radial_config')
-    programa = models.ForeignKey('radio.Programa', on_delete=models.CASCADE, related_name='publicidades')
     horario = models.ForeignKey('radio.HorarioPrograma', on_delete=models.CASCADE, related_name='publicidades')
     duracion_segundos = models.IntegerField(validators=[MinValueValidator(1)])
     valor_por_segundo = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, validators=[MinValueValidator(Decimal('0.00'))])
@@ -79,9 +78,8 @@ class PublicidadRadial(models.Model):
         verbose_name = 'Publicidad Radial'
         verbose_name_plural = 'Publicidades Radiales'
         indexes = [
-            models.Index(fields=['programa']),
             models.Index(fields=['horario']),
         ]
     
     def __str__(self):
-        return f"{self.publicidad.nombre_cliente} - {self.programa.nombre}"
+        return f"{self.publicidad.nombre_cliente} - {self.horario}"

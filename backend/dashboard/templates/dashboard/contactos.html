@@ -61,6 +61,82 @@
         </div>
     </div>
 
+    <!-- Tipo de Asunto Management -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tags me-2"></i>
+                        Gestión de tipos de asunto
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Formulario para agregar nuevo tipo de asunto -->
+                    <form id="form-agregar-tipo" method="POST" action="{% url 'agregar_tipo_asunto' %}" class="mb-4">
+                        {% csrf_token %}
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-5">
+                                <label for="nombre_tipo" class="form-label">Nuevo Tipo de Asunto</label>
+                                <input type="text" class="form-control" id="nombre_tipo" name="nombre" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label for="descripcion_tipo" class="form-label">Descripción (Opcional)</label>
+                                <input type="text" class="form-control" id="descripcion_tipo" name="descripcion">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-plus me-1"></i> Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Lista de tipos de asunto -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Tipos de asunto disponibles</h6>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#listaTiposAsunto" aria-expanded="false" aria-controls="listaTiposAsunto">
+                            <i class="fas fa-list me-1"></i> Mostrar tipos
+                        </button>
+                    </div>
+                    
+                    <div class="collapse" id="listaTiposAsunto">
+                        <div class="card card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Descripción</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="lista-tipos-body">
+                                        {% for tipo in tipos_asunto %}
+                                        <tr id="tipo-row-{{ tipo.id }}">
+                                            <td><strong>{{ tipo.nombre }}</strong></td>
+                                            <td>{{ tipo.descripcion|default:"Sin descripción" }}</td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-outline-danger eliminar-tipo" data-tipo-id="{{ tipo.id }}" data-tipo-nombre="{{ tipo.nombre }}">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr id="no-tipos-row">
+                                            <td colspan="3" class="text-center text-muted">No hay tipos de asunto registrados.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Filters -->
     <div class="row mb-4">
         <div class="col-12">
@@ -165,97 +241,6 @@
                                         </button>
                                     </td>
                                 </tr>
-
-                                <!-- View Modal -->
-                                <div class="modal fade" id="viewModal{{ contacto.id }}" tabindex="-1">
-                                    <div class="modal-dialog modal-lg">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Detalles del Contacto #{{ contacto.id }}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <strong>Nombre:</strong> {{ contacto.nombre }}
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <strong>Email:</strong> {{ contacto.email }}
-                                                    </div>
-                                                </div>
-                                                <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <strong>Teléfono:</strong> {{ contacto.telefono|default:"No proporcionado" }}
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <strong>Tipo de Asunto:</strong> {{ contacto.tipo_asunto.nombre }}
-                                                    </div>
-                                                </div>
-                                                <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <strong>Estado:</strong> {{ contacto.estado.nombre }}
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <strong>Fecha de Envío:</strong> {{ contacto.fecha_envio|date:"d/m/Y H:i" }}
-                                                    </div>
-                                                </div>
-                                                <div class="row mb-3">
-                                                    <div class="col-12">
-                                                        <strong>Mensaje:</strong>
-                                                        <p class="mt-2 p-3 bg-light rounded">{{ contacto.mensaje }}</p>
-                                                    </div>
-                                                </div>
-                                                {% if contacto.respondido_por %}
-                                                <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <strong>Respondido por:</strong> {{ contacto.respondido_por.full_name }}
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <strong>Fecha de Respuesta:</strong> {{ contacto.fecha_respuesta|date:"d/m/Y H:i" }}
-                                                    </div>
-                                                </div>
-                                                {% endif %}
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                                <a href="mailto:{{ contacto.email }}" class="btn btn-primary">
-                                                    <i class="fas fa-reply me-2"></i>Responder por Email
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Edit Modal -->
-                                <div class="modal fade" id="editModal{{ contacto.id }}" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <form method="POST" action="{% url 'update_contacto' contacto.id %}">
-                                                {% csrf_token %}
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Editar Estado - {{ contacto.nombre }}</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Estado</label>
-                                                        <select name="estado" class="form-select" required>
-                                                            {% for estado in estados_disponibles %}
-                                                            <option value="{{ estado.id }}" {% if contacto.estado.id == estado.id %}selected{% endif %}>
-                                                                {{ estado.nombre }}
-                                                            </option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
                                 {% empty %}
                                 <tr>
                                     <td colspan="8" class="text-center text-muted py-4">
@@ -272,4 +257,254 @@
         </div>
     </div>
 </div>
+
+<!-- Modals -->
+{% for contacto in contactos %}
+<!-- View Modal for {{ contacto.id }} -->
+<div class="modal fade" id="viewModal{{ contacto.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles del Contacto #{{ contacto.id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Nombre:</strong> {{ contacto.nombre }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Email:</strong> {{ contacto.email }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Teléfono:</strong> {{ contacto.telefono|default:"No proporcionado" }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Tipo de Asunto:</strong> {{ contacto.tipo_asunto.nombre }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Estado:</strong> {{ contacto.estado.nombre }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Fecha de Envío:</strong> {{ contacto.fecha_envio|date:"d/m/Y H:i" }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <strong>Mensaje:</strong>
+                        <p class="mt-2 p-3 bg-light rounded">{{ contacto.mensaje }}</p>
+                    </div>
+                </div>
+                {% if contacto.respondido_por %}
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Respondido por:</strong> {{ contacto.respondido_por.full_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Fecha de Respuesta:</strong> {{ contacto.fecha_respuesta|date:"d/m/Y H:i" }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <a href="mailto:{{ contacto.email }}" class="btn btn-primary">
+                    <i class="fas fa-reply me-2"></i>Responder por Email
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal for {{ contacto.id }} -->
+<div class="modal fade" id="editModal{{ contacto.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'update_contacto' contacto.id %}" id="editForm{{ contacto.id }}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Estado - {{ contacto.nombre }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Estado</label>
+                        <select name="estado" class="form-select" required>
+                            {% for estado in estados_disponibles %}
+                            <option value="{{ estado.id }}" {% if contacto.estado.id == estado.id %}selected{% endif %}>
+                                {{ estado.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+// Mostrar notificación
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show`;
+    notification.role = 'alert';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(notification, container.firstChild);
+    
+    // Desaparecer después de 5 segundos
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 150);
+    }, 5000);
+}
+
+// Asegurar que los modals se cierren correctamente
+document.addEventListener('DOMContentLoaded', function() {
+    var modals = document.querySelectorAll('.modal');
+    modals.forEach(function(modal) {
+        modal.addEventListener('hidden.bs.modal', function (e) {
+            // Limpiar el foco del botón que abrió el modal
+            var modalToggle = document.querySelector('[data-bs-target="#' + e.target.id + '"]');
+            if (modalToggle) {
+                modalToggle.blur();
+            }
+        });
+    });
+
+        // Función para eliminar contacto con confirmación
+    window.deleteItem = function(url, name) {
+        if (confirm('¿Estás seguro de que deseas eliminar el contacto de ' + name + '?')) {
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Contacto eliminado correctamente', 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showNotification('Error al eliminar el contacto: ' + (data.error || ''), 'danger');
+                }
+            })
+            .catch(error => {
+                showNotification('Error al procesar la solicitud', 'danger');
+                console.error('Error:', error);
+            });
+        }
+    };
+
+    // Manejar el envío del formulario de agregar tipo de asunto
+    const formAgregarTipo = document.getElementById('form-agregar-tipo');
+    if (formAgregarTipo) {
+        formAgregarTipo.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.reset();
+                    // Agregar el nuevo tipo a la tabla sin recargar
+                    const tbody = document.querySelector('#lista-tipos-body');
+                    const noTiposRow = document.getElementById('no-tipos-row');
+                    
+                    if (noTiposRow) {
+                        noTiposRow.style.display = 'none';
+                    }
+                    
+                    const newRow = document.createElement('tr');
+                    newRow.id = `tipo-row-${data.tipo.id}`;
+                    newRow.innerHTML = `
+                        <td><strong>${data.tipo.nombre}</strong></td>
+                        <td>${data.tipo.descripcion || 'Sin descripción'}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-danger eliminar-tipo" 
+                                    data-tipo-id="${data.tipo.id}" 
+                                    data-tipo-nombre="${data.tipo.nombre}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    tbody.insertBefore(newRow, tbody.firstChild);
+                } else {
+                    alert('Error: ' + (data.error || 'No se pudo agregar el tipo de asunto'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al procesar la solicitud');
+            });
+        });
+    }
+
+    // Manejar la eliminación de tipos de asunto
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.eliminar-tipo')) {
+            const button = e.target.closest('.eliminar-tipo');
+            const tipoId = button.dataset.tipoId;
+            const tipoNombre = button.dataset.tipoNombre;
+            
+            if (confirm(`¿Estás seguro de que deseas eliminar el tipo de asunto "${tipoNombre}"?`)) {
+                fetch(`/dashboard/contactos/tipos/${tipoId}/eliminar/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const row = document.getElementById(`tipo-row-${tipoId}`);
+                        if (row) row.remove();
+                        
+                        // Si no quedan tipos, mostrar mensaje
+                        const tiposRows = document.querySelectorAll('#lista-tipos-body tr:not(#no-tipos-row)');
+                        if (tiposRows.length === 0) {
+                            const noTiposRow = document.getElementById('no-tipos-row');
+                            if (noTiposRow) noTiposRow.style.display = '';
+                        }
+                    } else {
+                        alert('Error: ' + (data.error || 'No se pudo eliminar el tipo de asunto'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al procesar la solicitud');
+                });
+            }
+        }
+    });
+});
+</script>
+
 {% endblock %}
+

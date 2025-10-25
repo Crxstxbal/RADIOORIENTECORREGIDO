@@ -21,7 +21,8 @@
     <i class="fas fa-music me-2"></i>Gestión de Géneros Musicales
   </div>
   <div class="card-body">
-    <form method="post" action="{% url 'agregar_genero' %}" class="row g-3">
+    <div id="notification-container"></div>
+    <form id="form-agregar-genero" method="post" action="{% url 'agregar_genero' %}" class="row g-3">
       {% csrf_token %}
       <div class="col-md-5">
         <label for="nuevoGenero" class="form-label">Nombre del Género</label>
@@ -40,13 +41,13 @@
     
     <div class="mt-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 class="mb-0">Ver todo para ver los géneros musicales de las bandas y artistas emergentes</h6>
+        <h6 class="mb-0">Presionar "Mostrar géneros" para ver los géneros musicales de las bandas y artistas emergentes</h6>
         <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#listaGeneros" aria-expanded="false" aria-controls="listaGeneros">
-          <i class="fas fa-list me-1"></i> Ver todos
+          <i class="fas fa-list me-1"></i> Mostrar géneros
         </button>
       </div>
       
-      <div class="collapse" id="listaGeneros">
+      <div class="collapse show" id="listaGeneros">
         <div class="card card-body mb-3">
           <div class="table-responsive">
             <table class="table table-sm table-hover">
@@ -57,13 +58,13 @@
                   <th>Acciones</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="lista-generos-body">
                 {% for genero in generos %}
-                <tr>
+                <tr id="genero-row-{{ genero.id }}">
                   <td><strong>{{ genero.nombre }}</strong></td>
                   <td>{{ genero.descripcion|default:"Sin descripción" }}</td>
                   <td>
-                    <form method="post" action="{% url 'eliminar_genero' genero.id %}" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar este género? Las bandas existentes mantendrán este género.');">
+                    <form method="post" action="{% url 'eliminar_genero' genero.id %}" class="d-inline form-eliminar-genero">
                       {% csrf_token %}
                       <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="fas fa-trash-alt"></i>
@@ -72,7 +73,7 @@
                   </td>
                 </tr>
                 {% empty %}
-                <tr>
+                <tr id="no-generos-row">
                   <td colspan="3" class="text-center text-muted">No hay géneros registrados.</td>
                 </tr>
                 {% endfor %}
@@ -299,10 +300,131 @@
         <a href="{% url 'cambiar_estado_banda' banda.id 'rechazado' %}" class="btn btn-danger">
           <i class="fas fa-times"></i> Rechazar
         </a>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-      </div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>      </div>
     </div>
   </div>
 </div>
 {% endfor %}
 {% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const notificationContainer = document.getElementById('notification-container');
+    const generosBody = document.getElementById('lista-generos-body');
+
+    function showNotification(message, type = 'success') {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+      alertDiv.role = 'alert';
+      alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      `;
+      notificationContainer.innerHTML = ''; // Limpiar notificaciones anteriores
+      notificationContainer.appendChild(alertDiv);
+
+      setTimeout(() => {
+        alertDiv.remove();
+      }, 5000);
+    }
+
+    // Agregar Género
+    const formAgregar = document.getElementById('form-agregar-genero');
+    formAgregar.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(formAgregar);
+      const url = formAgregar.action;
+
+      fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          showNotification(data.message, 'success');
+          const genero = data.genero;
+          const newRow = document.createElement('tr');
+          newRow.id = `genero-row-${genero.id}`;
+          const deleteUrl = "{% url 'eliminar_genero' 0 %}".replace('0', genero.id);
+          newRow.innerHTML = `
+            <td><strong>${genero.nombre}</strong></td>
+            <td>${genero.descripcion || 'Sin descripción'}</td>
+            <td>
+              <form method="post" action="${deleteUrl}" class="d-inline form-eliminar-genero">
+                <input type="hidden" name="csrfmiddlewaretoken" value="${formData.get('csrfmiddlewaretoken')}">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </form>
+            </td>
+          `;
+          
+          const noGenerosRow = document.getElementById('no-generos-row');
+          if (noGenerosRow) {
+            noGenerosRow.remove();
+          }
+          
+          generosBody.appendChild(newRow);
+          formAgregar.reset();
+        } else {
+          showNotification(data.message, 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showNotification('Ocurrió un error de red.', 'error');
+      });
+    });
+
+    // Eliminar Género (con delegación de eventos)
+    generosBody.addEventListener('submit', function(e) {
+      if (e.target.classList.contains('form-eliminar-genero')) {
+        e.preventDefault();
+        if (!confirm('¿Estás seguro de eliminar este género?')) {
+          return;
+        }
+
+        const formEliminar = e.target;
+        const formData = new FormData(formEliminar);
+        const url = formEliminar.action;
+
+        fetch(url, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            showNotification(data.message, 'success');
+            const row = formEliminar.closest('tr');
+            row.remove();
+
+            if (generosBody.children.length === 0) {
+              const emptyRow = document.createElement('tr');
+              emptyRow.id = 'no-generos-row';
+              emptyRow.innerHTML = '<td colspan="3" class="text-center text-muted">No hay géneros registrados.</td>';
+              generosBody.appendChild(emptyRow);
+            }
+          } else {
+            showNotification(data.message, 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showNotification('Ocurrió un error de red.', 'error');
+        });
+      }
+    });
+  });
+</script>
+{% endblock scripts %}

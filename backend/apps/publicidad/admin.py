@@ -30,5 +30,5 @@ class PublicidadWebAdmin(admin.ModelAdmin):
 
 @admin.register(PublicidadRadial)
 class PublicidadRadialAdmin(admin.ModelAdmin):
-    list_display = ['publicidad', 'programa', 'duracion_segundos', 'valor_por_segundo']
-    list_filter = ['programa']
+    list_display = ['publicidad', 'horario', 'duracion_segundos', 'valor_por_segundo']
+    list_filter = ['horario']

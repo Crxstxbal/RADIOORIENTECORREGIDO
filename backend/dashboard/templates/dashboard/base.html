@@ -47,6 +47,8 @@
             --card-bg: #333333;
             --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
             --navbar-bg: #1a1a1a;
+            --card-text: #ffffff;
+            --card-text-muted: #d1d5db;
         }
 
         body {
@@ -107,6 +109,77 @@
             color: var(--text-primary);
             box-shadow: var(--card-shadow);
             transition: all 0.3s ease;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            color: var(--text-primary);
+        }
+        
+        /* Card text colors */
+        .card {
+            color: #212529; /* Dark text in light mode */
+        }
+        
+        .card-body {
+            color: inherit;
+        }
+        
+        .card-body span {
+            color: inherit;
+        }
+        
+        .card-body strong {
+            color: inherit;
+        }
+        
+        /* Specific styles for statistics card */
+        .card .d-flex.justify-content-between {
+            color: inherit;
+        }
+        
+        .card .d-flex.justify-content-between span {
+            color: inherit !important;
+        }
+        
+        .card .d-flex.justify-content-between strong {
+            color: inherit !important;
+        }
+        
+        /* Dark mode overrides */
+        html.dark .card,
+        html.dark .card * {
+            color: #f8f9fa !important; /* Light text in dark mode */
+        }
+        
+        /* Make sure links are visible in both modes */
+        .card a {
+            color: #0d6efd; /* Bootstrap primary blue */
+            text-decoration: none;
+        }
+        
+        html.dark .card a {
+            color: #6ea8fe; /* Lighter blue for dark mode */
+        }
+        
+        .card a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Badge text colors */
+        .badge {
+            color: white !important;
+        }
+        
+        /* Override for light badges that need dark text */
+        .badge.bg-light, 
+        .badge.bg-light * {
+            color: #212529 !important;
         }
 
         .card:hover {

@@ -65,6 +65,11 @@ const Emergente = () => {
                         // Recargar países
                         const paisesActualizados = await axios.get('/api/ubicacion/paises/');
                         setPaises(paisesActualizados.data);
+                        // Seleccionar Chile por defecto si no hay país seleccionado
+                        const chileNuevo = paisesActualizados.data?.find(p => p.nombre === 'Chile');
+                        if (chileNuevo && !formData.pais) {
+                            setFormData(prev => ({ ...prev, pais: chileNuevo.id }));
+                        }
                     } catch (apiError) {
                         toast.dismiss(loadingToast);
                         console.error('Error al cargar desde API:', apiError);
@@ -84,7 +89,7 @@ const Emergente = () => {
                         try {
                             const response = await axios.post('/api/ubicacion/paises/reiniciar_datos_chile/');
                             toast.dismiss(loadingToast);
-                            toast.success(`✅ Datos actualizados: ${response.data.regiones_creadas} regiones, ${response.data.comunas_creadas} comunas`);
+                            toast.success(`Datos actualizados: ${response.data.regiones_creadas} regiones, ${response.data.comunas_creadas} comunas`);
                         } catch (apiError) {
                             toast.dismiss(loadingToast);
                             console.error('Error al actualizar desde API:', apiError);
@@ -92,6 +97,10 @@ const Emergente = () => {
                     }
                     
                     setPaises(paisesResponse.data);
+                    // Seleccionar Chile por defecto si no hay país seleccionado
+                    if (chile && !formData.pais) {
+                        setFormData(prev => ({ ...prev, pais: chile.id }));
+                    }
                 }
             } catch (error) {
                 console.error('Error al inicializar datos:', error);

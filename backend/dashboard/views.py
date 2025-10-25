@@ -89,6 +89,85 @@ def dashboard_articulos(request):
 
 @login_required
 @user_passes_test(is_staff_user)
+@require_http_methods(["POST"])
+def agregar_categoria(request):
+    """Agregar una nueva categoría de artículo, con soporte para AJAX y fallback."""
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    nombre = request.POST.get('nombre')
+    descripcion = request.POST.get('descripcion', '')
+
+    if not nombre:
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': 'El nombre de la categoría es obligatorio.'}, status=400)
+        messages.error(request, 'El nombre de la categoría es obligatorio.')
+        return redirect('dashboard_articulos')
+
+    try:
+        if Categoria.objects.filter(nombre__iexact=nombre).exists():
+            message = f'La categoría "{nombre}" ya existe.'
+            if is_ajax:
+                return JsonResponse({'status': 'error', 'message': message}, status=400)
+            messages.warning(request, message)
+        else:
+            categoria = Categoria.objects.create(nombre=nombre, descripcion=descripcion)
+            message = f'Categoría "{categoria.nombre}" creada exitosamente.'
+            if is_ajax:
+                return JsonResponse({
+                    'status': 'success',
+                    'message': message,
+                    'categoria': {
+                        'id': categoria.id,
+                        'nombre': categoria.nombre,
+                        'descripcion': categoria.descripcion or ''
+                    }
+                })
+            messages.success(request, message)
+    except Exception as e:
+        message = f'Error al crear la categoría: {str(e)}'
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': message}, status=500)
+        messages.error(request, message)
+
+    return redirect('dashboard_articulos')
+
+
+@login_required
+@user_passes_test(is_staff_user)
+@require_http_methods(["POST"])
+def eliminar_categoria(request, categoria_id):
+    """Eliminar una categoría de artículo, con soporte para AJAX y fallback."""
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    try:
+        categoria = get_object_or_404(Categoria, id=categoria_id)
+        nombre_categoria = categoria.nombre
+        
+        # Verificar si hay artículos usando esta categoría
+        if Articulo.objects.filter(categoria=categoria).exists():
+            message = f'No se puede eliminar la categoría "{nombre_categoria}" porque tiene artículos asociados.'
+            if is_ajax:
+                return JsonResponse({'status': 'error', 'message': message}, status=400)
+            messages.error(request, message)
+            return redirect('dashboard_articulos')
+            
+        categoria.delete()
+        message = f'Categoría "{nombre_categoria}" eliminada correctamente.'
+
+        if is_ajax:
+            return JsonResponse({'status': 'success', 'message': message})
+        
+        messages.success(request, message)
+
+    except Exception as e:
+        message = f'Error al eliminar la categoría: {str(e)}'
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': message}, status=500)
+        messages.error(request, message)
+    
+    return redirect('dashboard_articulos')
+
+@login_required
+@user_passes_test(is_staff_user)
 def dashboard_radio(request):
     """Gestión de radio y programas"""
     programs = Programa.objects.all().order_by('nombre')
@@ -97,9 +176,20 @@ def dashboard_radio(request):
     except EstacionRadio.DoesNotExist:
         station = None
     
+    # Obtener los 3 artículos más recientes
+    articulos_recientes = Articulo.objects.filter(
+        publicado=True
+    ).select_related('categoria', 'autor').order_by('-fecha_publicacion')[:3]
+    
+    # Obtener el total de artículos
+    total_articulos = Articulo.objects.count()
+    
     context = {
         'programs': programs,
         'station': station,
+        'articulos_recientes': articulos_recientes,
+        'total_articulos': total_articulos,
+        'total_articulos_count': total_articulos  # Adding this for the statistics section
     }
     return render(request, 'dashboard/radio.html', context)
 
@@ -495,14 +585,13 @@ def delete_news(request, news_id):
 @user_passes_test(is_staff_user)
 def delete_message(request, message_id):
     """Eliminar mensaje del chat"""
-    message = get_object_or_404(ChatMessage, id=message_id)
-    
     if request.method == 'POST':
         try:
+            message = get_object_or_404(ChatMessage, id=message_id)
             message.delete()
             messages.success(request, 'Mensaje eliminado exitosamente')
         except Exception as e:
-            messages.error(request, f'Error al eliminar mensaje: {str(e)}')
+            messages.error(request, f'Error al eliminar el mensaje: {str(e)}')
     
     return redirect('dashboard_chat')
 
@@ -523,6 +612,25 @@ def update_station(request):
         
         station.save()
         messages.success(request, 'Configuración de estación actualizada exitosamente')
+    
+    return redirect('dashboard_radio')
+
+@login_required
+@user_passes_test(is_staff_user)
+def toggle_station_status(request):
+    """Alternar el estado de la estación (activo/inactivo)"""
+    if request.method == 'POST':
+        try:
+            station = EstacionRadio.objects.first()
+            if station:
+                station.activo = not station.activo
+                station.save()
+                status = 'activa' if station.activo else 'en pausa'
+                messages.success(request, f'La transmisión está ahora {status}')
+            else:
+                messages.error(request, 'No se encontró la estación de radio')
+        except Exception as e:
+            messages.error(request, f'Error al cambiar el estado: {str(e)}')
     
     return redirect('dashboard_radio')
 
@@ -623,8 +731,8 @@ def dashboard_emergentes(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Obtener géneros para el filtro
-    generos = GeneroMusical.objects.filter(bandas_emergentes__isnull=False).distinct()
+    # Obtener todos los géneros para el filtro y la gestión
+    generos = GeneroMusical.objects.all().order_by('nombre')
     
     context = {
         'bandas': page_obj,
@@ -709,56 +817,69 @@ def eliminar_banda_emergente(request, banda_id):
 @user_passes_test(is_staff_user)
 @require_http_methods(["POST"])
 def agregar_genero(request):
-    """Agregar un nuevo género musical"""
+    """Agregar un nuevo género musical, con soporte para AJAX y fallback."""
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     nombre = request.POST.get('nombre')
     descripcion = request.POST.get('descripcion', '')
-    
+
     if not nombre:
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': 'El nombre del género es obligatorio.'}, status=400)
         messages.error(request, 'El nombre del género es obligatorio.')
         return redirect('dashboard_emergentes')
-    
+
     try:
-        # Verificar si ya existe un género con el mismo nombre (insensible a mayúsculas/minúsculas)
         if GeneroMusical.objects.filter(nombre__iexact=nombre).exists():
-            messages.warning(request, f'El género "{nombre}" ya existe.')
+            message = f'El género "{nombre}" ya existe.'
+            if is_ajax:
+                return JsonResponse({'status': 'error', 'message': message}, status=400)
+            messages.warning(request, message)
         else:
-            # Crear el nuevo género
-            genero = GeneroMusical.objects.create(
-                nombre=nombre,
-                descripcion=descripcion
-            )
-            messages.success(request, f'Género "{genero.nombre}" creado exitosamente.')
+            genero = GeneroMusical.objects.create(nombre=nombre, descripcion=descripcion)
+            message = f'Género "{genero.nombre}" creado exitosamente.'
+            if is_ajax:
+                return JsonResponse({
+                    'status': 'success',
+                    'message': message,
+                    'genero': {
+                        'id': genero.id,
+                        'nombre': genero.nombre,
+                        'descripcion': genero.descripcion
+                    }
+                })
+            messages.success(request, message)
     except Exception as e:
-        messages.error(request, f'Error al crear el género: {str(e)}')
-    
+        message = f'Error al crear el género: {str(e)}'
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': message}, status=500)
+        messages.error(request, message)
+
     return redirect('dashboard_emergentes')
 
 
 @login_required
 @user_passes_test(is_staff_user)
+@require_http_methods(["POST"])
 def eliminar_genero(request, genero_id):
-    """Eliminar un género musical"""
-    if request.method != 'POST':
-        messages.error(request, 'Método no permitido')
-        return redirect('dashboard_emergentes')
-        
+    """Eliminar un género musical, con soporte para AJAX y fallback."""
+    is_ajax = request.headers.get('X-Requested-with') == 'XMLHttpRequest'
+
     try:
-        genero = GeneroMusical.objects.get(id=genero_id)
+        genero = get_object_or_404(GeneroMusical, id=genero_id)
         nombre_genero = genero.nombre
+        genero.delete()
+        message = f'Género "{nombre_genero}" eliminado correctamente.'
+
+        if is_ajax:
+            return JsonResponse({'status': 'success', 'message': message})
         
-        # Verificar si hay bandas usando este género
-        if genero.bandas_emergentes.exists():
-            # Eliminar pero mantener la relación
-            genero.delete()
-            messages.success(request, f'Género "{nombre_genero}" eliminado. Las bandas existentes mantendrán este género.')
-        else:
-            genero.delete()
-            messages.success(request, f'Género "{nombre_genero}" eliminado correctamente.')
-            
-    except GeneroMusical.DoesNotExist:
-        messages.error(request, 'El género no existe o ya ha sido eliminado.')
+        messages.success(request, message)
+
     except Exception as e:
-        messages.error(request, f'Error al eliminar el género: {str(e)}')
+        message = f'Error al eliminar el género: {str(e)}'
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': message}, status=500)
+        messages.error(request, message)
     
     return redirect('dashboard_emergentes')
 
@@ -852,6 +973,108 @@ def update_contacto(request, contacto_id):
             messages.error(request, f"Error al actualizar contacto: {str(e)}")
 
     return redirect('dashboard_contactos')
+
+
+@login_required
+@user_passes_test(is_staff_user)
+def agregar_tipo_asunto(request):
+    """
+    Agregar un nuevo tipo de asunto, con soporte para AJAX y fallback.
+    """
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+        
+        if not nombre:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'El nombre del tipo de asunto es requerido'}, status=400)
+            messages.error(request, 'El nombre del tipo de asunto es requerido.')
+            return redirect('dashboard_contactos')
+        
+        try:
+            # Verificar si ya existe un tipo con el mismo nombre
+            if TipoAsunto.objects.filter(nombre__iexact=nombre).exists():
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': 'Ya existe un tipo de asunto con este nombre'}, status=400)
+                messages.error(request, 'Ya existe un tipo de asunto con este nombre.')
+                return redirect('dashboard_contactos')
+            
+            # Crear el nuevo tipo de asunto
+            tipo = TipoAsunto.objects.create(
+                nombre=nombre,
+                descripcion=descripcion if descripcion else None
+            )
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'tipo': {
+                        'id': tipo.id,
+                        'nombre': tipo.nombre,
+                        'descripcion': tipo.descripcion or ''
+                    }
+                })
+            
+            messages.success(request, f'Tipo de asunto "{tipo.nombre}" agregado correctamente.')
+            return redirect('dashboard_contactos')
+            
+        except Exception as e:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': str(e)}, status=500)
+            messages.error(request, f'Error al agregar el tipo de asunto: {str(e)}')
+            return redirect('dashboard_contactos')
+    
+    # Si no es una petición POST, redirigir al dashboard
+    return redirect('dashboard_contactos')
+
+
+@login_required
+@user_passes_test(is_staff_user)
+def eliminar_tipo_asunto(request, tipo_id):
+    """
+    Eliminar un tipo de asunto, con soporte para AJAX y fallback.
+    """
+    if request.method != 'POST':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+        messages.error(request, 'Método no permitido.')
+        return redirect('dashboard_contactos')
+    
+    try:
+        # Obtener el tipo de asunto
+        tipo = TipoAsunto.objects.get(id=tipo_id)
+        nombre_tipo = tipo.nombre
+        
+        # Verificar si hay contactos usando este tipo de asunto
+        if Contacto.objects.filter(tipo_asunto=tipo).exists():
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'No se puede eliminar este tipo de asunto porque está siendo utilizado por uno o más contactos.'
+                }, status=400)
+            messages.error(request, 'No se puede eliminar este tipo de asunto porque está siendo utilizado por uno o más contactos.')
+            return redirect('dashboard_contactos')
+        
+        # Eliminar el tipo de asunto
+        tipo.delete()
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
+        
+        messages.success(request, f'Tipo de asunto "{nombre_tipo}" eliminado correctamente.')
+        return redirect('dashboard_contactos')
+        
+    except TipoAsunto.DoesNotExist:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'El tipo de asunto no existe'}, status=404)
+        messages.error(request, 'El tipo de asunto no existe.')
+        return redirect('dashboard_contactos')
+        
+    except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        messages.error(request, f'Error al eliminar el tipo de asunto: {str(e)}')
+        return redirect('dashboard_contactos')
 
 
 @login_required

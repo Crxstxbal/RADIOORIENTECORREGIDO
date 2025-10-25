@@ -27,6 +27,8 @@ urlpatterns = [
     path('contactos/', views.dashboard_contactos, name='dashboard_contactos'),
     path('contactos/<int:contacto_id>/update/', views.update_contacto, name='update_contacto'),
     path('contactos/<int:contacto_id>/delete/', views.delete_contacto, name='delete_contacto'),
+    path('contactos/tipos/agregar/', views.agregar_tipo_asunto, name='agregar_tipo_asunto'),
+    path('contactos/tipos/<int:tipo_id>/eliminar/', views.eliminar_tipo_asunto, name='eliminar_tipo_asunto'),
 
     # User CRUD
     path('users/create/', views.create_user, name='create_user'),
@@ -37,6 +39,8 @@ urlpatterns = [
     path('articulos/create/', views.create_articulo, name='create_articulo'),
     path('articulos/edit/<int:articulo_id>/', views.edit_articulo, name='edit_articulo'),
     path('articulos/delete/<int:articulo_id>/', views.delete_articulo, name='delete_articulo'),
+    path('articulos/categorias/agregar/', views.agregar_categoria, name='agregar_categoria'),
+    path('articulos/categorias/eliminar/<int:categoria_id>/', views.eliminar_categoria, name='eliminar_categoria'),
     
     # Radio CRUD
     path('radio/create-program/', views.create_program, name='create_program'),
@@ -44,6 +48,7 @@ urlpatterns = [
     path('radio/delete-program/<int:program_id>/', views.delete_program, name='delete_program'),
     path('radio/create-news/', views.create_news, name='create_news'),
     path('radio/delete-news/<int:news_id>/', views.delete_news, name='delete_news'),
+    path('radio/toggle-status/', views.toggle_station_status, name='toggle_station_status'),
     path('radio/update_station/', views.update_station, name='update_station'),
 
     # Chat Moderation
