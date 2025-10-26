@@ -12,6 +12,10 @@ urlpatterns = [
     path('analytics/', views.dashboard_analytics, name='dashboard_analytics'),
     path('api/stats/', views.api_dashboard_stats, name='api_dashboard_stats'),
 
+    # Estados CRUD
+    path('estados/agregar/', views.agregar_estado, name='agregar_estado'),
+    path('estados/eliminar/<int:estado_id>/', views.eliminar_estado, name='eliminar_estado'),
+
     # Bandas Emergentes CRUD
     path('emergentes/', views.dashboard_emergentes, name='dashboard_emergentes'),
     path('emergentes/crear/', views.crear_banda_emergente, name='crear_banda_emergente'),

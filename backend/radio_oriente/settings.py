@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from decouple import config
 
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -82,19 +83,17 @@ if USE_SQLITE:
         }
     }
 else:
-    # PostgreSQL (para producción o si se prefiere)
+    # Configuración para PostgreSQL (Producción con Supabase)
+    # Utiliza la variable de entorno DATABASE_URL que incluye el pooler de conexiones.
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME', default='radio_oriente_db'),
-            'USER': config('DB_USER', default='postgres'),
-            'PASSWORD': config('DB_PASSWORD', default=''),
-            'HOST': config('DB_HOST', default='localhost'),
-            'PORT': config('DB_PORT', default='5432'),
-            'OPTIONS': {
-                'sslmode': config('DB_SSLMODE', default='prefer'),
-            },
-        }
+        'default': dj_database_url.config(
+            # Lee la URL de la base de datos desde la variable de entorno DATABASE_URL.
+            default=config('DATABASE_URL'),
+            # Mantiene las conexiones abiertas para reutilizarlas (importante para el pooler).
+            conn_max_age=600,
+            # Exige el uso de SSL para una conexión segura, requerido por Supabase.
+            ssl_require=True
+        )
     }
 
 # Supabase configuration

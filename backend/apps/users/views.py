@@ -1,5 +1,5 @@
 from rest_framework import status, generics
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
@@ -21,6 +21,7 @@ from .serializers import (
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([]) # No usar ninguna autenticación para el registro
 def register(request):
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
@@ -35,6 +36,7 @@ def register(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([]) # No usar ninguna autenticación para el login
 def login_view(request):
     serializer = UserLoginSerializer(data=request.data)
     if serializer.is_valid():
@@ -84,6 +86,7 @@ def profile_legacy(request):
 # Views para recuperación de contraseña
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([]) # No usar ninguna autenticación para solicitar reseteo
 def password_reset_request(request):
     """
     Solicitar reseteo de contraseña.
@@ -141,6 +144,7 @@ El equipo de Radio Oriente FM
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([]) # No usar ninguna autenticación para confirmar reseteo
 def password_reset_confirm(request):
     """
     Confirmar reseteo de contraseña con token.

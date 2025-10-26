@@ -61,6 +61,91 @@
         </div>
     </div>
 
+    <!-- Estado Management -->
+    <div class="row mb-1">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header py-1">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tasks me-2"></i>
+                        Gestión de estados
+                    </h5>
+                </div>
+                <div class="card-body p-2">
+                    <!-- Formulario para agregar nuevo estado -->
+                    <form id="form-agregar-estado" method="POST" action="{% url 'agregar_estado' %}" class="mb-4">
+                        {% csrf_token %}
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label for="nombre_estado" class="form-label">Nuevo Estado</label>
+                                <input type="text" class="form-control" id="nombre_estado" name="nombre" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="descripcion_estado" class="form-label">Descripción (Opcional)</label>
+                                <input type="text" class="form-control" id="descripcion_estado" name="descripcion">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="tipo_entidad" class="form-label">Tipo</label>
+                                <select class="form-select" id="tipo_entidad" name="tipo_entidad" required>
+                                    <option value="contacto">Contacto</option>
+                                    <option value="banda">Banda</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-plus me-1"></i> Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Lista de estados -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Estados disponibles</h6>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#listaEstados" aria-expanded="false" aria-controls="listaEstados">
+                            <i class="fas fa-list me-1"></i> Mostrar estados
+                        </button>
+                    </div>
+                    
+                    <div class="collapse" id="listaEstados">
+                        <div class="card card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Descripción</th>
+                                            <th>Tipo</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="lista-estados-body">
+                                        {% for estado in estados %}
+                                        <tr id="estado-row-{{ estado.id }}">
+                                            <td><strong>{{ estado.nombre }}</strong></td>
+                                            <td>{{ estado.descripcion|default:"Sin descripción" }}</td>
+                                            <td>{{ estado.get_tipo_entidad_display }}</td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-outline-danger eliminar-estado" data-estado-id="{{ estado.id }}" {% if estado.contactos.exists or estado.bandas.exists %}disabled title="No se puede eliminar porque tiene elementos asociados"{% endif %}>
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr id="no-estados-row">
+                                            <td colspan="4" class="text-center text-muted">No hay estados registrados.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Tipo de Asunto Management -->
     <div class="row mb-1">
         <div class="col-12">
@@ -386,7 +471,116 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-        // Función para eliminar contacto con confirmación
+                if (modalToggle) {
+            modalToggle.blur();
+        }
+    });
+
+    // Manejar el envío del formulario de agregar estado
+    const formAgregarEstado = document.getElementById('form-agregar-estado');
+    if (formAgregarEstado) {
+        formAgregarEstado.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    this.reset();
+                    // Agregar el nuevo estado a la tabla sin recargar
+                    const tbody = document.querySelector('#lista-estados-body');
+                    const noEstadosRow = document.getElementById('no-estados-row');
+                    
+                    if (noEstadosRow) {
+                        noEstadosRow.remove();
+                    }
+                    
+                    const newRow = document.createElement('tr');
+                    newRow.id = `estado-row-${data.estado.id}`;
+                    newRow.innerHTML = `
+                        <td><strong>${data.estado.nombre}</strong></td>
+                        <td>${data.estado.descripcion || 'Sin descripción'}</td>
+                        <td>${data.estado.tipo_entidad === 'banda' ? 'Banda' : 'Contacto'}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-danger eliminar-estado" 
+                                    data-estado-id="${data.estado.id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    tbody.insertBefore(newRow, tbody.firstChild);
+                    showNotification(data.message, 'success');
+                } else {
+                    showNotification(data.message || 'No se pudo agregar el estado', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al procesar la solicitud', 'danger');
+            });
+        });
+    }
+
+    // Manejar la eliminación de estados
+    document.addEventListener('click', function(e) {
+        const button = e.target.closest('.eliminar-estado');
+        if (button) {
+            if (button.disabled) {
+                showNotification('No se puede eliminar este estado porque tiene elementos asociados', 'warning');
+                return;
+            }
+
+            const estadoId = button.dataset.estadoId;
+            
+            if (confirm('¿Estás seguro de que deseas eliminar este estado?')) {
+                fetch(`/dashboard/estados/eliminar/${estadoId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const row = document.getElementById(`estado-row-${estadoId}`);
+                        if (row) {
+                            row.remove();
+                            
+                            // Si no quedan estados, mostrar mensaje
+                            const estadosRows = document.querySelectorAll('#lista-estados-body tr:not(#no-estados-row)');
+                            if (estadosRows.length === 0) {
+                                const tbody = document.querySelector('#lista-estados-body');
+                                const emptyRow = document.createElement('tr');
+                                emptyRow.id = 'no-estados-row';
+                                emptyRow.innerHTML = '<td colspan="4" class="text-center text-muted">No hay estados registrados.</td>';
+                                tbody.appendChild(emptyRow);
+                            }
+                        }
+                        showNotification(data.message, 'success');
+                    } else {
+                        showNotification(data.message || 'No se pudo eliminar el estado', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Error al procesar la solicitud', 'danger');
+                });
+            }
+        }
+    });
+
+    // Función para eliminar contacto con confirmación
     window.deleteItem = function(url, name) {
         if (confirm('¿Estás seguro de que deseas eliminar el contacto de ' + name + '?')) {
             fetch(url, {

@@ -12,6 +12,8 @@ from django.core import serializers
 from datetime import datetime, timedelta
 import json
 
+from .forms import BandaEmergenteForm
+
 from apps.users.models import User
 from apps.articulos.models import Articulo, Categoria
 from apps.radio.models import Programa, EstacionRadio, HorarioPrograma, GeneroMusical
@@ -580,6 +582,97 @@ def delete_news(request, news_id):
     
     return redirect('dashboard_radio')
 
+# Estado CRUD
+@login_required
+@user_passes_test(is_staff_user)
+@require_http_methods(["POST"])
+def agregar_estado(request):
+    """Agregar un nuevo estado, con soporte para AJAX y fallback."""
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    nombre = request.POST.get('nombre')
+    descripcion = request.POST.get('descripcion', '')
+    tipo_entidad = request.POST.get('tipo_entidad')
+
+    if not nombre or not tipo_entidad:
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': 'El nombre y tipo de estado son obligatorios.'}, status=400)
+        messages.error(request, 'El nombre y tipo de estado son obligatorios.')
+        return redirect('dashboard_emergentes')
+
+    try:
+        if Estado.objects.filter(nombre__iexact=nombre, tipo_entidad=tipo_entidad).exists():
+            message = f'El estado "{nombre}" ya existe para {tipo_entidad}.'
+            if is_ajax:
+                return JsonResponse({'status': 'error', 'message': message}, status=400)
+            messages.warning(request, message)
+        else:
+            estado = Estado.objects.create(
+                nombre=nombre,
+                descripcion=descripcion,
+                tipo_entidad=tipo_entidad
+            )
+            message = f'Estado "{estado.nombre}" creado exitosamente.'
+            if is_ajax:
+                return JsonResponse({
+                    'status': 'success',
+                    'message': message,
+                    'estado': {
+                        'id': estado.id,
+                        'nombre': estado.nombre,
+                        'descripcion': estado.descripcion,
+                        'tipo_entidad': estado.tipo_entidad
+                    }
+                })
+            messages.success(request, message)
+    except Exception as e:
+        message = f'Error al crear el estado: {str(e)}'
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': message}, status=500)
+        messages.error(request, message)
+
+    return redirect('dashboard_emergentes')
+
+@login_required
+@user_passes_test(is_staff_user)
+@require_http_methods(["POST"])
+def eliminar_estado(request, estado_id):
+    """Eliminar un estado, con soporte para AJAX y fallback."""
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    try:
+        estado = get_object_or_404(Estado, id=estado_id)
+        nombre_estado = estado.nombre
+
+        # Verificar si hay elementos usando este estado
+        if estado.tipo_entidad == 'contacto' and estado.contactos.exists():
+            message = f'No se puede eliminar el estado "{nombre_estado}" porque está siendo usado por contactos.'
+            if is_ajax:
+                return JsonResponse({'status': 'error', 'message': message}, status=400)
+            messages.error(request, message)
+            return redirect('dashboard_emergentes')
+
+        if estado.tipo_entidad == 'banda' and BandaEmergente.objects.filter(estado=estado).exists():
+            message = f'No se puede eliminar el estado "{nombre_estado}" porque está siendo usado por bandas.'
+            if is_ajax:
+                return JsonResponse({'status': 'error', 'message': message}, status=400)
+            messages.error(request, message)
+            return redirect('dashboard_emergentes')
+
+        estado.delete()
+        message = f'Estado "{nombre_estado}" eliminado correctamente.'
+
+        if is_ajax:
+            return JsonResponse({'status': 'success', 'message': message})
+        messages.success(request, message)
+
+    except Exception as e:
+        message = f'Error al eliminar el estado: {str(e)}'
+        if is_ajax:
+            return JsonResponse({'status': 'error', 'message': message}, status=500)
+        messages.error(request, message)
+
+    return redirect('dashboard_emergentes')
+
 # Chat Moderation
 @login_required
 @user_passes_test(is_staff_user)
@@ -737,7 +830,7 @@ def dashboard_emergentes(request):
     context = {
         'bandas': page_obj,
         'total_bandas': paginator.count,
-        'estados': Estado.objects.all(),
+        'estados': Estado.objects.all().order_by('tipo_entidad', 'nombre'),
         'generos': generos,
         'estado_actual': estado,
         'genero_actual': int(genero) if genero and genero.isdigit() else None,
@@ -750,26 +843,26 @@ def dashboard_emergentes(request):
 @login_required
 @user_passes_test(is_staff_user)
 def cambiar_estado_banda(request, banda_id, nuevo_estado):
-    """Cambiar el estado de una banda usando la tabla Estado normalizada"""
+    """Cambiar el estado de una banda y registrar quién lo revisó"""
     banda = get_object_or_404(BandaEmergente, id=banda_id)
     
-    # Mapear nombres de estados a los de la base de datos
-    estados_mapping = {
-        'aprobado': 'Aprobada',
-        'rechazado': 'Rechazada',
-        'pendiente': 'Recibida',
-        'revision': 'En Revisión'
-    }
-    
-    nombre_estado = estados_mapping.get(nuevo_estado, nuevo_estado)
-    
     try:
+        # Mapeo de estados (de la URL a los nombres en la BD)
+        estados_mapping = {
+            'pendiente': 'Pendiente',
+            'aprobado': 'Aprobado', 
+            'rechazado': 'Rechazado',
+            'revision': 'Revisado'
+        }
+        
         # Buscar el estado en la tabla Estado
+        nombre_estado = estados_mapping.get(nuevo_estado.lower(), nuevo_estado)
         estado_obj = Estado.objects.get(
-            nombre__iexact=nombre_estado,
+            nombre=nombre_estado,
             tipo_entidad='banda'
         )
         
+        # Actualizar estado y registrar quién lo revisó
         banda.estado = estado_obj
         banda.revisado_por = request.user
         banda.fecha_revision = timezone.now()
@@ -777,7 +870,7 @@ def cambiar_estado_banda(request, banda_id, nuevo_estado):
         
         messages.success(request, f"Estado de '{banda.nombre_banda}' actualizado a {estado_obj.nombre}.")
     except Estado.DoesNotExist:
-        messages.error(request, f"Estado '{nombre_estado}' no encontrado.")
+        messages.error(request, f"Estado '{nuevo_estado}' no encontrado.")
     except Exception as e:
         messages.error(request, f"Error al actualizar estado: {str(e)}")
     
@@ -942,6 +1035,7 @@ def dashboard_contactos(request):
         'contactos_semana': contactos_semana,
         'estados_disponibles': estados_disponibles,
         'tipos_asunto': tipos_asunto,
+        'estados': Estado.objects.all().order_by('tipo_entidad', 'nombre'),  # Añadido para la gestión de estados
     }
 
     return render(request, 'dashboard/contactos.html', context)

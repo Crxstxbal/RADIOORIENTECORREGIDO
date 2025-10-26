@@ -1,17 +1,143 @@
-{% extends 'dashboard/base.html' %}
-{% block page_title %} Bandas Emergentes {% endblock %}
-
+{% extends 'dashboard/base.html' %} 
+{% block page_title %} Bandas Emergentes
+{%endblock %} 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h2><i class="fas fa-guitar text-danger me-2"></i> Bandas Emergentes</h2>
   <div class="d-flex gap-2 align-items-center">
     <span class="badge bg-primary">Total: {{ total_bandas }}</span>
     {% for estado, count in stats_estados.items %}
-      <span class="badge bg-secondary">{{ estado }}: {{ count }}</span>
+    <span class="badge bg-secondary">{{ estado }}: {{ count }}</span>
     {% endfor %}
-    <a href="{% url 'crear_banda_emergente' %}" class="btn btn-success btn-sm ms-2">
-      <i class="fas fa-plus-circle me-1"></i> Nueva Banda
-    </a>
+  </div>
+</div>
+
+<!-- Sección para gestionar estados -->
+<div class="card mb-4">
+  <div class="card-header bg-dark text-white">
+    <i class="fas fa-tasks me-2"></i>Gestión de Estados
+  </div>
+  <div class="card-body">
+    <div id="notification-container-estados"></div>
+    <form
+      id="form-agregar-estado"
+      method="post"
+      action="{% url 'agregar_estado' %}"
+      class="row g-3"
+    >
+      {% csrf_token %}
+      <div class="col-md-4">
+        <label for="nombreEstado" class="form-label">Nombre del Estado</label>
+        <input
+          type="text"
+          class="form-control"
+          id="nombreEstado"
+          name="nombre"
+          placeholder="Ej: En Proceso, Finalizado..."
+          required
+        />
+      </div>
+      <div class="col-md-4">
+        <label for="descripcionEstado" class="form-label">Descripción</label>
+        <input
+          type="text"
+          class="form-control"
+          id="descripcionEstado"
+          name="descripcion"
+          placeholder="Breve descripción del estado..."
+        />
+      </div>
+      <div class="col-md-2">
+        <label for="tipoEntidad" class="form-label">Tipo</label>
+        <select
+          class="form-select"
+          id="tipoEntidad"
+          name="tipo_entidad"
+          required
+        >
+          <option value="banda">Banda</option>
+          <option value="contacto">Contacto</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="fas fa-plus-circle me-1"></i> Agregar
+        </button>
+      </div>
+    </form>
+
+    <div class="mt-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0">Estados disponibles</h6>
+        <button
+          class="btn btn-sm btn-outline-secondary"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#listaEstados"
+          aria-expanded="false"
+          aria-controls="listaEstados"
+        >
+          <i class="fas fa-list me-1"></i> Mostrar estados
+        </button>
+      </div>
+
+      <div class="collapse" id="listaEstados">
+        <div class="card card-body mb-3">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover">
+              <thead>
+                <tr>
+                  <th>Estado</th>
+                  <th>Descripción</th>
+                  <th>Tipo</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="lista-estados-body">
+                {% for estado in estados %}
+                <tr id="estado-row-{{ estado.id }}">
+                  <td><strong>{{ estado.nombre }}</strong></td>
+                  <td>{{ estado.descripcion|default:"Sin descripción" }}</td>
+                  <td>{{ estado.get_tipo_entidad_display }}</td>
+                  <td>
+                    <form
+                      method="post"
+                      action="{% url 'eliminar_estado' estado.id %}"
+                      class="d-inline form-eliminar-estado"
+                    >
+                      {% csrf_token %}
+                      <button
+                        type="submit"
+                        class="btn btn-sm btn-outline-danger"
+                        {%
+                        if
+                        estado.contactos.exists
+                        or
+                        estado.bandas.exists
+                        %}disabled
+                        title="No se puede eliminar porque tiene elementos asociados"
+                        {%
+                        endif
+                        %}
+                      >
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr id="no-estados-row">
+                  <td colspan="4" class="text-center text-muted">
+                    No hay estados registrados.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -22,15 +148,33 @@
   </div>
   <div class="card-body">
     <div id="notification-container"></div>
-    <form id="form-agregar-genero" method="post" action="{% url 'agregar_genero' %}" class="row g-3">
+    <form
+      id="form-agregar-genero"
+      method="post"
+      action="{% url 'agregar_genero' %}"
+      class="row g-3"
+    >
       {% csrf_token %}
       <div class="col-md-5">
         <label for="nuevoGenero" class="form-label">Nombre del Género</label>
-        <input type="text" class="form-control" id="nuevoGenero" name="nombre" placeholder="Ej: Rock, Pop, Jazz..." required>
+        <input
+          type="text"
+          class="form-control"
+          id="nuevoGenero"
+          name="nombre"
+          placeholder="Ej: Rock, Pop, Jazz..."
+          required
+        />
       </div>
       <div class="col-md-5">
         <label for="descripcionGenero" class="form-label">Descripción</label>
-        <input type="text" class="form-control" id="descripcionGenero" name="descripcion" placeholder="Breve descripción del género...">
+        <input
+          type="text"
+          class="form-control"
+          id="descripcionGenero"
+          name="descripcion"
+          placeholder="Breve descripción del género..."
+        />
       </div>
       <div class="col-md-2 d-flex align-items-end">
         <button type="submit" class="btn btn-primary w-100">
@@ -38,15 +182,25 @@
         </button>
       </div>
     </form>
-    
+
     <div class="mt-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 class="mb-0">Presionar "Mostrar géneros" para ver los géneros musicales de las bandas y artistas emergentes</h6>
-        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#listaGeneros" aria-expanded="false" aria-controls="listaGeneros">
+        <h6 class="mb-0">
+          Presionar "Mostrar géneros" para ver los géneros musicales de las
+          bandas y artistas emergentes
+        </h6>
+        <button
+          class="btn btn-sm btn-outline-secondary"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#listaGeneros"
+          aria-expanded="false"
+          aria-controls="listaGeneros"
+        >
           <i class="fas fa-list me-1"></i> Mostrar géneros
         </button>
       </div>
-      
+
       <div class="collapse" id="listaGeneros">
         <div class="card card-body mb-3">
           <div class="table-responsive">
@@ -64,9 +218,16 @@
                   <td><strong>{{ genero.nombre }}</strong></td>
                   <td>{{ genero.descripcion|default:"Sin descripción" }}</td>
                   <td>
-                    <form method="post" action="{% url 'eliminar_genero' genero.id %}" class="d-inline form-eliminar-genero">
+                    <form
+                      method="post"
+                      action="{% url 'eliminar_genero' genero.id %}"
+                      class="d-inline form-eliminar-genero"
+                    >
                       {% csrf_token %}
-                      <button type="submit" class="btn btn-sm btn-outline-danger">
+                      <button
+                        type="submit"
+                        class="btn btn-sm btn-outline-danger"
+                      >
                         <i class="fas fa-trash-alt"></i>
                       </button>
                     </form>
@@ -74,7 +235,9 @@
                 </tr>
                 {% empty %}
                 <tr id="no-generos-row">
-                  <td colspan="3" class="text-center text-muted">No hay géneros registrados.</td>
+                  <td colspan="3" class="text-center text-muted">
+                    No hay géneros registrados.
+                  </td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -82,7 +245,6 @@
           </div>
         </div>
       </div>
-      
     </div>
   </div>
 </div>
@@ -110,74 +272,103 @@
             <td>
               <strong>{{ banda.nombre_banda }}</strong>
               {% if banda.integrantes.exists %}
-                <br><small class="text-muted">
-                  <i class="fas fa-users me-1"></i>
-                  {% for integrante in banda.integrantes.all %}
-                    {{ integrante.integrante.nombre }}{% if not forloop.last %}, {% endif %}
-                  {% endfor %}
-                </small>
+              <br />
+              <small class="text-muted">
+                <i class="fas fa-users me-1"></i>
+                {% for integrante in banda.integrantes.all %}
+                {{integrante.integrante.nombre }}{% if not forloop.last %},
+                {%endif %} {% endfor %}
+              </small>
               {% endif %}
             </td>
             <td>{{ banda.genero.nombre }}</td>
             <td>
-              {% if banda.comuna %}
-                {{ banda.comuna.nombre }}, {{ banda.comuna.ciudad.nombre }}
+              {% if banda.comuna %} 
+              {{ banda.comuna.nombre }}, 
+              {{banda.comuna.ciudad.nombre }} 
               {% else %}
-                <span class="text-muted">No especificada</span>
+              <span class="text-muted">No especificada</span>
               {% endif %}
             </td>
             <td>
-              <div><i class="fas fa-envelope me-1 text-muted"></i> {{ banda.email_contacto }}</div>
+              <div>
+                <i class="fas fa-envelope me-1 text-muted"></i>
+                {{ banda.email_contacto }}
+              </div>
               {% if banda.telefono_contacto %}
-                <div><i class="fas fa-phone me-1 text-muted"></i> {{ banda.telefono_contacto }}</div>
+              <div>
+                <i class="fas fa-phone me-1 text-muted"></i>
+                {{ banda.telefono_contacto }}
+              </div>
               {% endif %}
             </td>
             <td>
-              <span class="badge 
-                {% if banda.estado.nombre == 'Recibida' %} bg-warning
-                {% elif banda.estado.nombre == 'En Revisión' %} bg-info
-                {% elif banda.estado.nombre == 'Aprobada' %} bg-success
-                {% elif banda.estado.nombre == 'Rechazada' %} bg-danger
-                {% endif %}">
+              <span
+                class="badge {% if banda.estado.nombre == 'Recibida' %} bg-warning {% elif banda.estado.nombre == 'En Revisión' %} bg-info {% elif banda.estado.nombre == 'Aprobada' %} bg-success {% elif banda.estado.nombre == 'Rechazada' %} bg-danger {% endif %}"
+              >
                 {{ banda.estado.nombre }}
               </span>
             </td>
             <td>{{ banda.fecha_envio|date:"d/m/Y H:i" }}</td>
             <td>
               {% if banda.revisado_por %}
-                <small>{{ banda.revisado_por.get_full_name|default:banda.revisado_por.username }}</small>
-                <br><small class="text-muted">{{ banda.fecha_revision|date:"d/m/Y H:i" }}</small>
+              <small
+                >{{banda.revisado_por.get_full_name|default:banda.revisado_por.username}}</small
+              >
+              <br /><small class="text-muted"
+                >{{ banda.fecha_revision|date:"d/m/Y H:i" }}</small
+              >
               {% else %}
-                <span class="text-muted">Pendiente</span>
+              <span class="text-muted">Pendiente</span>
               {% endif %}
             </td>
             <td>
               <div class="d-flex flex-wrap gap-1">
                 <!-- Botones de estado -->
                 <div class="btn-group" role="group">
-                  <a href="{% url 'cambiar_estado_banda' banda.id 'revision' %}" class="btn btn-sm btn-info" title="En Revisión">
-                    <i class="fas fa-eye"></i>
-                  </a>
-                  <a href="{% url 'cambiar_estado_banda' banda.id 'aprobado' %}" class="btn btn-sm btn-success" title="Aprobar">
-                    <i class="fas fa-check"></i>
-                  </a>
-                  <a href="{% url 'cambiar_estado_banda' banda.id 'rechazado' %}" class="btn btn-sm btn-danger" title="Rechazar">
-                    <i class="fas fa-times"></i>
-                  </a>
-                  <a href="{% url 'cambiar_estado_banda' banda.id 'pendiente' %}" class="btn btn-sm btn-secondary" title="Marcar como Pendiente">
-                    <i class="fas fa-clock"></i>
-                  </a>
+                  {% for estado in estados %}
+                    {% if estado.tipo_entidad == 'banda' %}
+                      <a href="{% url 'cambiar_estado_banda' banda.id estado.nombre|lower %}"
+                         class="btn btn-sm {% if estado.nombre == 'Revisado' %}btn-info{% elif estado.nombre == 'Aprobado' %}btn-success{% elif estado.nombre == 'Rechazado' %}btn-danger{% elif estado.nombre == 'Pendiente' %}btn-secondary{% endif %}"
+                         title="{{ estado.nombre }}"
+                      >
+                        {% if estado.nombre == 'Revisado' %}
+                          <i class="fas fa-eye"></i>
+                        {% elif estado.nombre == 'Aprobado' %}
+                          <i class="fas fa-check"></i>
+                        {% elif estado.nombre == 'Rechazado' %}
+                          <i class="fas fa-times"></i>
+                        {% elif estado.nombre == 'Pendiente' %}
+                          <i class="fas fa-clock"></i>
+                        {% endif %}
+                      </a>
+                    {% endif %}
+                  {% endfor %}
                 </div>
 
                 <!-- Botón de detalle -->
-                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bandaModal{{ banda.id }}" title="Ver detalles">
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#bandaModal{{ banda.id }}"
+                  title="Ver detalles"
+                >
                   <i class="fas fa-search-plus"></i>
                 </button>
 
                 <!-- Eliminar -->
-                <form method="POST" action="{% url 'eliminar_banda_emergente' banda.id %}" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar esta banda?');">
+                <form
+                  method="POST"
+                  action="{% url 'eliminar_banda_emergente' banda.id %}"
+                  class="d-inline"
+                  onsubmit="return confirm('¿Estás seguro de eliminar esta banda?');"
+                >
                   {% csrf_token %}
-                  <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
+                  <button
+                    type="submit"
+                    class="btn btn-sm btn-danger"
+                    title="Eliminar"
+                  >
                     <i class="fas fa-trash"></i>
                   </button>
                 </form>
@@ -201,127 +392,178 @@
      MODALES FUERA DE LA TABLA
 ======================= -->
 {% for banda in bandas %}
-<div class="modal fade" id="bandaModal{{ banda.id }}" tabindex="-1" aria-labelledby="bandaModalLabel{{ banda.id }}" aria-hidden="true">
+<div
+  class="modal fade"
+  id="bandaModal{{ banda.id }}"
+  tabindex="-1"
+  aria-labelledby="bandaModalLabel{{ banda.id }}"
+  aria-hidden="true"
+>
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header bg-dark text-white">
         <h5 class="modal-title" id="bandaModalLabel{{ banda.id }}">
           <i class="fas fa-music me-2"></i> {{ banda.nombre_banda }}
         </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Cerrar"
+        ></button>
       </div>
       <div class="modal-body">
         <div class="row">
           <div class="col-md-6">
             <p><strong>Integrantes:</strong></p>
             {% if banda.integrantes.exists %}
-              <ul class="list-unstyled">
-                {% for integrante in banda.integrantes.all %}
-                  <li><i class="fas fa-user me-2"></i>{{ integrante.integrante.nombre }}</li>
-                {% endfor %}
-              </ul>
+            <ul class="list-unstyled">
+              {% for integrante in banda.integrantes.all %}
+              <li>
+                <i class="fas fa-user me-2"></i>{{ integrante.integrante.nombre}}
+              </li>
+              {% endfor %}
+            </ul>
             {% else %}
-              <p class="text-muted">No especificados</p>
+            <p class="text-muted">No especificados</p>
             {% endif %}
-            
+
             <p><strong>Género:</strong> {{ banda.genero.nombre }}</p>
-            <p><strong>Ubicación:</strong> 
-              {% if banda.comuna %}
-                {{ banda.comuna.nombre }}, {{ banda.comuna.ciudad.nombre }}, {{ banda.comuna.ciudad.pais.nombre }}
-              {% else %}
-                <span class="text-muted">No especificada</span>
+            <p>
+              <strong>Ubicación:</strong>
+              {% if banda.comuna %} {{ banda.comuna.nombre }}, {{banda.comuna.ciudad.nombre }}, {{ banda.comuna.ciudad.pais.nombre}} {% else %}
+              <span class="text-muted">No especificada</span>
               {% endif %}
             </p>
           </div>
           <div class="col-md-6">
             <p><strong>Contacto:</strong></p>
-            <p><i class="fas fa-envelope me-1 text-muted"></i> {{ banda.email_contacto }}</p>
+            <p>
+              <i class="fas fa-envelope me-1 text-muted"></i>{{banda.email_contacto }}
+            </p>
             {% if banda.telefono_contacto %}
-              <p><i class="fas fa-phone me-1 text-muted"></i> {{ banda.telefono_contacto }}</p>
+            <p>
+              <i class="fas fa-phone me-1 text-muted"></i>{{banda.telefono_contacto }}
+            </p>
             {% endif %}
-            
-            <p><strong>Estado:</strong> 
-              <span class="badge 
-                {% if banda.estado.nombre == 'Recibida' %} bg-warning
-                {% elif banda.estado.nombre == 'En Revisión' %} bg-info
-                {% elif banda.estado.nombre == 'Aprobada' %} bg-success
-                {% elif banda.estado.nombre == 'Rechazada' %} bg-danger
-                {% endif %}">
+
+            <p>
+              <strong>Estado:</strong>
+              <span
+                class="badge {% if banda.estado.nombre == 'Recibida' %} bg-warning {% elif banda.estado.nombre == 'En Revisión' %} bg-info {% elif banda.estado.nombre == 'Aprobada' %} bg-success {% elif banda.estado.nombre == 'Rechazada' %} bg-danger {% endif %}"
+              >
                 {{ banda.estado.nombre }}
               </span>
             </p>
           </div>
         </div>
-        
-        <hr>
+
+        <hr />
         <p><strong>Mensaje:</strong></p>
         <div class="bg-light p-3 rounded">{{ banda.mensaje }}</div>
-        
+
         {% if banda.links.exists %}
-          <hr>
-          <p><strong>Enlaces:</strong></p>
-          <div class="d-flex flex-wrap gap-2">
-            {% for link in banda.links.all %}
-              <a href="{{ link.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-external-link-alt me-1"></i>{{ link.tipo|title }}
-              </a>
-            {% endfor %}
-          </div>
-        {% endif %}
-        
-        {% if banda.documento_presentacion %}
-          <hr>
-          <p><strong>Documento de Presentación:</strong></p>
-          <a href="{{ banda.documento_presentacion }}" target="_blank" class="btn btn-sm btn-outline-primary">
-            <i class="fas fa-download"></i> Descargar
+        <hr />
+        <p><strong>Enlaces:</strong></p>
+        <div class="d-flex flex-wrap gap-2">
+          {% for link in banda.links.all %}
+          <a
+            href="{{ link.url }}"
+            target="_blank"
+            class="btn btn-sm btn-outline-primary"
+          >
+            <i class="fas fa-external-link-alt me-1"></i>{{ link.tipo|title }}
           </a>
+          {% endfor %}
+        </div>
+        {% endif %} {% if banda.documento_presentacion %}
+        <hr />
+        <p><strong>Documento de Presentación:</strong></p>
+        <a
+          href="{{ banda.documento_presentacion }}"
+          target="_blank"
+          class="btn btn-sm btn-outline-primary"
+        >
+          <i class="fas fa-download"></i> Descargar
+        </a>
         {% endif %}
-        
-        <hr>
+
+        <hr />
         <div class="row">
           <div class="col-md-6">
-            <p><strong>Fecha de envío:</strong> {{ banda.fecha_envio|date:"d/m/Y H:i" }}</p>
+            <p>
+              <strong>Fecha de envío:</strong>
+              {{ banda.fecha_envio|date:"d/m/Y H:i" }}
+            </p>
           </div>
           <div class="col-md-6">
             {% if banda.fecha_revision %}
-              <p><strong>Fecha de revisión:</strong> {{ banda.fecha_revision|date:"d/m/Y H:i" }}</p>
-              <p><strong>Revisado por:</strong> {{ banda.revisado_por.get_full_name|default:banda.revisado_por.username }}</p>
+            <p>
+              <strong>Fecha de revisión:</strong>
+              {{ banda.fecha_revision|date:"d/m/Y H:i" }}
+            </p>
+            <p>
+              <strong>Revisado por:</strong>
+              {{banda.revisado_por.get_full_name|default:banda.revisado_por.username}}
+            </p>
             {% endif %}
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <a href="{% url 'cambiar_estado_banda' banda.id 'revision' %}" class="btn btn-info">
-          <i class="fas fa-eye"></i> En Revisión
-        </a>
-        <a href="{% url 'cambiar_estado_banda' banda.id 'aprobado' %}" class="btn btn-success">
-          <i class="fas fa-check"></i> Aprobar
-        </a>
-        <a href="{% url 'cambiar_estado_banda' banda.id 'rechazado' %}" class="btn btn-danger">
-          <i class="fas fa-times"></i> Rechazar
-        </a>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>      </div>
+        <!-- Botones de estado -->
+        <div class="btn-group" role="group">
+          {% for estado in estados %}
+            {% if estado.tipo_entidad == 'banda' %}
+              <a
+                href="{% url 'cambiar_estado_banda' banda.id estado.nombre %}"
+                class="btn {% if estado.nombre == 'Revisado' %}btn-info{% elif estado.nombre == 'Aprobado' %}btn-success{% elif estado.nombre == 'Rechazado' %}btn-danger{% elif estado.nombre == 'Pendiente' %}btn-secondary{% endif %}"
+                title="{{ estado.nombre }}"
+              >
+                {% if estado.nombre == 'Revisado' %}
+                  <i class="fas fa-eye"></i>
+                {% elif estado.nombre == 'Aprobado' %}
+                  <i class="fas fa-check"></i>
+                {% elif estado.nombre == 'Rechazado' %}
+                  <i class="fas fa-times"></i>
+                {% elif estado.nombre == 'Pendiente' %}
+                  <i class="fas fa-clock"></i>
+                {% endif %}
+                {{ estado.nombre }}
+              </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cerrar
+        </button>
+      </div>
     </div>
   </div>
 </div>
-{% endfor %}
-{% endblock %}
-
-{% block scripts %}
+{% endfor %} {% endblock %} {% block scripts %}
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const notificationContainer = document.getElementById('notification-container');
-    const generosBody = document.getElementById('lista-generos-body');
+  document.addEventListener("DOMContentLoaded", function () {
+    const notificationContainer = document.getElementById(
+      "notification-container"
+    );
+    const notificationContainerEstados = document.getElementById(
+      "notification-container-estados"
+    );
+    const generosBody = document.getElementById("lista-generos-body");
+    const estadosBody = document.getElementById("lista-estados-body");
 
-    function showNotification(message, type = 'success') {
-      const alertDiv = document.createElement('div');
-      alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
-      alertDiv.role = 'alert';
+    function showNotification(message, type = "success") {
+      const alertDiv = document.createElement("div");
+      alertDiv.className = `alert alert-${
+        type === "success" ? "success" : "danger"
+      } alert-dismissible fade show`;
+      alertDiv.role = "alert";
       alertDiv.innerHTML = `
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       `;
-      notificationContainer.innerHTML = ''; // Limpiar notificaciones anteriores
+      notificationContainer.innerHTML = ""; // Limpiar notificaciones anteriores
       notificationContainer.appendChild(alertDiv);
 
       setTimeout(() => {
@@ -330,63 +572,68 @@
     }
 
     // Agregar Género
-    const formAgregar = document.getElementById('form-agregar-genero');
-    formAgregar.addEventListener('submit', function(e) {
+    const formAgregar = document.getElementById("form-agregar-genero");
+    formAgregar.addEventListener("submit", function (e) {
       e.preventDefault();
       const formData = new FormData(formAgregar);
       const url = formAgregar.action;
 
       fetch(url, {
-        method: 'POST',
+        method: "POST",
         body: formData,
         headers: {
-          'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-          'X-Requested-With': 'XMLHttpRequest'
-        }
+          "X-CSRFToken": formData.get("csrfmiddlewaretoken"),
+          "X-Requested-With": "XMLHttpRequest",
+        },
       })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'success') {
-          showNotification(data.message, 'success');
-          const genero = data.genero;
-          const newRow = document.createElement('tr');
-          newRow.id = `genero-row-${genero.id}`;
-          const deleteUrl = "{% url 'eliminar_genero' 0 %}".replace('0', genero.id);
-          newRow.innerHTML = `
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status === "success") {
+            showNotification(data.message, "success");
+            const genero = data.genero;
+            const newRow = document.createElement("tr");
+            newRow.id = `genero-row-${genero.id}`;
+            const deleteUrl = "{% url 'eliminar_genero' 0 %}".replace(
+              "0",
+              genero.id
+            );
+            newRow.innerHTML = `
             <td><strong>${genero.nombre}</strong></td>
-            <td>${genero.descripcion || 'Sin descripción'}</td>
+            <td>${genero.descripcion || "Sin descripción"}</td>
             <td>
               <form method="post" action="${deleteUrl}" class="d-inline form-eliminar-genero">
-                <input type="hidden" name="csrfmiddlewaretoken" value="${formData.get('csrfmiddlewaretoken')}">
+                <input type="hidden" name="csrfmiddlewaretoken" value="${formData.get(
+                  "csrfmiddlewaretoken"
+                )}">
                 <button type="submit" class="btn btn-sm btn-outline-danger">
                   <i class="fas fa-trash-alt"></i>
                 </button>
               </form>
             </td>
           `;
-          
-          const noGenerosRow = document.getElementById('no-generos-row');
-          if (noGenerosRow) {
-            noGenerosRow.remove();
+
+            const noGenerosRow = document.getElementById("no-generos-row");
+            if (noGenerosRow) {
+              noGenerosRow.remove();
+            }
+
+            generosBody.appendChild(newRow);
+            formAgregar.reset();
+          } else {
+            showNotification(data.message, "error");
           }
-          
-          generosBody.appendChild(newRow);
-          formAgregar.reset();
-        } else {
-          showNotification(data.message, 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        showNotification('Ocurrió un error de red.', 'error');
-      });
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          showNotification("Ocurrió un error de red.", "error");
+        });
     });
 
     // Eliminar Género (con delegación de eventos)
-    generosBody.addEventListener('submit', function(e) {
-      if (e.target.classList.contains('form-eliminar-genero')) {
+    generosBody.addEventListener("submit", function (e) {
+      if (e.target.classList.contains("form-eliminar-genero")) {
         e.preventDefault();
-        if (!confirm('¿Estás seguro de eliminar este género?')) {
+        if (!confirm("¿Estás seguro de eliminar este género?")) {
           return;
         }
 
@@ -395,36 +642,199 @@
         const url = formEliminar.action;
 
         fetch(url, {
-          method: 'POST',
+          method: "POST",
           body: formData,
           headers: {
-            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-            'X-Requested-With': 'XMLHttpRequest'
-          }
+            "X-CSRFToken": formData.get("csrfmiddlewaretoken"),
+            "X-Requested-With": "XMLHttpRequest",
+          },
         })
-        .then(response => response.json())
-        .then(data => {
-          if (data.status === 'success') {
-            showNotification(data.message, 'success');
-            const row = formEliminar.closest('tr');
-            row.remove();
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "success") {
+              showNotification(data.message, "success");
+              const row = formEliminar.closest("tr");
+              row.remove();
 
-            if (generosBody.children.length === 0) {
-              const emptyRow = document.createElement('tr');
-              emptyRow.id = 'no-generos-row';
-              emptyRow.innerHTML = '<td colspan="3" class="text-center text-muted">No hay géneros registrados.</td>';
-              generosBody.appendChild(emptyRow);
+              if (generosBody.children.length === 0) {
+                const emptyRow = document.createElement("tr");
+                emptyRow.id = "no-generos-row";
+                emptyRow.innerHTML =
+                  '<td colspan="3" class="text-center text-muted">No hay géneros registrados.</td>';
+                generosBody.appendChild(emptyRow);
+              }
+            } else {
+              showNotification(data.message, "error");
             }
-          } else {
-            showNotification(data.message, 'error');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          showNotification('Ocurrió un error de red.', 'error');
-        });
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            showNotification("Ocurrió un error de red.", "error");
+          });
       }
     });
+
+    // Gestión de Estados
+    const formAgregarEstado = document.getElementById("form-agregar-estado");
+    formAgregarEstado.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const formData = new FormData(formAgregarEstado);
+      const url = formAgregarEstado.action;
+
+      fetch(url, {
+        method: "POST",
+        body: formData,
+        headers: {
+          "X-CSRFToken": formData.get("csrfmiddlewaretoken"),
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status === "success") {
+            showNotification(
+              data.message,
+              "success",
+              notificationContainerEstados
+            );
+            const estado = data.estado;
+            const newRow = document.createElement("tr");
+            newRow.id = `estado-row-${estado.id}`;
+            const deleteUrl = "{% url 'eliminar_estado' 0 %}".replace(
+              "0",
+              estado.id
+            );
+            newRow.innerHTML = `
+              <td><strong>${estado.nombre}</strong></td>
+              <td>${estado.descripcion || "Sin descripción"}</td>
+              <td>${estado.tipo_entidad === "banda" ? "Banda" : "Contacto"}</td>
+              <td>
+                <form method="post" action="${deleteUrl}" class="d-inline form-eliminar-estado">
+                  <input type="hidden" name="csrfmiddlewaretoken" value="${formData.get(
+                    "csrfmiddlewaretoken"
+                  )}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </form>
+              </td>
+            `;
+
+            const noEstadosRow = document.getElementById("no-estados-row");
+            if (noEstadosRow) {
+              noEstadosRow.remove();
+            }
+
+            estadosBody.appendChild(newRow);
+            formAgregarEstado.reset();
+          } else {
+            showNotification(
+              data.message,
+              "error",
+              notificationContainerEstados
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          showNotification(
+            "Ocurrió un error de red.",
+            "error",
+            notificationContainerEstados
+          );
+        });
+    });
+
+    // Eliminar Estado (con delegación de eventos)
+    estadosBody.addEventListener("submit", function (e) {
+      if (e.target.classList.contains("form-eliminar-estado")) {
+        e.preventDefault();
+
+        const button = e.target.querySelector("button");
+        if (button.disabled) {
+          showNotification(
+            "No se puede eliminar este estado porque tiene elementos asociados.",
+            "error",
+            notificationContainerEstados
+          );
+          return;
+        }
+
+        if (!confirm("¿Estás seguro de eliminar este estado?")) {
+          return;
+        }
+
+        const formEliminar = e.target;
+        const formData = new FormData(formEliminar);
+        const url = formEliminar.action;
+
+        fetch(url, {
+          method: "POST",
+          body: formData,
+          headers: {
+            "X-CSRFToken": formData.get("csrfmiddlewaretoken"),
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "success") {
+              showNotification(
+                data.message,
+                "success",
+                notificationContainerEstados
+              );
+              const row = formEliminar.closest("tr");
+              row.remove();
+
+              if (estadosBody.children.length === 0) {
+                const emptyRow = document.createElement("tr");
+                emptyRow.id = "no-estados-row";
+                emptyRow.innerHTML =
+                  '<td colspan="4" class="text-center text-muted">No hay estados registrados.</td>';
+                estadosBody.appendChild(emptyRow);
+              }
+            } else {
+              showNotification(
+                data.message,
+                "error",
+                notificationContainerEstados
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            showNotification(
+              "Ocurrió un error de red.",
+              "error",
+              notificationContainerEstados
+            );
+          });
+      }
+    });
+
+    // Función para notificaciones que acepta el contenedor como parámetro
+    function showNotification(
+      message,
+      type = "success",
+      container = notificationContainer
+    ) {
+      const alertDiv = document.createElement("div");
+      alertDiv.className = `alert alert-${
+        type === "success" ? "success" : "danger"
+      } alert-dismissible fade show`;
+      alertDiv.role = "alert";
+      alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      `;
+      container.innerHTML = ""; // Limpiar notificaciones anteriores
+      container.appendChild(alertDiv);
+
+      setTimeout(() => {
+        alertDiv.remove();
+      }, 5000);
+    }
   });
 </script>
-{% endblock scripts %}
+{% endblock %}
