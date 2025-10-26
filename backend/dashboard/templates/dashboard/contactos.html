@@ -6,10 +6,10 @@
 {% block content %}
 <div class="container-fluid">
     <!-- Stats Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
+    <div class="row mb-1">
+        <div class="col-md-3 mb-2">
             <div class="card stat-card">
-                <div class="card-body">
+                <div class="card-body p-2">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <p class="text-xs mb-1">Total Contactos</p>
@@ -20,9 +20,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3 mb-2">
             <div class="card stat-card users">
-                <div class="card-body">
+                <div class="card-body p-2">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <p class="text-xs mb-1">Pendientes</p>
@@ -33,9 +33,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3 mb-2">
             <div class="card stat-card posts">
-                <div class="card-body">
+                <div class="card-body p-2">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <p class="text-xs mb-1">Respondidos</p>
@@ -46,9 +46,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3 mb-2">
             <div class="card stat-card programs">
-                <div class="card-body">
+                <div class="card-body p-2">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <p class="text-xs mb-1">Esta Semana</p>
@@ -62,16 +62,16 @@
     </div>
 
     <!-- Tipo de Asunto Management -->
-    <div class="row mb-4">
+    <div class="row mb-1">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header py-1">
                     <h5 class="mb-0">
                         <i class="fas fa-tags me-2"></i>
                         Gestión de tipos de asunto
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-2">
                     <!-- Formulario para agregar nuevo tipo de asunto -->
                     <form id="form-agregar-tipo" method="POST" action="{% url 'agregar_tipo_asunto' %}" class="mb-4">
                         {% csrf_token %}
@@ -138,10 +138,10 @@
     </div>
 
     <!-- Filters -->
-    <div class="row mb-4">
+    <div class="row mb-1">
         <div class="col-12">
             <div class="card">
-                <div class="card-body">
+                <div class="card-body p-2">
                     <form method="GET" class="row g-3">
                         <div class="col-md-3">
                             <label class="form-label">Estado</label>
@@ -181,16 +181,16 @@
     </div>
 
     <!-- Contactos Table -->
-    <div class="row">
+    <div class="row mt-2">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header py-1">
                     <h5 class="mb-0">
                         <i class="fas fa-inbox me-2"></i>
                         Mensajes de Contacto
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-2">
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>

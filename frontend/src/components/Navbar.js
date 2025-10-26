@@ -65,14 +65,6 @@ const Navbar = () => {
                 Dashboard
               </a>
             )}
-            <button
-              className="theme-toggle"
-              onClick={toggleTheme}
-              aria-label="Cambiar tema"
-              title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
-            >
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
           </div>
 
           {/* Sección autenticación desktop */}
@@ -90,6 +82,14 @@ const Navbar = () => {
                 Iniciar Sesión
               </Link>
             )}
+            <button
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label="Cambiar tema"
+              title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
           </div>
 
           {/* Botón de menú en dispositivo mobil */}
