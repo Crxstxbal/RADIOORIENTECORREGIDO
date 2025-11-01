@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Music, Users, Link, Send, X, Plus } from 'lucide-react';
-import { 
-  FaSpotify, 
-  FaYoutube, 
-  FaInstagram, 
-  FaFacebook, 
+import {
+  FaSpotify,
+  FaYoutube,
+  FaInstagram,
+  FaFacebook,
   FaSoundcloud,
   FaGlobe,
   FaLink
 } from 'react-icons/fa';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import './emergente.css';
 
@@ -48,55 +47,80 @@ const Emergente = () => {
         const inicializarDatos = async () => {
             try {
                 // Verificar si hay países
-                const paisesResponse = await axios.get('/api/ubicacion/paises/');
-                
+                const paisesResponse = await fetch('/api/ubicacion/paises/');
+                if (!paisesResponse.ok) {
+                    throw new Error('Error al cargar países');
+                }
+                const paisesData = await paisesResponse.json();
+
+                // Los endpoints DRF devuelven objetos paginados con { results: [] }
+                const paisesArray = paisesData.results || (Array.isArray(paisesData) ? paisesData : []);
+
                 // Si no hay países o no está Chile, reiniciar datos desde API
-                const chile = paisesResponse.data?.find(p => p.nombre === 'Chile');
-                
+                const chile = paisesArray.find(p => p.nombre === 'Chile');
+
                 if (!chile) {
                     console.log('Chile no encontrado, cargando datos desde API...');
                     const loadingToast = toast.loading('Cargando regiones y comunas de Chile desde API oficial...');
-                    
+
                     try {
-                        const response = await axios.post('/api/ubicacion/paises/reiniciar_datos_chile/');
-                        toast.dismiss(loadingToast);
-                        toast.success(`✅ ${response.data.message}\n📍 ${response.data.regiones_creadas} regiones\n🏘️ ${response.data.comunas_creadas} comunas`);
-                        
-                        // Recargar países
-                        const paisesActualizados = await axios.get('/api/ubicacion/paises/');
-                        setPaises(paisesActualizados.data);
-                        // Seleccionar Chile por defecto si no hay país seleccionado
-                        const chileNuevo = paisesActualizados.data?.find(p => p.nombre === 'Chile');
-                        if (chileNuevo && !formData.pais) {
-                            setFormData(prev => ({ ...prev, pais: chileNuevo.id }));
+                        const response = await fetch('/api/ubicacion/paises/reiniciar_datos_chile/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            toast.dismiss(loadingToast);
+                            toast.success(`✅ ${data.message}\n📍 ${data.regiones_creadas} regiones\n🏘️ ${data.comunas_creadas} comunas`);
+
+                            // Recargar países
+                            const paisesActualizadosResponse = await fetch('/api/ubicacion/paises/');
+                            if (paisesActualizadosResponse.ok) {
+                                const paisesActualizados = await paisesActualizadosResponse.json();
+                                const paisesActualizadosArray = paisesActualizados.results || (Array.isArray(paisesActualizados) ? paisesActualizados : []);
+                                setPaises(paisesActualizadosArray);
+                                // Seleccionar Chile por defecto si no hay país seleccionado
+                                const chileNuevo = paisesActualizadosArray.find(p => p.nombre === 'Chile');
+                                if (chileNuevo && !formData.pais) {
+                                    setFormData(prev => ({ ...prev, pais: chileNuevo.id }));
+                                }
+                            }
+                        } else {
+                            throw new Error('Error al reiniciar datos');
                         }
                     } catch (apiError) {
                         toast.dismiss(loadingToast);
                         console.error('Error al cargar desde API:', apiError);
                         toast.error('No se pudieron cargar los datos desde la API');
+                        setPaises([]);
                     }
                 } else {
                     // Chile existe, verificar si tiene regiones
-                    const ciudadesResponse = await axios.get('/api/ubicacion/ciudades/por_pais/', {
-                        params: { pais_id: chile.id }
-                    });
-                    
+                    const ciudadesResponse = await fetch(`/api/ubicacion/ciudades/por_pais/?pais_id=${chile.id}`);
+                    const ciudadesData = ciudadesResponse.ok ? await ciudadesResponse.json() : [];
+
                     // Si no hay regiones o hay muy pocas, recargar desde API
-                    if (!ciudadesResponse.data || ciudadesResponse.data.length < 10) {
+                    if (!ciudadesData || ciudadesData.length < 10) {
                         console.log('Pocas o ninguna región, recargando desde API...');
                         const loadingToast = toast.loading('Actualizando datos desde API oficial de Chile...');
-                        
+
                         try {
-                            const response = await axios.post('/api/ubicacion/paises/reiniciar_datos_chile/');
-                            toast.dismiss(loadingToast);
-                            toast.success(`Datos actualizados: ${response.data.regiones_creadas} regiones, ${response.data.comunas_creadas} comunas`);
+                            const response = await fetch('/api/ubicacion/paises/reiniciar_datos_chile/', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' }
+                            });
+                            if (response.ok) {
+                                const data = await response.json();
+                                toast.dismiss(loadingToast);
+                                toast.success(`Datos actualizados: ${data.regiones_creadas} regiones, ${data.comunas_creadas} comunas`);
+                            }
                         } catch (apiError) {
                             toast.dismiss(loadingToast);
                             console.error('Error al actualizar desde API:', apiError);
                         }
                     }
-                    
-                    setPaises(paisesResponse.data);
+
+                    setPaises(paisesArray);
                     // Seleccionar Chile por defecto si no hay país seleccionado
                     if (chile && !formData.pais) {
                         setFormData(prev => ({ ...prev, pais: chile.id }));
@@ -105,14 +129,21 @@ const Emergente = () => {
             } catch (error) {
                 console.error('Error al inicializar datos:', error);
                 toast.error('Error al cargar la lista de países');
+                setPaises([]);
             }
         };
 
         // Cargar géneros musicales
         const cargarGeneros = async () => {
             try {
-                const response = await axios.get('/api/radio/api/generos/');
-                setGeneros(response.data);
+                const response = await fetch('/api/radio/api/generos/');
+                if (!response.ok) {
+                    throw new Error('Error al cargar géneros');
+                }
+                const data = await response.json();
+                // Los endpoints DRF devuelven objetos paginados con { results: [] }
+                const generosArray = data.results || (Array.isArray(data) ? data : []);
+                setGeneros(generosArray);
             } catch (error) {
                 console.error('Error al cargar géneros musicales:', error);
                 toast.error('Error al cargar la lista de géneros musicales');
@@ -147,18 +178,20 @@ const Emergente = () => {
             setIsLoadingCiudades(true);
             try {
                 console.log('Solicitando ciudades para país ID:', formData.pais);
-                const response = await axios.get('/api/ubicacion/ciudades/por_pais/', {
-                    params: {
-                        pais_id: formData.pais
-                    }
-                });
-                console.log('Respuesta de ciudades:', response.data);
-                
+                const response = await fetch(`/api/ubicacion/ciudades/por_pais/?pais_id=${formData.pais}`);
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar ciudades');
+                }
+
+                const data = await response.json();
+                console.log('Respuesta de ciudades:', data);
+
                 // La respuesta ya debería ser un array
-                const ciudadesData = Array.isArray(response.data) ? response.data : [];
-                
+                const ciudadesData = Array.isArray(data) ? data : [];
+
                 setCiudades(ciudadesData);
-                
+
                 // Resetear ciudad y comuna cuando cambia el país
                 setFormData(prev => ({
                     ...prev,
@@ -193,17 +226,19 @@ const Emergente = () => {
             setIsLoadingComunas(true);
             try {
                 console.log('Solicitando comunas para ciudad ID:', formData.ciudad);
-                const response = await axios.get('/api/ubicacion/comunas/por_ciudad/', {
-                    params: {
-                        ciudad_id: formData.ciudad
-                    }
-                });
-                console.log('Respuesta de comunas:', response.data);
-                
+                const response = await fetch(`/api/ubicacion/comunas/por_ciudad/?ciudad_id=${formData.ciudad}`);
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar comunas');
+                }
+
+                const data = await response.json();
+                console.log('Respuesta de comunas:', data);
+
                 // La respuesta ya debería ser un array
-                const comunasData = Array.isArray(response.data) ? response.data : [];
+                const comunasData = Array.isArray(data) ? data : [];
                 setComunas(comunasData);
-                
+
                 // Resetear comuna cuando cambia la ciudad
                 setFormData(prev => ({
                     ...prev,
@@ -336,61 +371,66 @@ const Emergente = () => {
 
             console.log('📤 Enviando datos:', dataToSend);
 
-            const response = await axios.post('/api/emergentes/api/bandas/', dataToSend, {
+            const response = await fetch('/api/emergentes/api/bandas/', {
+                method: 'POST',
                 headers: {
                     'Authorization': `Token ${token}`,
                     'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dataToSend)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Respuesta exitosa:', data);
+                toast.success('¡Propuesta enviada exitosamente! Te contactaremos pronto.');
+                setSubmitted(true);
+
+                // Limpiar formulario
+                setFormData({
+                    nombre_banda: '',
+                    integrantes: [],
+                    genero: '',
+                    comuna: '',
+                    email_contacto: '',
+                    telefono_contacto: '',
+                    mensaje: '',
+                    links: [],
+                    documento_presentacion: ''
+                });
+            } else {
+                const errorData = await response.json();
+                console.error('📄 Respuesta del servidor:', errorData);
+                console.error('🔢 Código de estado:', response.status);
+
+                let errorMessage = 'Error al enviar la propuesta. Inténtalo de nuevo.';
+
+                if (errorData) {
+                    console.log('📋 Datos del error:', errorData);
+
+                    if (typeof errorData === 'object') {
+                        // Mostrar errores específicos de campos
+                        setErrors(errorData);
+
+                        // Crear mensaje de error más específico
+                        const firstError = Object.values(errorData)[0];
+                        if (Array.isArray(firstError)) {
+                            errorMessage = firstError[0];
+                        } else if (typeof firstError === 'string') {
+                            errorMessage = firstError;
+                        }
+                    } else {
+                        errorMessage = errorData.toString();
+                    }
                 }
-            });
 
-            console.log('✅ Respuesta exitosa:', response.data);
-            toast.success('¡Propuesta enviada exitosamente! Te contactaremos pronto.');
-            setSubmitted(true);
-            
-            // Limpiar formulario
-            setFormData({
-                nombre_banda: '',
-                integrantes: [],
-                genero: '',
-                comuna: '',
-                email_contacto: '',
-                telefono_contacto: '',
-                mensaje: '',
-                links: [],
-                documento_presentacion: ''
-            });
-
+                toast.error(errorMessage);
+                console.log('🚨 Error mostrado al usuario:', errorMessage);
+            }
         } catch (error) {
             console.error('❌ Error completo:', error);
-            console.error('📄 Respuesta del servidor:', error.response?.data);
-            console.error('🔢 Código de estado:', error.response?.status);
-            
-            let errorMessage = 'Error al enviar la propuesta. Inténtalo de nuevo.';
-            
-            if (error.response?.data) {
-                const errorData = error.response.data;
-                console.log('📋 Datos del error:', errorData);
-                
-                if (typeof errorData === 'object') {
-                    // Mostrar errores específicos de campos
-                    setErrors(errorData);
-                    
-                    // Crear mensaje de error más específico
-                    const firstError = Object.values(errorData)[0];
-                    if (Array.isArray(firstError)) {
-                        errorMessage = firstError[0];
-                    } else if (typeof firstError === 'string') {
-                        errorMessage = firstError;
-                    }
-                } else {
-                    errorMessage = errorData.toString();
-                }
-            } else if (error.message) {
-                errorMessage = error.message;
-            }
-            
-            toast.error(errorMessage);
-            console.log('🚨 Error mostrado al usuario:', errorMessage);
+            toast.error('Error al enviar la propuesta. Inténtalo de nuevo.');
+            console.log('🚨 Error mostrado al usuario:', error.message);
         } finally {
             setIsLoading(false);
         }

@@ -57,5 +57,11 @@ urlpatterns = [
 
     # Chat Moderation
     path('chat/delete-message/<int:message_id>/', views.delete_message, name='delete_message'),
+
+    # Notificaciones
+    path('notificaciones/', views.dashboard_notificaciones, name='dashboard_notificaciones'),
+    path('notificaciones/marcar-leida/<int:notificacion_id>/', views.marcar_notificacion_leida, name='marcar_notificacion_leida'),
+    path('notificaciones/eliminar/<int:notificacion_id>/', views.eliminar_notificacion, name='eliminar_notificacion'),
+    path('notificaciones/marcar-todas-leidas/', views.marcar_todas_leidas, name='marcar_todas_leidas'),
 ]
 

@@ -23,23 +23,17 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor para manejar respuestas y errores
+// Interceptor para manejar respuestas y errores (instancia api)
 api.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
-    // Manejar errores de autenticación
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
-    
     // Manejar errores de servidor
     if (error.response?.status >= 500) {
       console.error('Server error:', error.response.data);
     }
-    
+
     return Promise.reject(error);
   }
 );

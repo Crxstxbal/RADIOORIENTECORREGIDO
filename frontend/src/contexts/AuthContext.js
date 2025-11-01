@@ -17,21 +17,24 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-  // Configure axios defaults
-  useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Token ${token}`;
-    } else {
-      delete axios.defaults.headers.common['Authorization'];
-    }
-  }, [token]);
+  // NO configurar axios.defaults globalmente
+  // Esto causaba problemas en páginas públicas como /contacto y /emergente
+  // useEffect(() => {
+  //   if (token) {
+  //     axios.defaults.headers.common['Authorization'] = `Token ${token}`;
+  //   } else {
+  //     delete axios.defaults.headers.common['Authorization'];
+  //   }
+  // }, [token]);
 
   // Check if user is logged in on mount
   useEffect(() => {
     const checkAuth = async () => {
       if (token) {
         try {
-          const response = await axios.get('/api/auth/profile/');
+          const response = await axios.get('/api/auth/profile/', {
+            headers: { Authorization: `Token ${token}` }
+          });
           setUser(response.data);
         } catch (error) {
           localStorage.removeItem('token');
@@ -85,7 +88,11 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.post('/api/auth/logout/');
+      if (token) {
+        await axios.post('/api/auth/logout/', {}, {
+          headers: { Authorization: `Token ${token}` }
+        });
+      }
     } catch (error) {
       console.error('Error during logout:', error);
     } finally {
@@ -98,7 +105,9 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (userData) => {
     try {
-      const response = await axios.put('/api/auth/profile/update/', userData);
+      const response = await axios.put('/api/auth/profile/update/', userData, {
+        headers: token ? { Authorization: `Token ${token}` } : {}
+      });
       setUser(response.data);
       toast.success('Perfil actualizado');
       return { success: true };

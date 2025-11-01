@@ -2,6 +2,7 @@ from rest_framework import generics, status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
+from apps.common.pagination import StandardResultsSetPagination
 from .models import EstacionRadio, GeneroMusical, Conductor, Programa, ProgramaConductor, HorarioPrograma
 from .serializers import (
     EstacionRadioSerializer, GeneroMusicalSerializer, ConductorSerializer,
@@ -41,17 +42,27 @@ class ProgramaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def por_dia(self, request):
-        """Obtener programas por día de la semana"""
+        """Obtener programas por día de la semana (paginado)"""
         dia = request.query_params.get('dia')
-        if dia is not None:
-            try:
-                dia = int(dia)
-                programas = self.queryset.filter(horarios__dia_semana=dia, horarios__activo=True).distinct()
-                serializer = self.get_serializer(programas, many=True)
-                return Response(serializer.data)
-            except ValueError:
-                pass
-        return Response([])
+        if dia is None:
+            return Response([])
+
+        try:
+            dia = int(dia)
+            queryset = self.queryset.filter(horarios__dia_semana=dia, horarios__activo=True).distinct()
+
+            # Aplicar paginación
+            paginator = StandardResultsSetPagination()
+            page = paginator.paginate_queryset(queryset, request)
+
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return paginator.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        except ValueError:
+            return Response({'error': 'El parámetro dia debe ser un número'}, status=status.HTTP_400_BAD_REQUEST)
 
 class HorarioProgramaViewSet(viewsets.ModelViewSet):
     """ViewSet para horarios de programas"""

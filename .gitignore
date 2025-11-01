@@ -1,6 +1,10 @@
 /backend/.env
+/frontend/.env
 .env
-.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 db.sqlite3
 database_setup.sql
 node_modules

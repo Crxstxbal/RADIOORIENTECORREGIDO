@@ -18,7 +18,8 @@ def api_info(request):
             'contact': '/api/contact/',
             'emergentes': '/api/emergentes/',
             'ubicacion': '/api/ubicacion/',
-            'publicidad': '/api/publicidad/'
+            'publicidad': '/api/publicidad/',
+            'notifications': '/api/notifications/'
         }
     })
 
@@ -41,6 +42,7 @@ urlpatterns = [
     path('api/emergentes/', include('apps.emergente.urls')),
     path('api/ubicacion/', include('apps.ubicacion.urls')),
     path('api/publicidad/', include('apps.publicidad.urls')),
+    path('api/notifications/', include('apps.notifications.urls')),
 ]
 
 if settings.DEBUG:

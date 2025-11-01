@@ -2,6 +2,7 @@ from rest_framework import generics, status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
+from rest_framework.authentication import TokenAuthentication
 from .models import TipoAsunto, Estado, Contacto, Suscripcion
 from .serializers import (
     TipoAsuntoSerializer, EstadoSerializer, ContactoSerializer, ContactoCreateSerializer,
@@ -37,7 +38,9 @@ class ContactoViewSet(viewsets.ModelViewSet):
     queryset = Contacto.objects.select_related('tipo_asunto', 'estado', 'usuario').all()
     serializer_class = ContactoSerializer
     permission_classes = [AllowAny]
-    
+    # Solo usar TokenAuthentication, no SessionAuthentication para evitar CSRF en peticiones públicas
+    authentication_classes = [TokenAuthentication]
+
     def get_serializer_class(self):
         if self.action == 'create':
             return ContactoCreateSerializer

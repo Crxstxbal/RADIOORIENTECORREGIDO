@@ -10,6 +10,7 @@ const Navbar = () => {
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL || 'http://localhost:8000/dashboard/';
 
   const navItems = [
     { name: "Inicio", path: "/" },
@@ -56,7 +57,7 @@ const Navbar = () => {
             {/* Link Dashboard solo para administradores */}
             {isAdmin && (
               <a
-                href="http://localhost:8000/dashboard/"
+                href={dashboardUrl}
                 className="nav-link dashboard-link"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -118,7 +119,7 @@ const Navbar = () => {
             {/* Link Dashboard solo para administradores - Mobile */}
             {isAdmin && (
               <a
-                href="http://localhost:8000/dashboard/"
+                href={dashboardUrl}
                 className="mobile-nav-link dashboard-link"
                 target="_blank"
                 rel="noopener noreferrer"

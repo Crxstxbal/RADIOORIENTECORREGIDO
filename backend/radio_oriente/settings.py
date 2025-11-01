@@ -12,7 +12,9 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-produc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+# Configuración de hosts permitidos
+ALLOWED_HOSTS_STR = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0')
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(',') if host.strip()]
 
 # Application definition
 INSTALLED_APPS = [
@@ -36,6 +38,7 @@ INSTALLED_APPS = [
     'apps.contact',
     'apps.emergente',
     'apps.publicidad',
+    'apps.notifications',
     'dashboard',
 ]
 
@@ -141,14 +144,18 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'apps.common.pagination.StandardResultsSetPagination',
+    'PAGE_SIZE': 20,
 }
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
-CORS_ALLOW_ALL_ORIGINS = True  # For development only
+# En producción, desactiva CORS_ALLOW_ALL_ORIGINS y solo usa CORS_ALLOWED_ORIGINS
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
+
+# Lista de orígenes permitidos (se puede configurar desde .env)
+ALLOWED_ORIGINS_STR = config('ALLOWED_ORIGINS', default='http://localhost:3000,http://127.0.0.1:3000')
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_STR.split(',') if origin.strip()]
+
 CORS_ALLOW_CREDENTIALS = True
 
 # Channels configuration (comentado temporalmente)

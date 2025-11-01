@@ -3,9 +3,10 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticate
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils.text import slugify
+from apps.common.pagination import StandardResultsSetPagination, SmallResultsSetPagination
 from .models import Categoria, Articulo, ComentarioArticulo
 from .serializers import (
-    CategoriaSerializer, ArticuloSerializer, ArticuloListSerializer, 
+    CategoriaSerializer, ArticuloSerializer, ArticuloListSerializer,
     ArticuloCreateSerializer, BlogPostLegacySerializer, ComentarioArticuloSerializer
 )
 
@@ -41,34 +42,71 @@ class ArticuloViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def destacados(self, request):
-        """Obtener artículos destacados"""
-        destacados = self.queryset.filter(destacado=True).order_by('-fecha_publicacion')[:5]
-        serializer = ArticuloListSerializer(destacados, many=True, context={'request': request})
+        """Obtener artículos destacados (paginado)"""
+        queryset = self.queryset.filter(destacado=True).order_by('-fecha_publicacion')
+
+        # Usar paginación pequeña para destacados
+        paginator = SmallResultsSetPagination()
+        page = paginator.paginate_queryset(queryset, request)
+
+        if page is not None:
+            serializer = ArticuloListSerializer(page, many=True, context={'request': request})
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = ArticuloListSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def por_categoria(self, request):
-        """Obtener artículos por categoría"""
+        """Obtener artículos por categoría (paginado)"""
         categoria_slug = request.query_params.get('categoria')
-        if categoria_slug:
-            articulos = self.queryset.filter(categoria__slug=categoria_slug)
-            serializer = ArticuloListSerializer(articulos, many=True, context={'request': request})
-            return Response(serializer.data)
-        return Response([])
+        if not categoria_slug:
+            return Response([])
+
+        queryset = self.queryset.filter(categoria__slug=categoria_slug)
+
+        # Aplicar paginación
+        paginator = StandardResultsSetPagination()
+        page = paginator.paginate_queryset(queryset, request)
+
+        if page is not None:
+            serializer = ArticuloListSerializer(page, many=True, context={'request': request})
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = ArticuloListSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def mas_vistos(self, request):
-        """Obtener artículos más vistos"""
-        mas_vistos = self.queryset.order_by('-vistas')[:10]
-        serializer = ArticuloListSerializer(mas_vistos, many=True, context={'request': request})
+        """Obtener artículos más vistos (paginado)"""
+        queryset = self.queryset.order_by('-vistas')
+
+        # Usar paginación pequeña para más vistos
+        paginator = SmallResultsSetPagination()
+        page = paginator.paginate_queryset(queryset, request)
+
+        if page is not None:
+            serializer = ArticuloListSerializer(page, many=True, context={'request': request})
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = ArticuloListSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
     
     @action(detail=True, methods=['get'])
     def comentarios(self, request, slug=None):
-        """Obtener comentarios de un artículo"""
+        """Obtener comentarios de un artículo (paginado)"""
         articulo = self.get_object()
-        comentarios = articulo.comentarios.filter(activo=True)
-        serializer = ComentarioArticuloSerializer(comentarios, many=True)
+        queryset = articulo.comentarios.filter(activo=True)
+
+        # Aplicar paginación
+        paginator = StandardResultsSetPagination()
+        page = paginator.paginate_queryset(queryset, request)
+
+        if page is not None:
+            serializer = ComentarioArticuloSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = ComentarioArticuloSerializer(queryset, many=True)
         return Response(serializer.data)
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])

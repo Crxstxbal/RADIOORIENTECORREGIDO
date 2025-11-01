@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import axios from 'axios';
 import toast from 'react-hot-toast';
 import './Pages.css';
 
@@ -19,25 +20,14 @@ const Contacto = () => {
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        // Usar fetch en lugar de axios para evitar problemas con headers globales
-        const tiposResponse = await fetch('/api/contact/api/tipos-asunto/');
-        if (!tiposResponse.ok) {
-          throw new Error('Error al cargar tipos de asunto');
-        }
-        const tiposData = await tiposResponse.json();
-        // Los endpoints DRF devuelven objetos paginados con { results: [] }
-        const tiposArray = tiposData.results || (Array.isArray(tiposData) ? tiposData : []);
-        setTiposAsunto(tiposArray);
-
+        // Cargar tipos de asunto
+        const tiposResponse = await axios.get('/api/contact/api/tipos-asunto/');
+        setTiposAsunto(tiposResponse.data);
+        
         // Cargar información de la estación
-        const estacionResponse = await fetch('/api/radio/api/estaciones/');
-        if (estacionResponse.ok) {
-          const estacionData = await estacionResponse.json();
-          // Los endpoints DRF devuelven objetos paginados con { results: [] }
-          const estacionArray = estacionData.results || (Array.isArray(estacionData) ? estacionData : []);
-          if (estacionArray.length > 0) {
-            setEstacionInfo(estacionArray[0]);
-          }
+        const estacionResponse = await axios.get('/api/radio/api/estaciones/');
+        if (estacionResponse.data.length > 0) {
+          setEstacionInfo(estacionResponse.data[0]);
         }
       } catch (error) {
         console.error('Error al cargar datos:', error);
@@ -50,7 +40,7 @@ const Contacto = () => {
         ]);
       }
     };
-
+    
     cargarDatos();
   }, []);
 
@@ -66,29 +56,20 @@ const Contacto = () => {
     setLoading(true);
 
     try {
-      // Usar fetch para enviar sin autenticación (formulario público)
-      const response = await fetch('/api/contact/api/contactos/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      // Obtener token de autenticación si existe
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Token ${token}` } : {};
+      
+      await axios.post('/api/contact/api/contactos/', formData, { headers });
+      toast.success('Mensaje enviado exitosamente. Te contactaremos pronto.');
+      setFormData({
+        nombre: '',
+        email: '',
+        telefono: '',
+        tipo_asunto: '',
+        mensaje: ''
       });
-
-      if (response.ok) {
-        toast.success('Mensaje enviado exitosamente. Te contactaremos pronto.');
-        setFormData({
-          nombre: '',
-          email: '',
-          telefono: '',
-          tipo_asunto: '',
-          mensaje: ''
-        });
-      } else {
-        toast.error('Error al enviar el mensaje. Inténtalo de nuevo.');
-      }
     } catch (error) {
-      console.error('Error:', error);
       toast.error('Error al enviar el mensaje. Inténtalo de nuevo.');
     } finally {
       setLoading(false);

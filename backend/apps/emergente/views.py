@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from apps.common.pagination import StandardResultsSetPagination
 from .models import Integrante, BandaEmergente, BandaLink, BandaIntegrante
 from .serializers import (
     IntegranteSerializer, BandaEmergenteSerializer, BandaEmergenteCreateSerializer,
@@ -44,23 +45,43 @@ class BandaEmergenteViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def por_estado(self, request):
-        """Obtener bandas por estado"""
+        """Obtener bandas por estado (paginado)"""
         estado_id = request.query_params.get('estado_id')
-        if estado_id:
-            bandas = self.queryset.filter(estado_id=estado_id)
-            serializer = BandaEmergenteListSerializer(bandas, many=True)
-            return Response(serializer.data)
-        return Response([])
+        if not estado_id:
+            return Response([])
+
+        queryset = self.queryset.filter(estado_id=estado_id)
+
+        # Aplicar paginación
+        paginator = StandardResultsSetPagination()
+        page = paginator.paginate_queryset(queryset, request)
+
+        if page is not None:
+            serializer = BandaEmergenteListSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = BandaEmergenteListSerializer(queryset, many=True)
+        return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def por_genero(self, request):
-        """Obtener bandas por género"""
+        """Obtener bandas por género (paginado)"""
         genero_id = request.query_params.get('genero_id')
-        if genero_id:
-            bandas = self.queryset.filter(genero_id=genero_id)
-            serializer = BandaEmergenteListSerializer(bandas, many=True)
-            return Response(serializer.data)
-        return Response([])
+        if not genero_id:
+            return Response([])
+
+        queryset = self.queryset.filter(genero_id=genero_id)
+
+        # Aplicar paginación
+        paginator = StandardResultsSetPagination()
+        page = paginator.paginate_queryset(queryset, request)
+
+        if page is not None:
+            serializer = BandaEmergenteListSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = BandaEmergenteListSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 # Views de compatibilidad para el frontend existente
 class BandaEmergenteListCreateView(generics.ListCreateAPIView):

@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BookOpen, Calendar, User, Eye, Tag, Filter } from 'lucide-react';
 import axios from 'axios';
+import Pagination from '../components/Pagination';
 import './Pages.css';
 
 const Articles = () => {
-  const location = useLocation(); 
+  const location = useLocation();
   const [articles, setArticles] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,32 +14,79 @@ const Articles = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Estados de paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
+        // Construir params de paginación
+        const params = {
+          page: currentPage,
+          page_size: pageSize
+        };
+
+        // Agregar filtro de categoría si está seleccionado
+        let endpoint = '/api/articulos/api/articulos/';
+        if (selectedCategory) {
+          const category = categories.find(c => c.id === parseInt(selectedCategory));
+          if (category) {
+            endpoint = '/api/articulos/api/articulos/por_categoria/';
+            params.categoria = category.slug;
+          }
+        }
+
         // Cargar artículos desde nueva API
-        const articlesResponse = await axios.get('/api/articulos/api/articulos/');
-        setArticles(articlesResponse.data.results || articlesResponse.data);
-        
-        // Cargar categorías
-        const categoriesResponse = await axios.get('/api/articulos/api/categorias/');
-        setCategories(categoriesResponse.data.results || categoriesResponse.data);
+        const articlesResponse = await axios.get(endpoint, { params });
+
+        // Extraer datos de paginación
+        const data = articlesResponse.data;
+        if (data.results) {
+          // Respuesta paginada
+          setArticles(data.results);
+          setTotalPages(data.total_pages || 1);
+          setTotalItems(data.count || 0);
+        } else {
+          // Respuesta sin paginación (fallback)
+          setArticles(data);
+          setTotalPages(1);
+          setTotalItems(data.length);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
-        // Fallback con datos de ejemplo
         setArticles([]);
-        setCategories([
-          { id: 1, nombre: 'Noticias' },
-          { id: 2, nombre: 'Entrevistas' },
-          { id: 3, nombre: 'Música' },
-          { id: 4, nombre: 'Eventos' }
-        ]);
+        setTotalPages(1);
+        setTotalItems(0);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
+  }, [currentPage, pageSize, selectedCategory]);
+
+  // Cargar categorías (solo una vez)
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categoriesResponse = await axios.get('/api/articulos/api/categorias/');
+        setCategories(categoriesResponse.data.results || categoriesResponse.data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        setCategories([
+          { id: 1, nombre: 'Noticias', slug: 'noticias' },
+          { id: 2, nombre: 'Entrevistas', slug: 'entrevistas' },
+          { id: 3, nombre: 'Música', slug: 'musica' },
+          { id: 4, nombre: 'Eventos', slug: 'eventos' }
+        ]);
+      }
+    };
+
+    fetchCategories();
   }, []);
 
   // Abrir modal automáticamente si viene del Home
@@ -81,18 +129,35 @@ const Articles = () => {
     return article.imagen_portada || article.imagen_url;
   };
 
-  // Filtrar artículos
+  // Filtrar artículos solo por búsqueda local (categoría se filtra en la API)
   const filteredArticles = articles.filter(article => {
-    const matchesCategory = !selectedCategory || article.categoria?.id === parseInt(selectedCategory);
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       article.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       article.contenido.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch && article.publicado;
+    return matchesSearch;
   });
 
-  // Artículos destacados
+  // Artículos destacados (mostrados aparte, sin paginación)
   const featuredArticles = filteredArticles.filter(article => article.destacado).slice(0, 3);
   const regularArticles = filteredArticles.filter(article => !article.destacado);
+
+  // Handlers de paginación
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    // Scroll suave hacia arriba
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setCurrentPage(1); // Resetear a primera página
+  };
+
+  // Resetear a página 1 cuando cambia la categoría
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="news-page">
@@ -125,7 +190,7 @@ const Articles = () => {
               <Filter size={20} />
               <select
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={handleCategoryChange}
                 className="form-select"
               >
                 <option value="">Todas las categorías</option>
@@ -237,6 +302,19 @@ const Articles = () => {
                       </article>
                     ))}
                   </div>
+                )}
+
+                {/* Componente de paginación */}
+                {!loading && regularArticles.length > 0 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    pageSize={pageSize}
+                    onPageSizeChange={handlePageSizeChange}
+                    totalItems={totalItems}
+                    showPageSize={true}
+                  />
                 )}
               </section>
             </>
