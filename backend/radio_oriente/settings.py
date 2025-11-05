@@ -149,12 +149,36 @@ REST_FRAMEWORK = {
 }
 
 # CORS settings
-# En producción, desactiva CORS_ALLOW_ALL_ORIGINS y solo usa CORS_ALLOWED_ORIGINS
-CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
+# En desarrollo, permitir todos los orígenes para facilitar el desarrollo
+CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo
 
 # Lista de orígenes permitidos (se puede configurar desde .env)
-ALLOWED_ORIGINS_STR = config('ALLOWED_ORIGINS', default='http://localhost:3000,http://127.0.0.1:3000')
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_STR.split(',') if origin.strip()]
+# En producción, descomenta las siguientes líneas y configura los orígenes permitidos
+# ALLOWED_ORIGINS_STR = config('ALLOWED_ORIGINS', default='http://localhost:3000,http://127.0.0.1:3000')
+# CORS_ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_STR.split(',') if origin.strip()]
+
+# Métodos HTTP permitidos
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Cabeceras permitidas
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 CORS_ALLOW_CREDENTIALS = True
 

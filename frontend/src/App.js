@@ -23,6 +23,7 @@ import RecuperarContrasena from './pages/RecuperarContrasena';
 import ResetearContrasena from './pages/ResetearContrasena';
 import Emergente from './components/Emergente';
 import Reproductor from './pages/reproductor';
+import PublicidadPage from './pages/PublicidadPage';
 
 // Layouts en español
 import LayoutPrincipal from './layouts/LayoutPrincipal';
@@ -69,6 +70,7 @@ function App() {
               <Route path="/registro" element={<Registro />} />
               <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
               <Route path="/resetear-contrasena/:uid/:token" element={<ResetearContrasena />} />
+              <Route path="/publicidad" element={<PublicidadPage />} />
             </Route>
 
             {/* Layout full screen solo para el reproductor */}
