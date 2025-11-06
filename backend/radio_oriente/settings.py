@@ -148,6 +148,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
+
 # CORS settings
 # En desarrollo, permitir todos los orígenes para facilitar el desarrollo
 CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo

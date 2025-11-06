@@ -4,6 +4,10 @@ from . import views
 urlpatterns = [
     path('', views.dashboard_home, name='dashboard_home'),
     path('login/', views.dashboard_login, name='dashboard_login'),
+
+    path('calendario/', views.dashboard_calendario, name='dashboard_calendario'),
+    path('api/calendario/eventos/', views.api_get_calendar_events, name='api_get_calendar_events'),
+
     path('logout/', views.dashboard_logout, name='dashboard_logout'),
     path('users/', views.dashboard_users, name='dashboard_users'),
     path('articulos/', views.dashboard_articulos, name='dashboard_articulos'),

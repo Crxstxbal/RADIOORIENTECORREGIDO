@@ -1,6 +1,6 @@
-{% extends 'dashboard/base.html' %} 
+{% extends 'dashboard/base.html' %}
 {% block page_title %} Dashboard Principal
-{%endblock %} 
+{%endblock %}
 {% block content %}
 <div class="row mb-4">
   <!-- Estadísticas principales -->
@@ -130,13 +130,23 @@
         <div class="text-center py-4">
           <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
           <p class="text-muted">No hay artículos publicados aún</p>
-          <a href="{% url 'dashboard_articulos' %}" class="btn btn-primary"
-            >Crear Artículo</a
-          >
+          <a href="{% url 'dashboard_articulos' %}" class="btn btn-primary">Crear Artículo</a>
         </div>
         {% endif %}
       </div>
     </div>
+
+    <div class="card mt-4">
+      <div class="card-body text-center">
+        <h5 class="card-title mb-3">Calendario de Programación</h5>
+        <p class="card-text text-muted small">Revisa los eventos y programas agendados.</p>
+
+        <a href="{% url 'dashboard_calendario' %}" class="btn btn-danger text-white">
+          <i class="fas fa-calendar-alt me-2"></i>Ir al Calendario
+        </a>
+      </div>
+    </div>
+
   </div>
 
   <!-- Mensajes de contacto recientes -->
@@ -152,10 +162,8 @@
         {% if recent_contacts %} {% for contact in recent_contacts %}
         <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
           <div class="flex-shrink-0">
-            <div
-              class="bg-light rounded-circle d-flex align-items-center justify-content-center"
-              style="width: 40px; height: 40px"
-            >
+            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center"
+              style="width: 40px; height: 40px">
               <i class="fas fa-user text-muted"></i>
             </div>
           </div>
@@ -164,9 +172,7 @@
             <p class="mb-1 small text-muted">
               {{ contact.mensaje|truncatechars:60 }}
             </p>
-            <small class="text-muted"
-              >{{ contact.fecha_creacion|timesince }} ago</small
-            >
+            <small class="text-muted">{{ contact.fecha_creacion|timesince }} ago</small>
           </div>
         </div>
         {% endfor %}

@@ -1,3 +1,11 @@
+from datetime import datetime
+from datetime import timezone as dt_timezone
+import traceback
+from django.conf import settings
+from django.http import JsonResponse
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login, logout
@@ -61,6 +69,11 @@ def dashboard_home(request):
     }
     
     return render(request, 'dashboard/home.html', context)
+
+@login_required
+def dashboard_calendario(request):
+    context = {} 
+    return render(request, 'dashboard/calendario.html', context)
 
 @login_required
 @user_passes_test(is_staff_user)
@@ -1283,4 +1296,69 @@ def marcar_todas_leidas(request):
     
     messages.success(request, f'{count} notificaciones marcadas como leídas.')
     return redirect('dashboard_notificaciones')
+
+@login_required
+def api_get_calendar_events(request):
+    
+    # 1. ID DEL CALENDARIO
+    CALENDAR_ID = '7505ae36af692d9dc952769cb67cb09e5624f1c041e7e99c0c7efb2928b345b0@group.calendar.google.com' 
+
+    # 2. RUTA A CREDENCIALES
+    CREDENTIALS_FILE = settings.BASE_DIR / 'google-credentials.json'
+
+    # 3. PERMISOS
+    SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+
+    print(f"[DEBUG] Intentando cargar calendario: {CALENDAR_ID}")
+    print(f"[DEBUG] Buscando credenciales en: {CREDENTIALS_FILE}")
+
+    try:
+        # Carga las credenciales del archivo JSON
+        creds = service_account.Credentials.from_service_account_file(
+            CREDENTIALS_FILE, scopes=SCOPES)
+        print("[DEBUG] Credenciales cargadas exitosamente.")
+
+        # Construye el servicio de la API
+        service = build('calendar', 'v3', credentials=creds)
+        print("[DEBUG] Servicio de API de Google construido.")
+
+        # Llama a la API
+        now = datetime.now(dt_timezone.utc).isoformat()  # 'Z' indica UTC
+        
+        events_result = service.events().list(
+            calendarId=CALENDAR_ID, 
+            timeMin=now,
+            maxResults=50,
+            singleEvents=True,
+            orderBy='startTime'
+        ).execute()
+        
+        print("[DEBUG] Llamada a la API de Google exitosa.")
+        events = events_result.get('items', [])
+        print(f"[DEBUG] Encontrados {len(events)} eventos.")
+
+        # FORMATEA LOS EVENTOS PARA FULLCALENDAR
+        formatted_events = []
+        for event in events:
+            start = event['start'].get('dateTime', event['start'].get('date'))
+            end = event['end'].get('dateTime', event['end'].get('date'))
+            
+            formatted_events.append({
+                'title': event.get('summary', 'Evento sin título'),
+                'start': start,
+                'end': end,
+                'id': event['id'],
+            })
+
+        return JsonResponse(formatted_events, safe=False)
+
+    except Exception as e:
+        # --- ESTA ES LA PARTE IMPORTANTE ---
+        # ¡Imprime el error completo en tu terminal de Django!
+        print("="*50)
+        print("¡ERROR! Falló la API de Google Calendar:")
+        traceback.print_exc() # Esto imprimirá el error rojo
+        print("="*50)
+        # -----------------------------------
+        return JsonResponse({'error': str(e)}, status=500)
 
