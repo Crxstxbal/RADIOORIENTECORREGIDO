@@ -9,6 +9,46 @@ const Home = () => {
   const [featuredArticles, setFeaturedArticles] = useState([]);
   const [radioStation, setRadioStation] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [displayedText, setDisplayedText] = useState("");
+  const [textIndex, setTextIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const animatedTexts = [
+    "Radio Oriente FM",
+    "La Mejor de Peñalolén"
+  ];
+
+  // Efecto typewriter
+  useEffect(() => {
+    const currentFullText = animatedTexts[textIndex];
+    const typingSpeed = isDeleting ? 50 : 50;
+    const pauseAfterComplete = 2500;
+    const pauseAfterDelete = 500;
+
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        // Escribiendo
+        if (displayedText.length < currentFullText.length) {
+          setDisplayedText(currentFullText.substring(0, displayedText.length + 1));
+        } else {
+          // Terminó de escribir, esperar y luego borrar
+          setTimeout(() => setIsDeleting(true), pauseAfterComplete);
+        }
+      } else {
+        // Borrando
+        if (displayedText.length > 0) {
+          setDisplayedText(currentFullText.substring(0, displayedText.length - 1));
+        } else {
+          // Terminó de borrar, cambiar al siguiente texto
+          setIsDeleting(false);
+          setTextIndex((prev) => (prev + 1) % animatedTexts.length);
+          setTimeout(() => {}, pauseAfterDelete);
+        }
+      }
+    }, typingSpeed);
+
+    return () => clearTimeout(timeout);
+  }, [displayedText, isDeleting, textIndex, animatedTexts]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,18 +61,18 @@ const Home = () => {
         // Obtener artículos publicados ordenados por fecha
         const articles = articlesResponse.data.results || articlesResponse.data || [];
         const publishedArticles = articles.filter(article => article.publicado);
-        
+
         // Obtener fecha de hoy (solo año, mes, día)
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         // Filtrar artículos del día
         const todayArticles = publishedArticles.filter(article => {
           const articleDate = new Date(article.fecha_publicacion || article.fecha_creacion);
           articleDate.setHours(0, 0, 0, 0);
           return articleDate.getTime() === today.getTime();
         });
-        
+
         // Si hay al menos 3 del día, usar esos; si no, usar los últimos 3
         let articlesToShow;
         if (todayArticles.length >= 3) {
@@ -47,7 +87,7 @@ const Home = () => {
             })
             .slice(0, 3);
         }
-        
+
         setFeaturedArticles(articlesToShow);
         setRadioStation(stationResponse.data);
       } catch (error) {
@@ -65,7 +105,36 @@ const Home = () => {
   };
 
   return (
-    <div className="home-page">
+    <>
+      <style>{`
+        @keyframes radio-pulse {
+          0% {
+            transform: scale(0.8);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(2.8);
+            opacity: 0;
+          }
+        }
+
+        @keyframes pulse-cursor {
+          0% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.3;
+            transform: scale(0.8);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
+
+      <div className="home-page">
       {/* Hero Section */}
       <section className="hero">
         <div className="container">
@@ -75,9 +144,24 @@ const Home = () => {
                 Bienvenidos a
               </h1>
               <h1 className="hero-title">
-                <span className="text-red">Radio Oriente FM</span>
+                <span className="text-red typewriter-text">
+                  {displayedText}
+                  <span
+                    className="cursor"
+                    style={{
+                      display: 'inline-block',
+                      marginLeft: '2px',
+                      fontWeight: 700
+                    }}
+                  >
+                    <span style={{
+                      animation: 'pulse-cursor 0.8s ease-in-out infinite',
+                      display: 'inline-block'
+                    }}>|</span>
+                  </span>
+                </span>
               </h1>
-              
+
               <p className="hero-description">
                 La mejor música, noticias y entretenimiento de la Zona oriente
                 de santiago. Conectando comunidades a través de las ondas
@@ -100,9 +184,15 @@ const Home = () => {
                   className="hero-logo"
                 />
                 <div className="radio-waves">
-                  <div className="wave wave-1"></div>
-                  <div className="wave wave-2"></div>
-                  <div className="wave wave-3"></div>
+                  <div className="wave wave-1" style={{
+                    animation: 'radio-pulse 3s ease-out 0s infinite'
+                  }}></div>
+                  <div className="wave wave-2" style={{
+                    animation: 'radio-pulse 3s ease-out 1s infinite'
+                  }}></div>
+                  <div className="wave wave-3" style={{
+                    animation: 'radio-pulse 3s ease-out 2s infinite'
+                  }}></div>
                 </div>
               </div>
             </div>
@@ -259,6 +349,7 @@ const Home = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 

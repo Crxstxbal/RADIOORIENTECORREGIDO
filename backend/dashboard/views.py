@@ -212,8 +212,32 @@ def dashboard_radio(request):
 @user_passes_test(is_staff_user)
 def dashboard_chat(request):
     """Moderación del chat"""
+    # Obtener todos los mensajes
     messages = ChatMessage.objects.all().order_by('-fecha_envio')[:50]
-    return render(request, 'dashboard/chat.html', {'messages': messages})
+
+    # Calcular estadísticas usando timezone aware datetime
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    messages_today = ChatMessage.objects.filter(
+        fecha_envio__gte=today_start,
+        fecha_envio__lte=today_end
+    ).count()
+
+    # Usuarios únicos activos hoy (basado en mensajes)
+    active_users_today = ChatMessage.objects.filter(
+        fecha_envio__gte=today_start,
+        fecha_envio__lte=today_end
+    ).values('id_usuario').distinct().count()
+
+    context = {
+        'messages': messages,
+        'messages_today': messages_today,
+        'active_users_today': active_users_today,
+    }
+
+    return render(request, 'dashboard/chat.html', context)
 
 @login_required
 @user_passes_test(is_staff_user)

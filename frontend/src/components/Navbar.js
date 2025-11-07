@@ -17,8 +17,7 @@ const Navbar = () => {
     { name: "Programación", path: "/programacion" },
     { name: "Artículos", path: "/articulos" },
     { name: "Contacto", path: "/contacto" },
-    { name: "Suscripción", path: "/suscripcion" },
-    {/* { name: "Reproductor", path: "/reproductor", icon: <Radio size={18}/> }, */}
+    { name: "Suscripción", path: "/suscripcion" }
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -72,8 +71,8 @@ const Navbar = () => {
           <div className="nav-auth desktop">
             {isAuthenticated ? (
               <div className="user-menu">
-                <User className="user-icon" size={20} />
-                <span className="user-name">Hola {user.username}</span>
+                <User className="user-icon" size={35 } />
+                <span className="user-name">Hola, {user.username}</span>
                 <button onClick={handleLogout} className="btn btn-primary">
                   Cerrar Sesión
                 </button>

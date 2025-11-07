@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, X, Users, Minimize2, Maximize2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { MessageCircle, Send, X, Users, Minimize2, Maximize2, Radio, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../utils/api';
 import './LiveChat.css';
 
 const LiveChat = () => {
@@ -8,69 +9,119 @@ const LiveChat = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
+  const [isRadioOnline, setIsRadioOnline] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(0);
+  const [error, setError] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const messagesEndRef = useRef(null);
-  const wsRef = useRef(null);
+  const pollingIntervalRef = useRef(null);
 
+  // Verificar estado de la radio
   useEffect(() => {
-    if (isOpen && isAuthenticated) {
-      connectWebSocket();
-    } else if (wsRef.current) {
-      wsRef.current.close();
-    }
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
+    const checkRadioStatus = async () => {
+      try {
+        const response = await api.get('/api/chat/radio-status/');
+        setIsRadioOnline(response.data.is_online);
+        setOnlineUsers(response.data.listeners_count || 0);
+      } catch (error) {
+        console.error('Error checking radio status:', error);
+        setIsRadioOnline(false);
       }
     };
+
+    checkRadioStatus();
+    const statusInterval = setInterval(checkRadioStatus, 10000); // Cada 10 segundos
+
+    return () => clearInterval(statusInterval);
+  }, []);
+
+  // Cargar mensajes cuando se abre el chat
+  useEffect(() => {
+    if (isOpen && isAuthenticated) {
+      loadMessages();
+      startPolling();
+    } else {
+      stopPolling();
+    }
+
+    return () => stopPolling();
   }, [isOpen, isAuthenticated]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const connectWebSocket = () => {
-    const wsUrl = `ws://localhost:8000/ws/chat/radio-oriente/`;
-    wsRef.current = new WebSocket(wsUrl);
+  const loadMessages = async () => {
+    try {
+      const response = await api.get('/api/chat/messages/radio-oriente/');
 
-    wsRef.current.onopen = () => {
-      setIsConnected(true);
-      console.log('WebSocket connected');
-    };
+      // La API puede devolver un array directo o un objeto con 'results'
+      const messagesData = Array.isArray(response.data) ? response.data : (response.data.results || []);
 
-    wsRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      setMessages(prev => [...prev, {
-        id: Date.now(),
-        message: data.message,
-        user_name: data.user_name,
-        username: data.username,
-        timestamp: data.timestamp,
-        isOwn: data.username === user?.username
-      }]);
-    };
-
-    wsRef.current.onclose = () => {
-      setIsConnected(false);
-      console.log('WebSocket disconnected');
-    };
-
-    wsRef.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setIsConnected(false);
-    };
+      const loadedMessages = messagesData.map(msg => ({
+        id: msg.id,
+        message: msg.contenido,
+        user_name: msg.usuario_nombre,
+        username: msg.usuario_nombre,
+        timestamp: msg.fecha_envio,
+        isOwn: msg.usuario_nombre === user?.username
+      }));
+      setMessages(loadedMessages.reverse());
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    }
   };
 
-  const sendMessage = (e) => {
+  const startPolling = () => {
+    // Actualizar mensajes cada 3 segundos
+    pollingIntervalRef.current = setInterval(() => {
+      loadMessages();
+    }, 3000);
+  };
+
+  const stopPolling = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  };
+
+  const sendMessage = async (e) => {
     e.preventDefault();
-    if (newMessage.trim() && wsRef.current && isConnected) {
-      wsRef.current.send(JSON.stringify({
-        message: newMessage.trim()
-      }));
+    if (!newMessage.trim() || isSending) return;
+
+    if (!isRadioOnline) {
+      setError('El chat solo está disponible cuando la radio está en vivo');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    setIsSending(true);
+    setError('');
+
+    try {
+      await api.post('/api/chat/messages/radio-oriente/', {
+        contenido: newMessage.trim()
+      });
       setNewMessage('');
+      // Recargar mensajes inmediatamente
+      await loadMessages();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      console.error('Error response:', error.response?.data);
+      if (error.response?.data?.detail) {
+        setError(error.response.data.detail);
+      } else if (error.response?.data) {
+        // Mostrar el primer error que encuentre
+        const firstError = Object.values(error.response.data)[0];
+        setError(Array.isArray(firstError) ? firstError[0] : firstError);
+      } else {
+        setError('Error al enviar el mensaje. Intenta de nuevo.');
+      }
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -99,13 +150,13 @@ const LiveChat = () => {
   return (
     <>
       {/* Chat Toggle Button */}
-      <button 
+      <button
         className={`chat-toggle ${isOpen ? 'active' : ''}`}
         onClick={toggleChat}
         title="Chat en vivo"
       >
         <MessageCircle size={24} />
-        {!isOpen && (
+        {!isOpen && isRadioOnline && (
           <span className="chat-notification">
             <span className="notification-dot"></span>
           </span>
@@ -121,21 +172,22 @@ const LiveChat = () => {
               <MessageCircle size={20} />
               <span>Chat en Vivo</span>
               <div className="connection-status">
-                <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></span>
+                <Radio size={14} />
+                <span className={`status-dot ${isRadioOnline ? 'connected' : 'disconnected'}`}></span>
                 <span className="status-text">
-                  {isConnected ? 'Conectado' : 'Desconectado'}
+                  {isRadioOnline ? 'Radio en Vivo' : 'Radio Offline'}
                 </span>
               </div>
             </div>
             <div className="chat-controls">
-              <button 
+              <button
                 className="control-btn"
                 onClick={toggleMinimize}
                 title={isMinimized ? 'Maximizar' : 'Minimizar'}
               >
                 {isMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
               </button>
-              <button 
+              <button
                 className="control-btn close-btn"
                 onClick={toggleChat}
                 title="Cerrar chat"
@@ -150,20 +202,27 @@ const LiveChat = () => {
               {/* Online Users */}
               <div className="online-users">
                 <Users size={16} />
-                <span>{onlineUsers} usuarios conectados</span>
+                <span>{onlineUsers} oyentes conectados</span>
               </div>
 
               {/* Messages Area */}
               <div className="messages-container">
                 {!isAuthenticated ? (
                   <div className="auth-required">
+                    <MessageCircle size={48} />
                     <p>Inicia sesión para participar en el chat</p>
-                    <button 
+                    <button
                       className="btn btn-primary btn-sm"
                       onClick={() => window.location.href = '/login'}
                     >
                       Iniciar Sesión
                     </button>
+                  </div>
+                ) : !isRadioOnline ? (
+                  <div className="auth-required">
+                    <Radio size={48} />
+                    <p>El chat está disponible cuando la radio está en vivo</p>
+                    <small>Vuelve cuando estemos transmitiendo</small>
                   </div>
                 ) : (
                   <>
@@ -175,8 +234,8 @@ const LiveChat = () => {
                         </div>
                       ) : (
                         messages.map((message) => (
-                          <div 
-                            key={message.id} 
+                          <div
+                            key={message.id}
                             className={`message ${message.isOwn ? 'own' : 'other'}`}
                           >
                             <div className="message-content">
@@ -198,21 +257,29 @@ const LiveChat = () => {
                       <div ref={messagesEndRef} />
                     </div>
 
+                    {/* Error Message */}
+                    {error && (
+                      <div className="chat-error">
+                        <AlertCircle size={14} />
+                        <span>{error}</span>
+                      </div>
+                    )}
+
                     {/* Message Input */}
                     <form onSubmit={sendMessage} className="message-form">
                       <input
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Escribe tu mensaje..."
+                        placeholder={isRadioOnline ? "Escribe tu mensaje..." : "Radio offline"}
                         className="message-input"
-                        disabled={!isConnected}
+                        disabled={!isRadioOnline || isSending}
                         maxLength={500}
                       />
-                      <button 
-                        type="submit" 
+                      <button
+                        type="submit"
                         className="send-btn"
-                        disabled={!newMessage.trim() || !isConnected}
+                        disabled={!newMessage.trim() || !isRadioOnline || isSending}
                       >
                         <Send size={18} />
                       </button>

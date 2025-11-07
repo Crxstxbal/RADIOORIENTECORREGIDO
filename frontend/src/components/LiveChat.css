@@ -247,6 +247,31 @@
   word-wrap: break-word;
 }
 
+.chat-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #fee2e2;
+  border-left: 3px solid #ef4444;
+  color: #991b1b;
+  font-size: 0.875rem;
+  margin: 0 1rem;
+  border-radius: 0.5rem;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .message-form {
   display: flex;
   padding: 1rem;
@@ -398,6 +423,12 @@ html.dark .message.own .message-content {
 
 html.dark .message.other .message-author {
   color: var(--color-red);
+}
+
+html.dark .chat-error {
+  background: rgba(239, 68, 68, 0.1);
+  border-left-color: #ef4444;
+  color: #fca5a5;
 }
 
 html.dark .message-form {

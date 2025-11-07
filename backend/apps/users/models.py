@@ -31,6 +31,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    # Campo para bloquear chat
+    chat_bloqueado = models.BooleanField(default=False, verbose_name='Chat Bloqueado')
     
     # Manager personalizado
     objects = UserManager()

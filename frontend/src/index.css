@@ -355,6 +355,29 @@ img {
 }
 
 /* Utility classes responsive */
+/* Animaciones globales */
+@keyframes radio-pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-cursor {
+  0%, 100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleY(0.5);
+    opacity: 0.3;
+  }
+}
+
 @media (max-width: 768px) {
   .hidden-mobile {
     display: none !important;

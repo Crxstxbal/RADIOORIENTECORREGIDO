@@ -32,14 +32,16 @@ html.dark .navbar {
 }
 
 .nav-logo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  text-decoration: none;
-  color: var(--color-white);
-  font-weight: 700;
-  font-size: 1.1rem;
-  transition: transform 0.2s;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  text-decoration: none !important;
+  color: var(--color-white) !important;
+  font-weight: 700 !important;
+  font-size: 1.1rem !important;
+  transition: transform 0.2s !important;
+  margin-right: 2rem !important;
+  flex-shrink: 0 !important;
 }
 
 .nav-logo:hover {
@@ -68,7 +70,7 @@ html.dark .navbar {
   gap: 1.5rem;
   align-items: center;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 2rem;
 }
 
 .nav-link {
@@ -192,9 +194,10 @@ html.dark .navbar {
 
 .user-icon {
   background: rgba(255, 255, 255, 0.1);
-  padding: 0.4rem;
+  padding: 0.5rem;
   border-radius: 50%;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .user-icon:hover {
