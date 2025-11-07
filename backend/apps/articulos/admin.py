@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Categoria, Articulo, ComentarioArticulo
+from .models import Categoria, Articulo
 
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
@@ -66,15 +66,3 @@ class ArticuloAdmin(admin.ModelAdmin):
             html += format_html('<img src="{}" style="width: 30px; height: 30px; border-radius: 4px; object-fit: cover;" />', obj.imagen_portada.url)
         return html if html else "📷"
     preview_thumbnails.short_description = "Imágenes"
-
-@admin.register(ComentarioArticulo)
-class ComentarioArticuloAdmin(admin.ModelAdmin):
-    list_display = ('articulo', 'autor', 'contenido_corto', 'fecha_creacion', 'activo')
-    list_filter = ('activo', 'fecha_creacion')
-    search_fields = ('contenido', 'autor__username', 'articulo__titulo')
-    list_editable = ('activo',)
-    readonly_fields = ('fecha_creacion',)
-    
-    def contenido_corto(self, obj):
-        return obj.contenido[:50] + '...' if len(obj.contenido) > 50 else obj.contenido
-    contenido_corto.short_description = 'Comentario'

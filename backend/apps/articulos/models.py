@@ -148,29 +148,3 @@ class Articulo(models.Model):
 
     def __str__(self):
         return self.titulo
-
-
-class ComentarioArticulo(models.Model):
-    """Comentarios en artículos"""
-    articulo = models.ForeignKey(
-        Articulo, 
-        on_delete=models.CASCADE, 
-        related_name='comentarios'
-    )
-    autor = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE,
-        related_name='comentarios_articulos'
-    )
-    contenido = models.TextField()
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    activo = models.BooleanField(default=True)
-    
-    class Meta:
-        db_table = 'comentario_articulo'
-        ordering = ['-fecha_creacion']
-        verbose_name = 'Comentario'
-        verbose_name_plural = 'Comentarios'
-    
-    def __str__(self):
-        return f'Comentario de {self.autor.username} en {self.articulo.titulo}'

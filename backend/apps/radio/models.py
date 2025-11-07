@@ -44,6 +44,7 @@ class Conductor(models.Model):
     telefono = models.CharField(max_length=20, blank=True, null=True)
     activo = models.BooleanField(default=True)
     
+    
     class Meta:
         db_table = 'conductor'
         verbose_name = 'Conductor'

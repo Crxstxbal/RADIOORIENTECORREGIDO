@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Categoria, Articulo, ComentarioArticulo
+from .models import Categoria, Articulo
 
 class CategoriaSerializer(serializers.ModelSerializer):
     articulos_count = serializers.IntegerField(source='articulos.count', read_only=True)
@@ -129,18 +129,6 @@ class ArticuloCreateSerializer(serializers.ModelSerializer):
             'imagen_portada', 'imagen_url', 'video_url', 'archivo_adjunto',
             'categoria', 'publicado', 'destacado', 'fecha_publicacion'
         ]
-    
-    def create(self, validated_data):
-        validated_data['autor'] = self.context['request'].user
-        return super().create(validated_data)
-
-class ComentarioArticuloSerializer(serializers.ModelSerializer):
-    autor_nombre = serializers.CharField(source='autor.username', read_only=True)
-    
-    class Meta:
-        model = ComentarioArticulo
-        fields = ['id', 'articulo', 'autor', 'autor_nombre', 'contenido', 'fecha_creacion', 'activo']
-        read_only_fields = ['autor', 'fecha_creacion']
     
     def create(self, validated_data):
         validated_data['autor'] = self.context['request'].user

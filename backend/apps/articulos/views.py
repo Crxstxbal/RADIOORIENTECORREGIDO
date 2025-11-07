@@ -4,10 +4,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils.text import slugify
 from apps.common.pagination import StandardResultsSetPagination, SmallResultsSetPagination
-from .models import Categoria, Articulo, ComentarioArticulo
+from .models import Categoria, Articulo
 from .serializers import (
     CategoriaSerializer, ArticuloSerializer, ArticuloListSerializer,
-    ArticuloCreateSerializer, BlogPostLegacySerializer, ComentarioArticuloSerializer
+    ArticuloCreateSerializer, BlogPostLegacySerializer
 )
 
 # ViewSets normalizados
@@ -91,33 +91,6 @@ class ArticuloViewSet(viewsets.ModelViewSet):
 
         serializer = ArticuloListSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
-    
-    @action(detail=True, methods=['get'])
-    def comentarios(self, request, slug=None):
-        """Obtener comentarios de un artículo (paginado)"""
-        articulo = self.get_object()
-        queryset = articulo.comentarios.filter(activo=True)
-
-        # Aplicar paginación
-        paginator = StandardResultsSetPagination()
-        page = paginator.paginate_queryset(queryset, request)
-
-        if page is not None:
-            serializer = ComentarioArticuloSerializer(page, many=True)
-            return paginator.get_paginated_response(serializer.data)
-
-        serializer = ComentarioArticuloSerializer(queryset, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
-    def comentar(self, request, slug=None):
-        """Agregar comentario a un artículo"""
-        articulo = self.get_object()
-        serializer = ComentarioArticuloSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save(articulo=articulo)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Views de compatibilidad para el frontend existente
 class BlogPostListView(generics.ListCreateAPIView):
