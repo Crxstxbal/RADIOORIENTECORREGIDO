@@ -15,6 +15,15 @@ urlpatterns = [
     path('chat/', views.dashboard_chat, name='dashboard_chat'),
     path('analytics/', views.dashboard_analytics, name='dashboard_analytics'),
     path('api/stats/', views.api_dashboard_stats, name='api_dashboard_stats'),
+    path('publicidad/', views.dashboard_publicidad, name='dashboard_publicidad'),
+    path('publicidad/ubicaciones/', views.ubicaciones_publicidad, name='dashboard_publicidad_ubicaciones'),
+    # API pública para frontend
+    path('api/publicidad/ubicaciones/', views.api_publicidad_ubicaciones, name='api_publicidad_ubicaciones'),
+    path('api/publicidad/solicitar/', views.api_publicidad_solicitar, name='api_publicidad_solicitar'),
+    # API de administración de publicidad web
+    path('api/publicidad/solicitudes/<int:solicitud_id>/aprobar/', views.api_aprobar_solicitud, name='api_aprobar_solicitud'),
+    path('api/publicidad/solicitudes/<int:solicitud_id>/estado/', views.api_cambiar_estado_solicitud, name='api_cambiar_estado_solicitud'),
+    path('api/publicidad/campanias-web/<int:campania_id>/actualizar_web/', views.api_actualizar_campania_web, name='api_actualizar_campania_web'),
 
     # Estados CRUD
     path('estados/agregar/', views.agregar_estado, name='agregar_estado'),

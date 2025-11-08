@@ -1,3 +1,11 @@
+.page {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  color: #fff;
+  min-height: 100vh;
+  padding: 20px;
+}
+
 .container {
   max-width: 1400px;
   margin: 0 auto;
@@ -56,6 +64,8 @@
   transform: translateY(-2px);
   box-shadow: 0 5px 20px rgba(220, 20, 60, 0.4);
 }
+
+.active { --active: 1; }
 
 /* Grid de Cards */
 .packagesGrid {

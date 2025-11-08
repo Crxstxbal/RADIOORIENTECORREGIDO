@@ -1,0 +1,226 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Publicidad Web - Dashboard{% endblock %}
+{% block page_title %}Publicidad Web{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row g-4">
+    <div class="col-12 col-xl-7">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Solicitudes Web</h5>
+          <span class="badge bg-primary">{{ solicitudes|length }}</span>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Estado</th>
+                <th>Inicio</th>
+                <th>Fin</th>
+                <th>Costo Estimado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in solicitudes %}
+                <tr>
+                  <td>#{{ s.id }}</td>
+                  <td>{{ s.usuario.email }}</td>
+                  <td>
+                    <span class="badge {% if s.estado == 'aprobada' %}bg-success{% elif s.estado == 'rechazada' %}bg-danger{% elif s.estado == 'en_revision' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                      {% if s.estado == 'en_revision' %}Contactado en breve{% else %}{{ s.estado|title }}{% endif %}
+                    </span>
+                  </td>
+                  <td>{{ s.fecha_inicio_solicitada }}</td>
+                  <td>{{ s.fecha_fin_solicitada }}</td>
+                  <td>${{ s.costo_total_estimado }}</td>
+                  <td>
+                    <div class="btn-group" role="group">
+                      {% if not s.publicacion_id and s.estado != 'rechazada' %}
+                        <button class="btn btn-sm btn-outline-warning" onclick="marcarEnRevision({{ s.id }})">
+                          <i class="fas fa-hourglass-half"></i> En revisión
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="rechazarSolicitud({{ s.id }})">
+                          <i class="fas fa-times"></i> Rechazar
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="aprobarSolicitud({{ s.id }})">
+                          <i class="fas fa-check"></i> Aprobar y Publicar
+                        </button>
+                      {% else %}
+                        {% if s.publicacion_id %}
+                          <a href="#camp-{{ s.publicacion_id }}" class="btn btn-sm btn-outline-primary">Ver campaña</a>
+                        {% endif %}
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="7" class="text-center text-muted">Sin solicitudes</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-5">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Campañas Publicadas (WEB)</h5>
+          <span class="badge bg-primary">{{ campanias|length }}</span>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Rango</th>
+                <th>URL</th>
+                <th>Formato</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in campanias %}
+                <tr id="camp-{{ c.id }}">
+                  <td>#{{ c.id }}</td>
+                  <td>{{ c.nombre_cliente }}</td>
+                  <td>{{ c.fecha_inicio }} → {{ c.fecha_fin }}</td>
+                  <td class="text-truncate" style="max-width:180px;">{{ c.web_config.url_destino }}</td>
+                  <td>{{ c.web_config.formato }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="editarCampania({{ c.id }}, '{{ c.web_config.url_destino|default:'' }}', '{{ c.web_config.formato|default:'' }}', '{{ c.web_config.archivo_media|default:'' }}')">
+                      <i class="fas fa-pen"></i>
+                    </button>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="6" class="text-center text-muted">Sin campañas</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal edición campaña web -->
+<div class="modal fade" id="editarCampaniaModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar campaña WEB</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditarCampania">
+          <input type="hidden" id="campaniaId" />
+          <div class="mb-3">
+            <label class="form-label">URL de destino</label>
+            <input type="url" class="form-control" id="urlDestino" placeholder="https://..." />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Formato</label>
+            <input type="text" class="form-control" id="formato" placeholder="728x90" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Archivo media (URL)</label>
+            <input type="text" class="form-control" id="archivoMedia" placeholder="https://.../banner.png" />
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button class="btn btn-primary" onclick="guardarEdicionCampania()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Helper CSRF: define si no existe
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+async function marcarEnRevision(id) {
+  if (!confirm('¿Marcar la solicitud #' + id + ' como "Contactado en breve"?')) return;
+  try {
+    const resp = await fetch(`/dashboard/api/publicidad/solicitudes/${id}/estado/`, {
+      method: 'PATCH',
+      headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: 'en_revision' })
+    });
+    if (!resp.ok) throw new Error('Error al marcar en revisión');
+    location.reload();
+  } catch (e) { alert(e.message); }
+}
+
+async function rechazarSolicitud(id) {
+  const motivo = prompt('Motivo de rechazo para la solicitud #' + id + ':');
+  if (motivo === null) return; // cancelado
+  try {
+    const resp = await fetch(`/dashboard/api/publicidad/solicitudes/${id}/estado/`, {
+      method: 'PATCH',
+      headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: 'rechazada', motivo: motivo })
+    });
+    if (!resp.ok) throw new Error('Error al rechazar');
+    location.reload();
+  } catch (e) { alert(e.message); }
+}
+
+async function aprobarSolicitud(id) {
+  if (!confirm('¿Aprobar y publicar la solicitud #' + id + '?')) return;
+  try {
+    const resp = await fetch(`/dashboard/api/publicidad/solicitudes/${id}/aprobar/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    if (!resp.ok) throw new Error('Error al aprobar');
+    location.reload();
+  } catch (e) { alert(e.message); }
+}
+
+let editarModal;
+function editarCampania(id, url, formato, media) {
+  document.getElementById('campaniaId').value = id;
+  document.getElementById('urlDestino').value = url || '';
+  document.getElementById('formato').value = formato || '';
+  document.getElementById('archivoMedia').value = media || '';
+  const modalEl = document.getElementById('editarCampaniaModal');
+  editarModal = new bootstrap.Modal(modalEl);
+  editarModal.show();
+}
+
+async function guardarEdicionCampania() {
+  const id = document.getElementById('campaniaId').value;
+  const data = {
+    url_destino: document.getElementById('urlDestino').value,
+    formato: document.getElementById('formato').value,
+    archivo_media: document.getElementById('archivoMedia').value
+  };
+  try {
+    const resp = await fetch(`/dashboard/api/publicidad/campanias-web/${id}/actualizar_web/`, {
+      method: 'PATCH',
+      headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!resp.ok) throw new Error('Error al actualizar campaña');
+    editarModal.hide();
+    location.reload();
+  } catch (e) { alert(e.message); }
+}
+</script>
+{% endblock %}

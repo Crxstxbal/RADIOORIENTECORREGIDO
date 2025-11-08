@@ -13,7 +13,7 @@ python manage.py startapp NOMBRE-MODULO
 pip install channels
 pip install dj-database-url
 pip install django-cors-headers
-
+pip install detoxify
 pip install pillow
 
 #Frontend

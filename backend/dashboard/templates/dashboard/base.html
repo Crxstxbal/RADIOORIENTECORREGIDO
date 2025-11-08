@@ -799,6 +799,30 @@
                         Notificaciones
                     </a>
                 </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_publicidad' or request.resolver_match.url_name == 'dashboard_publicidad_ubicaciones' %}active{% endif %}" href="#" data-bs-toggle="collapse" data-bs-target="#publicidadSubmenu" aria-expanded="false">
+                        <i class="fas fa-rectangle-ad me-2"></i>
+                        Publicidad
+                        <i class="fas fa-chevron-right ms-auto"></i>
+                    </a>
+                    <div class="collapse" id="publicidadSubmenu">
+                        <ul class="nav flex-column ms-4">
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_publicidad' %}active{% endif %}" href="{% url 'dashboard_publicidad' %}">
+                                    <i class="fas fa-list me-2"></i>
+                                    Solicitudes y Campañas
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_publicidad_ubicaciones' %}active{% endif %}" href="{% url 'dashboard_publicidad_ubicaciones' %}">
+                                    <i class="fas fa-map-marker-alt me-2"></i>
+                                    Ubicaciones
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
 
                 <li class="nav-item mt-4">
                     <a class="nav-link" href="{% url 'dashboard_logout' %}">

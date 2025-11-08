@@ -1,8 +1,17 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .api.views import (
+    UbicacionPublicidadViewSet,
+    SolicitudPublicidadViewSet,
+    PublicidadWebCampaignViewSet,
+)
 
-# URLs para publicidad
-# Los endpoints de self-service fueron removidos para revisión futura
+# Router para API REST
+router = DefaultRouter()
+router.register(r'ubicaciones', UbicacionPublicidadViewSet, basename='ubicacion')
+router.register(r'solicitudes', SolicitudPublicidadViewSet, basename='solicitud')
+router.register(r'campanias-web', PublicidadWebCampaignViewSet, basename='campanias-web')
 
 urlpatterns = [
-    # Endpoints legacy de publicidad aquí (si se necesitan en el futuro)
+    path('api/', include(router.urls)),
 ]

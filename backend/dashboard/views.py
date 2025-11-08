@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q
+from django.db.models.deletion import ProtectedError
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.contrib import messages
@@ -29,6 +30,7 @@ from apps.chat.models import ChatMessage
 from apps.contact.models import Contacto, Suscripcion, Estado, TipoAsunto
 from apps.emergente.models import BandaEmergente, BandaLink, Integrante, BandaIntegrante
 from apps.ubicacion.models import Pais, Ciudad, Comuna
+from apps.publicidad.models import Publicidad, SolicitudPublicidadWeb, UbicacionPublicidadWeb, TipoUbicacion, ItemSolicitudWeb, PublicidadWeb
 
 
 def is_staff_user(user):
@@ -328,6 +330,146 @@ def dashboard_analytics(request):
     
     return render(request, 'dashboard/analytics.html', context)
 
+@login_required
+@user_passes_test(is_staff_user)
+def dashboard_publicidad(request):
+    """Gestión de Publicidad Web: solicitudes y campañas publicadas"""
+    solicitudes = SolicitudPublicidadWeb.objects.select_related('usuario').order_by('-fecha_solicitud')[:100]
+    campanias = Publicidad.objects.filter(tipo='WEB').select_related('web_config').order_by('-fecha_creacion')[:100]
+    return render(request, 'dashboard/publicidad.html', {
+        'solicitudes': solicitudes,
+        'campanias': campanias,
+    })
+
+@login_required
+@user_passes_test(is_staff_user)
+def ubicaciones_publicidad(request):
+    """Gestión de ubicaciones de publicidad (carousels, banners, etc.)"""
+    ubicaciones = (
+        UbicacionPublicidadWeb.objects
+        .select_related('tipo')
+        .annotate(items_count=Count('items_solicitud_web'))
+        .all()
+        .order_by('orden', 'nombre')
+    )
+    tipos_ubicacion_select = TipoUbicacion.objects.filter(activo=True).order_by('nombre')
+    tipos_ubicacion_all = TipoUbicacion.objects.annotate(ubicaciones_count=Count('ubicaciones')).order_by('nombre')
+    
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+
+        # Gestión de eliminación de Ubicación
+        if form_type == 'delete_ubicacion':
+            del_id = request.POST.get('ubicacion_id')
+            try:
+                ubic = UbicacionPublicidadWeb.objects.get(id=del_id)
+                # Evitar borrar si tiene items asociados
+                if ubic.items_solicitud_web.exists():
+                    messages.warning(request, 'No se puede eliminar: la ubicación tiene elementos asociados.')
+                else:
+                    ubic.delete()
+                    messages.success(request, 'Ubicación eliminada correctamente')
+            except ProtectedError:
+                messages.error(request, 'No se puede eliminar la ubicación porque está protegida por relaciones.')
+            except Exception as e:
+                messages.error(request, f'Error al eliminar la ubicación: {str(e)}')
+            return redirect('dashboard_publicidad_ubicaciones')
+
+        # Gestión de eliminación de Tipo
+        if form_type == 'delete_tipo':
+            del_tipo_id = request.POST.get('tipo_id')
+            try:
+                t = TipoUbicacion.objects.get(id=del_tipo_id)
+                if t.ubicaciones.exists():
+                    messages.warning(request, 'No se puede eliminar: el tipo tiene ubicaciones asociadas.')
+                else:
+                    t.delete()
+                    messages.success(request, 'Tipo de ubicación eliminado correctamente')
+            except ProtectedError:
+                messages.error(request, 'No se puede eliminar el tipo porque está protegido por relaciones.')
+            except Exception as e:
+                messages.error(request, f'Error al eliminar el tipo de ubicación: {str(e)}')
+            return redirect('dashboard_publicidad_ubicaciones')
+
+        # Gestión de Tipos de Ubicación
+        if form_type == 'tipo':
+            tipo_id_form = request.POST.get('tipo_id')
+            nombre_tipo = request.POST.get('tipo_nombre')
+            codigo_tipo = request.POST.get('tipo_codigo')
+            descripcion_tipo = request.POST.get('tipo_descripcion', '')
+            activo_tipo = 'tipo_activo' in request.POST
+
+            try:
+                if tipo_id_form:
+                    tipo = TipoUbicacion.objects.get(id=tipo_id_form)
+                    tipo.nombre = nombre_tipo
+                    # Mantener codigo inmutable al editar (como en admin)
+                    tipo.descripcion = descripcion_tipo
+                    tipo.activo = activo_tipo
+                    tipo.save()
+                    messages.success(request, 'Tipo de ubicación actualizado correctamente')
+                else:
+                    TipoUbicacion.objects.create(
+                        codigo=codigo_tipo,
+                        nombre=nombre_tipo,
+                        descripcion=descripcion_tipo,
+                        activo=activo_tipo
+                    )
+                    messages.success(request, 'Tipo de ubicación creado correctamente')
+                return redirect('dashboard_publicidad_ubicaciones')
+            except Exception as e:
+                messages.error(request, f'Error al guardar el tipo de ubicación: {str(e)}')
+
+        # Gestión de Ubicaciones
+        else:
+            # Handle form submission for creating/updating locations
+            ubicacion_id = request.POST.get('ubicacion_id')
+            nombre = request.POST.get('nombre')
+            tipo_id = request.POST.get('tipo')
+            descripcion = request.POST.get('descripcion', '')
+            dimensiones = request.POST.get('dimensiones')
+            precio_mensual = request.POST.get('precio_mensual')
+            activo = 'activo' in request.POST
+            orden = request.POST.get('orden', 0)
+            
+            try:
+                tipo = TipoUbicacion.objects.get(id=tipo_id)
+                
+                if ubicacion_id:  # Update existing
+                    ubicacion = UbicacionPublicidadWeb.objects.get(id=ubicacion_id)
+                    ubicacion.nombre = nombre
+                    ubicacion.tipo = tipo
+                    ubicacion.descripcion = descripcion
+                    ubicacion.dimensiones = dimensiones
+                    ubicacion.precio_mensual = precio_mensual
+                    ubicacion.activo = activo
+                    ubicacion.orden = orden
+                    ubicacion.save()
+                    messages.success(request, 'Ubicación actualizada correctamente')
+                else:  # Create new
+                    UbicacionPublicidadWeb.objects.create(
+                        nombre=nombre,
+                        tipo=tipo,
+                        descripcion=descripcion,
+                        dimensiones=dimensiones,
+                        precio_mensual=precio_mensual,
+                        activo=activo,
+                        orden=orden
+                    )
+                    messages.success(request, 'Ubicación creada correctamente')
+                return redirect('dashboard_publicidad_ubicaciones')
+                
+            except TipoUbicacion.DoesNotExist:
+                messages.error(request, 'El tipo de ubicación seleccionado no existe')
+            except Exception as e:
+                messages.error(request, f'Error al guardar la ubicación: {str(e)}')
+    
+    return render(request, 'dashboard/ubicaciones_publicidad.html', {
+        'ubicaciones': ubicaciones,
+        'tipos_ubicacion': tipos_ubicacion_select,
+        'tipos_ubicacion_all': tipos_ubicacion_all,
+    })
+
 def dashboard_login(request):
     """Login específico para el dashboard"""
     if request.user.is_authenticated and request.user.is_staff:
@@ -365,6 +507,274 @@ def api_dashboard_stats(request):
         'subscriptions': Suscripcion.objects.count(),
     }
     return JsonResponse(stats)
+
+def api_publicidad_ubicaciones(request):
+    """API JSON para el frontend: lista tipos activos y sus ubicaciones activas."""
+    include_all = request.GET.get('all') == '1'
+    tipos_qs = TipoUbicacion.objects.all() if include_all else TipoUbicacion.objects.filter(activo=True)
+    tipos = list(
+        tipos_qs.order_by('nombre').values('id', 'nombre', 'codigo', 'descripcion', 'activo')
+    )
+    ubic_qs = UbicacionPublicidadWeb.objects.select_related('tipo')
+    if not include_all:
+        ubic_qs = ubic_qs.filter(activo=True, tipo__activo=True)
+    ubicaciones = list(
+        ubic_qs.order_by('orden', 'nombre').values(
+            'id', 'nombre', 'descripcion', 'dimensiones', 'precio_mensual',
+            'orden', 'activo', 'tipo_id', 'tipo__nombre', 'tipo__codigo', 'tipo__activo'
+        )
+    )
+    return JsonResponse({
+        'tipos': tipos,
+        'ubicaciones': ubicaciones,
+    })
+
+@login_required
+@user_passes_test(is_staff_user)
+@require_http_methods(["POST"])
+def api_aprobar_solicitud(request, solicitud_id: int):
+    """Aprobar una SolicitudPublicidadWeb y generar la campaña Publicidad + PublicidadWeb."""
+    try:
+        sol = SolicitudPublicidadWeb.objects.select_related('usuario').prefetch_related('items_web__ubicacion').get(id=solicitud_id)
+    except SolicitudPublicidadWeb.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Solicitud no encontrada'}, status=404)
+
+    if sol.publicacion_id:
+        return JsonResponse({'success': False, 'message': 'Ya tiene campaña asociada'}, status=400)
+
+    # Usamos las fechas y costo de la solicitud; cliente = nombre_contacto
+    try:
+        pub = Publicidad.objects.create(
+            nombre_cliente=sol.nombre_contacto or sol.usuario.get_full_name() or sol.usuario.username,
+            descripcion=f"Solicitud #{sol.id} - {sol.email_contacto}",
+            tipo='WEB',
+            fecha_inicio=sol.fecha_inicio_solicitada,
+            fecha_fin=sol.fecha_fin_solicitada,
+            costo_total=sol.costo_total_estimado,
+            activo=True,
+        )
+
+        # Tomamos el primer item como base para la configuración web (formato/url)
+        primer = sol.items_web.select_related('ubicacion').first()
+        formato = primer.formato if primer else ''
+        url_destino = primer.url_destino if primer else ''
+        PublicidadWeb.objects.create(
+            publicidad=pub,
+            url_destino=url_destino,
+            formato=formato,
+            impresiones=0,
+            clics=0,
+        )
+
+        sol.publicacion = pub
+        sol.estado = 'aprobada'
+        sol.aprobado_por = request.user
+        sol.fecha_aprobacion = timezone.now()
+        sol.save(update_fields=['publicacion', 'estado', 'aprobado_por', 'fecha_aprobacion'])
+        return JsonResponse({'success': True, 'message': 'Solicitud aprobada y campaña creada', 'campania_id': pub.id})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error al aprobar: {str(e)}'}, status=500)
+
+@login_required
+@user_passes_test(is_staff_user)
+@require_http_methods(["PATCH"]) 
+def api_cambiar_estado_solicitud(request, solicitud_id: int):
+    """Cambia el estado de una solicitud: pendiente | en_revision | aprobada | rechazada.
+    Si se envía 'aprobada', crea la campaña (igual que api_aprobar_solicitud).
+    Acepta JSON: { estado, motivo (opcional), notas_admin (opcional) }
+    """
+    try:
+        sol = SolicitudPublicidadWeb.objects.get(id=solicitud_id)
+    except SolicitudPublicidadWeb.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Solicitud no encontrada'}, status=404)
+    try:
+        data = json.loads(request.body or '{}')
+    except Exception:
+        data = {}
+
+    nuevo = data.get('estado')
+    if nuevo not in {'pendiente','en_revision','aprobada','rechazada'}:
+        return JsonResponse({'success': False, 'message': 'Estado inválido'}, status=400)
+
+    # Si es aprobación, delegamos
+    if nuevo == 'aprobada':
+        return api_aprobar_solicitud(request, solicitud_id)
+
+    # Revisión / Rechazo
+    if 'notas_admin' in data:
+        sol.notas_admin = data.get('notas_admin') or None
+    if nuevo == 'rechazada' and 'motivo' in data:
+        sol.motivo_rechazo = data.get('motivo') or None
+    sol.estado = nuevo
+    sol.save(update_fields=['estado','notas_admin','motivo_rechazo'])
+    return JsonResponse({'success': True, 'message': f'Solicitud actualizada a {nuevo}'})
+
+@login_required
+@user_passes_test(is_staff_user)
+@require_http_methods(["PATCH"]) 
+def api_actualizar_campania_web(request, campania_id: int):
+    """Actualizar datos web (url_destino, formato, archivo_media) de una campaña WEB."""
+    try:
+        pub = Publicidad.objects.select_related('web_config').get(id=campania_id, tipo='WEB')
+    except Publicidad.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Campaña no encontrada'}, status=404)
+    try:
+        data = json.loads(request.body or '{}')
+    except Exception:
+        data = {}
+    web = getattr(pub, 'web_config', None)
+    try:
+        if web is None:
+            web = PublicidadWeb.objects.create(
+                publicidad=pub,
+                url_destino=data.get('url_destino', ''),
+                formato=data.get('formato', ''),
+                impresiones=0,
+                clics=0,
+                archivo_media=data.get('archivo_media', '') or None,
+            )
+        else:
+            changed = False
+            if 'url_destino' in data:
+                web.url_destino = data['url_destino']
+                changed = True
+            if 'formato' in data:
+                web.formato = data['formato']
+                changed = True
+            if 'archivo_media' in data:
+                web.archivo_media = data['archivo_media'] or None
+                changed = True
+            if changed:
+                web.save()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error al actualizar: {str(e)}'}, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_publicidad_solicitar(request):
+    """Crea una solicitud de publicidad web si el usuario está autenticado.
+    Si no, crea un contacto con los datos recibidos.
+    Espera JSON con: nombre, email, telefono, preferencia_contacto, ubicacion_id, url_destino,
+    fecha_inicio, fecha_fin, mensaje (opcional).
+    """
+    try:
+        data = json.loads(request.body or '{}')
+    except Exception:
+        return JsonResponse({'success': False, 'message': 'JSON inválido'}, status=400)
+
+    # Puede venir 'ubicacion_id' (uno) o 'ubicacion_ids' (lista)
+    required = ['nombre', 'email']
+    missing = [k for k in required if not data.get(k)]
+    if missing:
+        return JsonResponse({'success': False, 'message': f'Faltan campos: {", ".join(missing)}'}, status=400)
+
+    ubicacion_ids = data.get('ubicacion_ids')
+    if not ubicacion_ids:
+        single = data.get('ubicacion_id')
+        ubicacion_ids = [single] if single else []
+    ubicacion_ids = [uid for uid in ubicacion_ids if uid]
+    if not ubicacion_ids:
+        return JsonResponse({'success': False, 'message': 'Debe seleccionar al menos una ubicación'}, status=400)
+
+    ubics = list(UbicacionPublicidadWeb.objects.select_related('tipo').filter(id__in=ubicacion_ids))
+    if not ubics:
+        return JsonResponse({'success': False, 'message': 'Ubicaciones no encontradas'}, status=404)
+
+    nombre = data.get('nombre')
+    email = data.get('email')
+    telefono = data.get('telefono')
+    preferencia = data.get('preferencia_contacto', 'telefono')
+    url_destino = data.get('url_destino', '')
+    fecha_inicio = data.get('fecha_inicio')
+    fecha_fin = data.get('fecha_fin')
+    mensaje = data.get('mensaje', '')
+
+    # Si está autenticado, crear Solicitud + Item
+    if request.user.is_authenticated:
+        try:
+            # Fechas opcionales
+            from datetime import date
+            def parse_date(s):
+                try:
+                    return date.fromisoformat(s) if s else None
+                except Exception:
+                    return None
+            fi = parse_date(fecha_inicio) or timezone.now().date()
+            ff = parse_date(fecha_fin) or fi
+
+            # Total estimado suma de ubicaciones seleccionadas
+            total_estimado = sum([u.precio_mensual for u in ubics])
+            solicitud = SolicitudPublicidadWeb.objects.create(
+                usuario=request.user,
+                nombre_contacto=nombre,
+                email_contacto=email,
+                telefono_contacto=telefono,
+                preferencia_contacto=preferencia,
+                estado='pendiente',
+                fecha_inicio_solicitada=fi,
+                fecha_fin_solicitada=ff,
+                mensaje_usuario=mensaje,
+                costo_total_estimado=total_estimado,
+            )
+            for ubic in ubics:
+                ItemSolicitudWeb.objects.create(
+                    solicitud=solicitud,
+                    ubicacion=ubic,
+                    url_destino=url_destino,
+                    formato=ubic.dimensiones,
+                    precio_acordado=ubic.precio_mensual,
+                    notas=f"Tipo: {ubic.tipo.nombre}"
+                )
+            return JsonResponse({'success': True, 'message': 'Solicitud creada. Te contactaremos pronto.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Error al crear solicitud: {str(e)}'}, status=500)
+
+    # No autenticado: crear la solicitud con un usuario "guest" para revisión en el dashboard
+    try:
+        guest = User.objects.filter(username='public_solicitudes').first()
+        if not guest:
+            guest = User.objects.create(username='public_solicitudes', email='solicitudes@radioorientefm.local')
+            try:
+                guest.set_unusable_password()
+                guest.save(update_fields=['password'])
+            except Exception:
+                pass
+
+        from datetime import date
+        def parse_date(s):
+            try:
+                return date.fromisoformat(s) if s else None
+            except Exception:
+                return None
+        fi = parse_date(fecha_inicio) or timezone.now().date()
+        ff = parse_date(fecha_fin) or fi
+
+        total_estimado = sum([u.precio_mensual for u in ubics])
+        solicitud = SolicitudPublicidadWeb.objects.create(
+            usuario=guest,
+            nombre_contacto=nombre,
+            email_contacto=email,
+            telefono_contacto=telefono,
+            preferencia_contacto=preferencia,
+            estado='pendiente',
+            fecha_inicio_solicitada=fi,
+            fecha_fin_solicitada=ff,
+            mensaje_usuario=mensaje,
+            costo_total_estimado=total_estimado,
+        )
+        for ubic in ubics:
+            ItemSolicitudWeb.objects.create(
+                solicitud=solicitud,
+                ubicacion=ubic,
+                url_destino=url_destino,
+                formato=ubic.dimensiones,
+                precio_acordado=ubic.precio_mensual,
+                notas=f"Tipo: {ubic.tipo.nombre}"
+            )
+        return JsonResponse({'success': True, 'message': 'Solicitud registrada. Un administrador te contactará.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error al crear solicitud (guest): {str(e)}'}, status=500)
 
 # CRUD Operations for Users
 @login_required
