@@ -9,9 +9,8 @@
         Moderación del Chat
     </h2>
     <div class="btn-group" role="group">
-        <button type="button" class="btn btn-outline-primary active">Todos</button>
-        <button type="button" class="btn btn-outline-warning">Reportados</button>
-        <button type="button" class="btn btn-outline-danger">Bloqueados</button>
+        <button type="button" class="btn btn-outline-primary active" id="btnTodos" onclick="filterMessages('all')">Todos</button>
+        <button type="button" class="btn btn-outline-danger" id="btnBloqueados" onclick="filterMessages('blocked')">Bloqueados</button>
     </div>
 </div>
 
@@ -74,7 +73,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+            <div class="card-body" style="max-height: 600px; overflow-y: auto;" id="messagesContainer">
                 {% for message in messages %}
                 <div class="d-flex mb-3 pb-3 border-bottom message-item" id="message-{{ message.id }}">
                     <div class="flex-shrink-0">
@@ -111,6 +110,7 @@
                 </div>
                 {% endfor %}
             </div>
+            <div class="card-footer bg-white" id="messagesPaginationContainer"></div>
         </div>
     </div>
 
@@ -129,112 +129,287 @@
                         <i class="fas fa-broom me-2"></i>
                         Limpiar Chat
                     </button>
-                    <button class="btn btn-outline-info">
+                    <button class="btn btn-outline-info" onclick="openFilterConfig()">
                         <i class="fas fa-robot me-2"></i>
-                        Filtros Automáticos
-                    </button>
-                    <button class="btn btn-outline-success">
-                        <i class="fas fa-download me-2"></i>
-                        Exportar Logs
+                        Filtros Automáticos ML
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Usuarios más activos -->
-        <div class="card mb-4">
+        <div class="card">
             <div class="card-header bg-white">
                 <h5 class="mb-0">
                     <i class="fas fa-star text-warning me-2"></i>
                     Usuarios Más Activos
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body" id="topUsersContainer">
+                {% for user in top_users %}
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="d-flex align-items-center">
-                        <div class="bg-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">
                             <i class="fas fa-user text-white small"></i>
                         </div>
                         <div>
-                            <strong>juan_radio</strong>
-                            <br><small class="text-muted">47 mensajes</small>
+                            <strong>{{ user.username }}</strong>
+                            <br><small class="text-muted">{{ user.message_count }} mensaje{{ user.message_count|pluralize:"s" }}</small>
                         </div>
                     </div>
-                    <span class="badge bg-success">Activo</span>
+                    <button class="btn btn-sm btn-outline-{% if user.is_blocked %}success{% else %}danger{% endif %} toggle-block-btn"
+                            data-user-id="{{ user.id }}"
+                            data-user-name="{{ user.username }}"
+                            data-blocked="{{ user.is_blocked|yesno:'true,false' }}">
+                        <i class="fas fa-{% if user.is_blocked %}unlock{% else %}ban{% endif %}"></i>
+                    </button>
                 </div>
-                
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-info rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">
-                            <i class="fas fa-user text-white small"></i>
-                        </div>
-                        <div>
-                            <strong>maria_music</strong>
-                            <br><small class="text-muted">32 mensajes</small>
-                        </div>
-                    </div>
-                    <span class="badge bg-primary">Online</span>
+                {% empty %}
+                <div class="text-center py-3">
+                    <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">No hay usuarios activos aún</p>
                 </div>
-                
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">
-                            <i class="fas fa-user text-white small"></i>
-                        </div>
-                        <div>
-                            <strong>carlos_fm</strong>
-                            <br><small class="text-muted">28 mensajes</small>
-                        </div>
-                    </div>
-                    <span class="badge bg-secondary">Offline</span>
-                </div>
+                {% endfor %}
             </div>
+            <div class="card-footer bg-white" id="usersPaginationContainer"></div>
         </div>
+    </div>
+</div>
 
-        <!-- Palabras filtradas -->
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-filter text-danger me-2"></i>
-                    Filtros de Contenido
+<!-- Modal para confirmar eliminación de mensaje -->
+<div class="modal fade" id="deleteMessageModal" tabindex="-1" aria-labelledby="deleteMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteMessageModalLabel">
+                    <i class="fas fa-trash me-2"></i>Eliminar Mensaje
                 </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label">Palabras Prohibidas</label>
-                    <textarea class="form-control" rows="3" placeholder="Ingresa palabras separadas por comas"></textarea>
-                </div>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="autoFilter" checked>
-                    <label class="form-check-label" for="autoFilter">
-                        Filtro automático activado
-                    </label>
-                </div>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="linkFilter">
-                    <label class="form-check-label" for="linkFilter">
-                        Bloquear enlaces
-                    </label>
-                </div>
-                <button class="btn btn-primary btn-sm w-100">
-                    Actualizar Filtros
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres eliminar este mensaje?</p>
+                <p class="text-muted small mb-0">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteMessage">
+                    <i class="fas fa-trash me-2"></i>Eliminar
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Modal para confirmar limpiar chat -->
+<div class="modal fade" id="clearChatModal" tabindex="-1" aria-labelledby="clearChatModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="clearChatModalLabel">
+                    <i class="fas fa-broom me-2"></i>Limpiar Chat
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres eliminar <strong>TODOS</strong> los mensajes del chat?</p>
+                <p class="text-muted small mb-0">Esta acción eliminará permanentemente todos los mensajes y no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="confirmClearChat">
+                    <i class="fas fa-broom me-2"></i>Limpiar Todo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmar bloqueo/desbloqueo de usuario -->
+<div class="modal fade" id="toggleBlockModal" tabindex="-1" aria-labelledby="toggleBlockModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white" id="toggleBlockModalHeader">
+                <h5 class="modal-title" id="toggleBlockModalLabel">
+                    <span id="toggleBlockAction">Bloquear Usuario</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="toggleBlockMessage">¿Estás seguro de que quieres bloquear a este usuario?</p>
+                <p class="text-muted small mb-0" id="toggleBlockDescription">El usuario no podrá enviar mensajes en el chat.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmToggleBlock">
+                    <span id="confirmToggleBlockText">Bloquear</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para configurar Filtro ML -->
+<div class="modal fade" id="filterConfigModal" tabindex="-1" aria-labelledby="filterConfigModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="filterConfigModalLabel">
+                    <i class="fas fa-robot me-2"></i>Configuración de Filtro Inteligente ML
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs mb-3" id="filterTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="config-tab" data-bs-toggle="tab" data-bs-target="#config" type="button" role="tab">
+                            <i class="fas fa-cog me-1"></i>Configuración
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="palabras-tab" data-bs-toggle="tab" data-bs-target="#palabras" type="button" role="tab">
+                            <i class="fas fa-ban me-1"></i>Palabras Prohibidas
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="usuarios-bloqueados-tab" data-bs-toggle="tab" data-bs-target="#usuarios-bloqueados" type="button" role="tab">
+                            <i class="fas fa-user-slash me-1"></i>Usuarios Bloqueados
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="infracciones-tab" data-bs-toggle="tab" data-bs-target="#infracciones" type="button" role="tab">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Infracciones
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="filterTabsContent">
+                    <!-- Tab: Configuración -->
+                    <div class="tab-pane fade show active" id="config" role="tabpanel">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="filterActivo" checked>
+                                <label class="form-check-label" for="filterActivo">
+                                    <strong>Activar Filtro Inteligente ML</strong>
+                                    <br><small class="text-muted">Analiza automáticamente mensajes con Machine Learning</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <label for="umbralToxicidad" class="form-label">
+                                <strong>Umbral de Toxicidad:</strong> <span id="umbralValue">0.7</span>
+                            </label>
+                            <input type="range" class="form-range" id="umbralToxicidad" min="0" max="1" step="0.05" value="0.7">
+                            <small class="text-muted">Mayor valor = más estricto. Recomendado: 0.6 - 0.8</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Acción al detectar contenido ofensivo:</strong></label>
+                            <select class="form-select" id="modoAccion">
+                                <option value="bloquear">Bloquear mensaje</option>
+                                <option value="advertir">Advertir usuario (permitir mensaje)</option>
+                                <option value="revisar">Marcar para revisión</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="strikesBloqueo" class="form-label"><strong>Infracciones para bloqueo automático:</strong></label>
+                            <input type="number" class="form-control" id="strikesBloqueo" min="1" max="10" value="3">
+                            <small class="text-muted">Número de infracciones antes de bloquear al usuario automáticamente</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="bloquearEnlaces">
+                                <label class="form-check-label" for="bloquearEnlaces">
+                                    Bloquear mensajes con enlaces (URLs)
+                                </label>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary w-100" onclick="saveFilterConfig()">
+                            <i class="fas fa-save me-2"></i>Guardar Configuración
+                        </button>
+                    </div>
+
+                    <!-- Tab: Palabras Prohibidas -->
+                    <div class="tab-pane fade" id="palabras" role="tabpanel">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Agregar palabra prohibida:</strong></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="nuevaPalabra" placeholder="Escribe la palabra...">
+                                <select class="form-select" id="severidadPalabra" style="max-width: 120px;">
+                                    <option value="baja">Baja</option>
+                                    <option value="media" selected>Media</option>
+                                    <option value="alta">Alta</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="addProhibitedWord()">
+                                    <i class="fas fa-plus"></i> Agregar
+                                </button>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div id="palabrasProhibidasList" style="max-height: 300px; overflow-y: auto;">
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-spinner fa-spin"></i> Cargando...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Usuarios Bloqueados -->
+                    <div class="tab-pane fade" id="usuarios-bloqueados" role="tabpanel">
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Gestión de Usuarios Bloqueados</strong>
+                            <p class="mb-0 small">Aquí puedes ver y gestionar todos los usuarios que han sido bloqueados del chat, ya sea manualmente o automáticamente por el sistema ML.</p>
+                        </div>
+
+                        <div id="usuariosBloqueadosList" style="max-height: 350px; overflow-y: auto;">
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-spinner fa-spin"></i> Cargando...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Infracciones -->
+                    <div class="tab-pane fade" id="infracciones" role="tabpanel">
+                        <div id="infraccionesList" style="max-height: 400px; overflow-y: auto;">
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-spinner fa-spin"></i> Cargando...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Búsqueda de mensajes
+// Búsqueda de mensajes - mejorada para buscar en contenido y nombre de usuario
 document.getElementById('searchMessages').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
+    const searchTerm = e.target.value.toLowerCase().trim();
     const messages = document.querySelectorAll('.message-item');
-    
+
     messages.forEach(message => {
-        const text = message.textContent.toLowerCase();
-        message.style.display = text.includes(searchTerm) ? '' : 'none';
+        // Buscar en el contenido del mensaje y en el nombre del usuario
+        const messageContent = message.querySelector('p')?.textContent.toLowerCase() || '';
+        const userName = message.querySelector('h6')?.textContent.toLowerCase() || '';
+        const fullText = messageContent + ' ' + userName;
+
+        // Mostrar u ocultar según coincida con el término de búsqueda
+        if (searchTerm === '' || fullText.includes(searchTerm)) {
+            message.style.display = '';
+        } else {
+            message.style.display = 'none';
+        }
     });
 });
 
@@ -242,6 +417,16 @@ document.getElementById('searchMessages').addEventListener('input', function(e) 
 console.log('Iniciando sistema de actualización automática de mensajes...');
 let isUpdating = false;
 let deletedMessagesToday = 0;
+let currentFilter = 'all'; // 'all' o 'blocked'
+let allMessages = []; // Guardar todos los mensajes para filtrado
+
+// Paginación de mensajes
+let currentMessagesPage = 1;
+const messagesPerPage = 20;
+
+// Paginación de usuarios
+let currentUsersPage = 1;
+const usersPerPage = 5;
 
 async function updateMessages() {
     if (isUpdating) return;
@@ -263,11 +448,17 @@ async function updateMessages() {
             const messages = Array.isArray(data) ? data : (data.results || []);
             console.log('Mensajes recibidos:', messages.length);
 
-            // Actualizar el contenedor de mensajes
-            updateMessagesContainer(messages);
+            // Guardar todos los mensajes
+            allMessages = messages;
+
+            // Actualizar el contenedor de mensajes según el filtro actual
+            updateMessagesContainer(filterMessagesByType(messages));
 
             // Actualizar estadísticas
             updateStatistics(messages);
+
+            // Actualizar lista de usuarios activos
+            updateTopUsers(messages);
         } else {
             console.error('Error en respuesta:', response.status, response.statusText);
         }
@@ -293,9 +484,15 @@ function updateMessagesContainer(messages) {
         return;
     }
 
+    // Aplicar paginación
+    const totalPages = Math.ceil(messages.length / messagesPerPage);
+    const startIndex = (currentMessagesPage - 1) * messagesPerPage;
+    const endIndex = startIndex + messagesPerPage;
+    const paginatedMessages = messages.slice(startIndex, endIndex);
+
     // Construir HTML de mensajes
     let messagesHTML = '';
-    messages.slice(0, 50).forEach(message => {
+    paginatedMessages.forEach(message => {
         const timeAgo = getTimeAgo(new Date(message.fecha_envio));
         messagesHTML += `
             <div class="d-flex mb-3 pb-3 border-bottom message-item" id="message-${message.id}">
@@ -338,6 +535,84 @@ function updateMessagesContainer(messages) {
     });
 
     container.innerHTML = messagesHTML;
+
+    // Actualizar paginación
+    renderMessagesPagination(totalPages);
+}
+
+function renderMessagesPagination(totalPages) {
+    const paginationContainer = document.getElementById('messagesPaginationContainer');
+    if (!paginationContainer) return;
+
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    let paginationHTML = '<nav><ul class="pagination pagination-sm justify-content-center mb-0">';
+
+    // Botón anterior
+    paginationHTML += `
+        <li class="page-item ${currentMessagesPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changeMessagesPage(${currentMessagesPage - 1}); return false;">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        </li>
+    `;
+
+    // Primera página
+    paginationHTML += `
+        <li class="page-item ${currentMessagesPage === 1 ? 'active' : ''}">
+            <a class="page-link" href="#" onclick="changeMessagesPage(1); return false;">1</a>
+        </li>
+    `;
+
+    // Puntos suspensivos si hay páginas intermedias
+    if (currentMessagesPage > 3) {
+        paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+    }
+
+    // Páginas intermedias (página actual y adyacentes)
+    for (let i = Math.max(2, currentMessagesPage - 1); i <= Math.min(totalPages - 1, currentMessagesPage + 1); i++) {
+        if (i !== 1 && i !== totalPages) {
+            paginationHTML += `
+                <li class="page-item ${currentMessagesPage === i ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="changeMessagesPage(${i}); return false;">${i}</a>
+                </li>
+            `;
+        }
+    }
+
+    // Puntos suspensivos si hay páginas intermedias
+    if (currentMessagesPage < totalPages - 2) {
+        paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+    }
+
+    // Última página
+    if (totalPages > 1) {
+        paginationHTML += `
+            <li class="page-item ${currentMessagesPage === totalPages ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changeMessagesPage(${totalPages}); return false;">${totalPages}</a>
+            </li>
+        `;
+    }
+
+    // Botón siguiente
+    paginationHTML += `
+        <li class="page-item ${currentMessagesPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changeMessagesPage(${currentMessagesPage + 1}); return false;">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>
+    `;
+
+    paginationHTML += '</ul></nav>';
+    paginationContainer.innerHTML = paginationHTML;
+}
+
+function changeMessagesPage(page) {
+    currentMessagesPage = page;
+    updateMessagesContainer(filterMessagesByType(allMessages));
 }
 
 function updateStatistics(messages) {
@@ -394,114 +669,74 @@ function escapeHtml(text) {
 updateMessages();
 setInterval(updateMessages, 2000);
 
-// Función para eliminar mensajes
+// Variables para los modals
+let currentMessageId = null;
+let currentUserId = null;
+let currentUserName = null;
+let currentUserBlocked = false;
+
+// Función para eliminar mensajes - con modal personalizado
 document.addEventListener('click', function(e) {
     if (e.target.closest('.delete-message-btn')) {
         const button = e.target.closest('.delete-message-btn');
-        const messageId = button.getAttribute('data-message-id');
+        currentMessageId = button.getAttribute('data-message-id');
 
-        if (confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
-            console.log('Intentando eliminar mensaje:', messageId);
-            fetch(`/api/chat/messages/${messageId}/delete/`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => {
-                console.log('Respuesta del servidor:', response.status);
-                if (response.ok) {
-                    deletedMessagesToday++;
-                    document.getElementById('deletedMessagesCount').textContent = deletedMessagesToday;
-                    showNotification('Mensaje eliminado correctamente', 'success');
-                    // Recargar mensajes inmediatamente
-                    updateMessages();
-                } else {
-                    return response.json().then(data => {
-                        console.error('Error response:', data);
-                        showNotification('Error: ' + (data.detail || response.statusText || 'No autorizado'), 'danger');
-                    }).catch(() => {
-                        showNotification(`Error ${response.status}: No autorizado`, 'danger');
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error en fetch:', error);
-                showNotification('Error al eliminar el mensaje: ' + error.message, 'danger');
-            });
-        }
+        // Mostrar modal de confirmación
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteMessageModal'));
+        deleteModal.show();
     }
 
-    // Función para bloquear/desbloquear usuario
+    // Función para bloquear/desbloquear usuario - con modal personalizado
     if (e.target.closest('.toggle-block-btn')) {
         const button = e.target.closest('.toggle-block-btn');
-        const userId = button.getAttribute('data-user-id');
-        const userName = button.getAttribute('data-user-name');
-        const isBlocked = button.getAttribute('data-blocked') === 'true';
+        currentUserId = button.getAttribute('data-user-id');
+        currentUserName = button.getAttribute('data-user-name');
+        currentUserBlocked = button.getAttribute('data-blocked') === 'true';
 
-        const action = isBlocked ? 'desbloquear' : 'bloquear';
-        if (confirm(`¿Estás seguro de que quieres ${action} a ${userName}?`)) {
-            console.log(`Intentando ${action} usuario:`, userId);
-            fetch(`/api/chat/users/${userId}/toggle-block/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    // Recargar mensajes inmediatamente
-                    updateMessages();
-                } else {
-                    showNotification('Error: ' + data.message, 'danger');
-                }
-            })
-            .catch(error => {
-                console.error('Error en fetch:', error);
-                showNotification('Error al cambiar estado del usuario: ' + error.message, 'danger');
-            });
+        const action = currentUserBlocked ? 'desbloquear' : 'bloquear';
+        const actionCap = currentUserBlocked ? 'Desbloquear' : 'Bloquear';
+
+        // Actualizar el modal según la acción
+        const modal = document.getElementById('toggleBlockModal');
+        const modalHeader = document.getElementById('toggleBlockModalHeader');
+        const modalAction = document.getElementById('toggleBlockAction');
+        const modalMessage = document.getElementById('toggleBlockMessage');
+        const modalDescription = document.getElementById('toggleBlockDescription');
+        const confirmBtn = document.getElementById('confirmToggleBlock');
+        const confirmBtnText = document.getElementById('confirmToggleBlockText');
+        const closeBtn = modal.querySelector('.btn-close');
+
+        if (currentUserBlocked) {
+            // Desbloquear
+            modalHeader.className = 'modal-header bg-success text-white';
+            closeBtn.className = 'btn-close btn-close-white';
+            modalAction.innerHTML = '<i class="fas fa-unlock me-2"></i>Desbloquear Usuario';
+            modalMessage.textContent = `¿Estás seguro de que quieres desbloquear a ${currentUserName}?`;
+            modalDescription.textContent = 'El usuario podrá volver a enviar mensajes en el chat.';
+            confirmBtn.className = 'btn btn-success';
+            confirmBtnText.innerHTML = '<i class="fas fa-unlock me-2"></i>Desbloquear';
+        } else {
+            // Bloquear
+            modalHeader.className = 'modal-header bg-danger text-white';
+            closeBtn.className = 'btn-close btn-close-white';
+            modalAction.innerHTML = '<i class="fas fa-ban me-2"></i>Bloquear Usuario';
+            modalMessage.textContent = `¿Estás seguro de que quieres bloquear a ${currentUserName}?`;
+            modalDescription.textContent = 'El usuario no podrá enviar mensajes en el chat.';
+            confirmBtn.className = 'btn btn-danger';
+            confirmBtnText.innerHTML = '<i class="fas fa-ban me-2"></i>Bloquear';
         }
+
+        // Mostrar modal de confirmación
+        const toggleBlockModal = new bootstrap.Modal(document.getElementById('toggleBlockModal'));
+        toggleBlockModal.show();
     }
 });
 
-// Función para limpiar todos los mensajes
+// Función para limpiar todos los mensajes - con modal personalizado
 function clearAllMessages() {
-    if (confirm('¿Estás seguro de que quieres eliminar TODOS los mensajes del chat? Esta acción no se puede deshacer.')) {
-        fetch('/api/chat/messages/clear/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ sala: 'radio-oriente' }),
-            credentials: 'same-origin'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                deletedMessagesToday += data.deleted_count || 0;
-                document.getElementById('deletedMessagesCount').textContent = deletedMessagesToday;
-                showNotification(data.message, 'success');
-                // Recargar mensajes inmediatamente
-                updateMessages();
-            } else {
-                showNotification('Error: ' + data.message, 'danger');
-            }
-        })
-        .catch(error => {
-            console.error('Error en fetch:', error);
-            showNotification('Error al limpiar el chat: ' + error.message, 'danger');
-        });
-    }
+    // Mostrar modal de confirmación
+    const clearModal = new bootstrap.Modal(document.getElementById('clearChatModal'));
+    clearModal.show();
 }
 
 // Función para obtener cookie CSRF
@@ -542,6 +777,661 @@ function showNotification(message, type = 'primary') {
     toast.addEventListener('hidden.bs.toast', function() {
         toast.remove();
     });
+}
+
+// Función para filtrar mensajes por tipo
+function filterMessagesByType(messages) {
+    if (currentFilter === 'blocked') {
+        return messages.filter(msg => msg.usuario_bloqueado === true);
+    }
+    return messages;
+}
+
+// Función para cambiar el filtro
+function filterMessages(type) {
+    currentFilter = type;
+
+    // Actualizar botones activos
+    document.getElementById('btnTodos').classList.toggle('active', type === 'all');
+    document.getElementById('btnBloqueados').classList.toggle('active', type === 'blocked');
+
+    // Actualizar vista de mensajes
+    updateMessagesContainer(filterMessagesByType(allMessages));
+}
+
+// Función para actualizar la lista de usuarios más activos
+function updateTopUsers(messages) {
+    // Contar mensajes por usuario
+    const userCounts = {};
+    messages.forEach(msg => {
+        if (msg.id_usuario && msg.usuario_nombre) {
+            if (!userCounts[msg.id_usuario]) {
+                userCounts[msg.id_usuario] = {
+                    id: msg.id_usuario,
+                    username: msg.usuario_nombre,
+                    count: 0,
+                    is_blocked: msg.usuario_bloqueado || false
+                };
+            }
+            userCounts[msg.id_usuario].count++;
+        }
+    });
+
+    // Convertir a array y ordenar
+    const allTopUsers = Object.values(userCounts)
+        .sort((a, b) => b.count - a.count);
+
+    // Actualizar el contenedor
+    const container = document.getElementById('topUsersContainer');
+    if (!container) return;
+
+    if (allTopUsers.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-3">
+                <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                <p class="text-muted mb-0">No hay usuarios activos aún</p>
+            </div>
+        `;
+        document.getElementById('usersPaginationContainer').innerHTML = '';
+        return;
+    }
+
+    // Aplicar paginación
+    const totalPages = Math.ceil(allTopUsers.length / usersPerPage);
+    const startIndex = (currentUsersPage - 1) * usersPerPage;
+    const endIndex = startIndex + usersPerPage;
+    const paginatedUsers = allTopUsers.slice(startIndex, endIndex);
+
+    let html = '';
+    paginatedUsers.forEach(user => {
+        html += `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">
+                        <i class="fas fa-user text-white small"></i>
+                    </div>
+                    <div>
+                        <strong>${escapeHtml(user.username)}</strong>
+                        <br><small class="text-muted">${user.count} mensaje${user.count !== 1 ? 's' : ''}</small>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-outline-${user.is_blocked ? 'success' : 'danger'} toggle-block-btn"
+                        data-user-id="${user.id}"
+                        data-user-name="${escapeHtml(user.username)}"
+                        data-blocked="${user.is_blocked ? 'true' : 'false'}">
+                    <i class="fas fa-${user.is_blocked ? 'unlock' : 'ban'}"></i>
+                </button>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+
+    // Actualizar paginación
+    renderUsersPagination(totalPages);
+}
+
+function renderUsersPagination(totalPages) {
+    const paginationContainer = document.getElementById('usersPaginationContainer');
+    if (!paginationContainer) return;
+
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    let paginationHTML = '<nav><ul class="pagination pagination-sm justify-content-center mb-0">';
+
+    // Botón anterior
+    paginationHTML += `
+        <li class="page-item ${currentUsersPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changeUsersPage(${currentUsersPage - 1}); return false;">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        </li>
+    `;
+
+    // Primera página
+    paginationHTML += `
+        <li class="page-item ${currentUsersPage === 1 ? 'active' : ''}">
+            <a class="page-link" href="#" onclick="changeUsersPage(1); return false;">1</a>
+        </li>
+    `;
+
+    // Puntos suspensivos si hay páginas intermedias
+    if (currentUsersPage > 3) {
+        paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+    }
+
+    // Páginas intermedias (página actual y adyacentes)
+    for (let i = Math.max(2, currentUsersPage - 1); i <= Math.min(totalPages - 1, currentUsersPage + 1); i++) {
+        if (i !== 1 && i !== totalPages) {
+            paginationHTML += `
+                <li class="page-item ${currentUsersPage === i ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="changeUsersPage(${i}); return false;">${i}</a>
+                </li>
+            `;
+        }
+    }
+
+    // Puntos suspensivos si hay páginas intermedias
+    if (currentUsersPage < totalPages - 2) {
+        paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+    }
+
+    // Última página
+    if (totalPages > 1) {
+        paginationHTML += `
+            <li class="page-item ${currentUsersPage === totalPages ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changeUsersPage(${totalPages}); return false;">${totalPages}</a>
+            </li>
+        `;
+    }
+
+    // Botón siguiente
+    paginationHTML += `
+        <li class="page-item ${currentUsersPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changeUsersPage(${currentUsersPage + 1}); return false;">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>
+    `;
+
+    paginationHTML += '</ul></nav>';
+    paginationContainer.innerHTML = paginationHTML;
+}
+
+function changeUsersPage(page) {
+    currentUsersPage = page;
+    updateMessages(); // Recargar todo para actualizar usuarios
+}
+
+// Event listeners para los botones de confirmación de los modals
+
+// Confirmación de eliminar mensaje
+document.getElementById('confirmDeleteMessage').addEventListener('click', function() {
+    if (!currentMessageId) return;
+
+    console.log('Intentando eliminar mensaje:', currentMessageId);
+    fetch(`/api/chat/messages/${currentMessageId}/delete/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        console.log('Respuesta del servidor:', response.status);
+        if (response.ok) {
+            deletedMessagesToday++;
+            document.getElementById('deletedMessagesCount').textContent = deletedMessagesToday;
+            showNotification('Mensaje eliminado correctamente', 'success');
+            // Cerrar modal
+            bootstrap.Modal.getInstance(document.getElementById('deleteMessageModal')).hide();
+            // Recargar mensajes inmediatamente
+            updateMessages();
+        } else {
+            return response.json().then(data => {
+                console.error('Error response:', data);
+                showNotification('Error: ' + (data.detail || response.statusText || 'No autorizado'), 'danger');
+                bootstrap.Modal.getInstance(document.getElementById('deleteMessageModal')).hide();
+            }).catch(() => {
+                showNotification(`Error ${response.status}: No autorizado`, 'danger');
+                bootstrap.Modal.getInstance(document.getElementById('deleteMessageModal')).hide();
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error en fetch:', error);
+        showNotification('Error al eliminar el mensaje: ' + error.message, 'danger');
+        bootstrap.Modal.getInstance(document.getElementById('deleteMessageModal')).hide();
+    });
+});
+
+// Confirmación de limpiar chat
+document.getElementById('confirmClearChat').addEventListener('click', function() {
+    fetch('/dashboard/chat/clear/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ sala: 'radio-oriente' }),
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            deletedMessagesToday += data.deleted_count || 0;
+            document.getElementById('deletedMessagesCount').textContent = deletedMessagesToday;
+            showNotification(data.message, 'success');
+            // Cerrar modal
+            bootstrap.Modal.getInstance(document.getElementById('clearChatModal')).hide();
+            // Recargar mensajes inmediatamente
+            updateMessages();
+        } else {
+            showNotification('Error: ' + data.message, 'danger');
+            bootstrap.Modal.getInstance(document.getElementById('clearChatModal')).hide();
+        }
+    })
+    .catch(error => {
+        console.error('Error en fetch:', error);
+        showNotification('Error al limpiar el chat: ' + error.message, 'danger');
+        bootstrap.Modal.getInstance(document.getElementById('clearChatModal')).hide();
+    });
+});
+
+// Confirmación de bloquear/desbloquear usuario
+document.getElementById('confirmToggleBlock').addEventListener('click', function() {
+    if (!currentUserId) return;
+
+    const action = currentUserBlocked ? 'desbloquear' : 'bloquear';
+    console.log(`Intentando ${action} usuario:`, currentUserId);
+
+    fetch(`/api/chat/users/${currentUserId}/toggle-block/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            // Cerrar modal
+            bootstrap.Modal.getInstance(document.getElementById('toggleBlockModal')).hide();
+            // Recargar mensajes inmediatamente
+            updateMessages();
+        } else {
+            showNotification('Error: ' + data.message, 'danger');
+            bootstrap.Modal.getInstance(document.getElementById('toggleBlockModal')).hide();
+        }
+    })
+    .catch(error => {
+        console.error('Error en fetch:', error);
+        showNotification('Error al cambiar estado del usuario: ' + error.message, 'danger');
+        bootstrap.Modal.getInstance(document.getElementById('toggleBlockModal')).hide();
+    });
+});
+
+// ============== FILTRO ML ==============
+
+// Actualizar valor del slider en tiempo real
+document.getElementById('umbralToxicidad').addEventListener('input', function(e) {
+    document.getElementById('umbralValue').textContent = parseFloat(e.target.value).toFixed(2);
+});
+
+// Abrir modal de configuración
+function openFilterConfig() {
+    const modal = new bootstrap.Modal(document.getElementById('filterConfigModal'));
+    modal.show();
+
+    // Cargar configuración actual
+    loadFilterConfig();
+    loadProhibitedWords();
+    loadBlockedUsers();
+    loadInfractions();
+}
+
+// Cargar configuración del filtro
+async function loadFilterConfig() {
+    try {
+        const response = await fetch('/api/chat/filter/config/', {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        });
+
+        const data = await response.json();
+
+        document.getElementById('filterActivo').checked = data.activo;
+        document.getElementById('umbralToxicidad').value = data.umbral_toxicidad;
+        document.getElementById('umbralValue').textContent = parseFloat(data.umbral_toxicidad).toFixed(2);
+        document.getElementById('bloquearEnlaces').checked = data.bloquear_enlaces;
+        document.getElementById('modoAccion').value = data.modo_accion;
+        document.getElementById('strikesBloqueo').value = data.strikes_para_bloqueo;
+
+    } catch (error) {
+        console.error('Error al cargar configuración:', error);
+        showNotification('Error al cargar configuración del filtro', 'danger');
+    }
+}
+
+// Guardar configuración del filtro
+async function saveFilterConfig() {
+    const config = {
+        activo: document.getElementById('filterActivo').checked,
+        umbral_toxicidad: parseFloat(document.getElementById('umbralToxicidad').value),
+        bloquear_enlaces: document.getElementById('bloquearEnlaces').checked,
+        modo_accion: document.getElementById('modoAccion').value,
+        strikes_para_bloqueo: parseInt(document.getElementById('strikesBloqueo').value)
+    };
+
+    try {
+        const response = await fetch('/api/chat/filter/config/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(config)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification('Configuración guardada correctamente', 'success');
+        } else {
+            showNotification('Error: ' + data.message, 'danger');
+        }
+
+    } catch (error) {
+        console.error('Error al guardar configuración:', error);
+        showNotification('Error al guardar configuración', 'danger');
+    }
+}
+
+// Cargar palabras prohibidas
+async function loadProhibitedWords() {
+    const container = document.getElementById('palabrasProhibidasList');
+    container.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+
+    try {
+        const response = await fetch('/api/chat/filter/palabras/', {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        });
+
+        const data = await response.json();
+
+        if (data.palabras.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted py-3">No hay palabras prohibidas configuradas</div>';
+            return;
+        }
+
+        let html = '<div class="list-group">';
+        data.palabras.forEach(palabra => {
+            const severidadColors = {
+                'baja': 'info',
+                'media': 'warning',
+                'alta': 'danger'
+            };
+            const color = severidadColors[palabra.severidad] || 'secondary';
+
+            html += `
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${escapeHtml(palabra.palabra)}</strong>
+                        <span class="badge bg-${color} ms-2">${palabra.severidad}</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteProhibitedWord(${palabra.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        container.innerHTML = html;
+
+    } catch (error) {
+        console.error('Error al cargar palabras prohibidas:', error);
+        container.innerHTML = '<div class="text-center text-danger py-3">Error al cargar palabras prohibidas</div>';
+    }
+}
+
+// Agregar palabra prohibida
+async function addProhibitedWord() {
+    const palabra = document.getElementById('nuevaPalabra').value.trim();
+    const severidad = document.getElementById('severidadPalabra').value;
+
+    if (!palabra) {
+        showNotification('Debes escribir una palabra', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/chat/filter/palabras/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ palabra, severidad })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification('Palabra agregada correctamente', 'success');
+            document.getElementById('nuevaPalabra').value = '';
+            loadProhibitedWords();
+        } else {
+            showNotification('Error: ' + data.message, 'danger');
+        }
+
+    } catch (error) {
+        console.error('Error al agregar palabra:', error);
+        showNotification('Error al agregar palabra', 'danger');
+    }
+}
+
+// Eliminar palabra prohibida
+async function deleteProhibitedWord(id) {
+    if (!confirm('¿Estás seguro de eliminar esta palabra?')) return;
+
+    try {
+        const response = await fetch('/api/chat/filter/palabras/', {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ id })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification('Palabra eliminada correctamente', 'success');
+            loadProhibitedWords();
+        } else {
+            showNotification('Error: ' + data.message, 'danger');
+        }
+
+    } catch (error) {
+        console.error('Error al eliminar palabra:', error);
+        showNotification('Error al eliminar palabra', 'danger');
+    }
+}
+
+// Cargar usuarios bloqueados
+async function loadBlockedUsers() {
+    const container = document.getElementById('usuariosBloqueadosList');
+    container.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+
+    try {
+        const response = await fetch('/api/chat/filter/usuarios-bloqueados/', {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        });
+
+        const data = await response.json();
+
+        if (data.usuarios_bloqueados.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-check-circle fa-2x mb-2"></i><p>No hay usuarios bloqueados</p></div>';
+            return;
+        }
+
+        let html = '<div class="list-group">';
+        data.usuarios_bloqueados.forEach(user => {
+            const ultimaInfraccion = user.ultima_infraccion;
+            let infraccionInfo = '';
+
+            if (ultimaInfraccion) {
+                const fecha = new Date(ultimaInfraccion.fecha);
+                const fechaStr = fecha.toLocaleDateString('es-CL');
+
+                const tipoColors = {
+                    'toxicidad_ml': 'danger',
+                    'palabra_prohibida': 'warning',
+                    'enlace_prohibido': 'info',
+                    'spam': 'secondary'
+                };
+                const color = tipoColors[ultimaInfraccion.tipo] || 'secondary';
+
+                infraccionInfo = `
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <span class="badge bg-${color}">${ultimaInfraccion.tipo}</span>
+                            ${ultimaInfraccion.score ? `<span class="badge bg-secondary">Score: ${(ultimaInfraccion.score * 100).toFixed(0)}%</span>` : ''}
+                            <span class="ms-2">${fechaStr}</span>
+                        </small>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-danger rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-user-slash text-white"></i>
+                                </div>
+                                <div>
+                                    <strong>${escapeHtml(user.username)}</strong>
+                                    <br><small class="text-muted">${escapeHtml(user.email)}</small>
+                                    <br><small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>${user.infracciones_count} infracción${user.infracciones_count !== 1 ? 'es' : ''}</small>
+                                    ${infraccionInfo}
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-success" onclick="unblockUserFromList(${user.id}, '${escapeHtml(user.username)}')">
+                            <i class="fas fa-unlock me-1"></i>Desbloquear
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        container.innerHTML = html;
+
+    } catch (error) {
+        console.error('Error al cargar usuarios bloqueados:', error);
+        container.innerHTML = '<div class="text-center text-danger py-3">Error al cargar usuarios bloqueados</div>';
+    }
+}
+
+// Desbloquear usuario desde la lista
+async function unblockUserFromList(userId, username) {
+    if (!confirm(`¿Estás seguro de desbloquear a ${username}?`)) return;
+
+    try {
+        const response = await fetch(`/api/chat/users/${userId}/toggle-block/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification(`${username} ha sido desbloqueado correctamente`, 'success');
+            loadBlockedUsers();
+            updateMessages();
+        } else {
+            showNotification('Error: ' + data.message, 'danger');
+        }
+
+    } catch (error) {
+        console.error('Error al desbloquear usuario:', error);
+        showNotification('Error al desbloquear usuario', 'danger');
+    }
+}
+
+// Cargar infracciones
+async function loadInfractions() {
+    const container = document.getElementById('infraccionesList');
+    container.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+
+    try {
+        const response = await fetch('/api/chat/filter/infracciones/', {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        });
+
+        const data = await response.json();
+
+        if (data.infracciones.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted py-3">No hay infracciones registradas</div>';
+            return;
+        }
+
+        let html = '<div class="list-group">';
+        data.infracciones.forEach(infraccion => {
+            const tipoColors = {
+                'toxicidad_ml': 'danger',
+                'palabra_prohibida': 'warning',
+                'enlace_prohibido': 'info',
+                'spam': 'secondary'
+            };
+            const color = tipoColors[infraccion.tipo_infraccion] || 'secondary';
+
+            const fecha = new Date(infraccion.fecha_infraccion);
+            const fechaStr = fecha.toLocaleString('es-CL');
+
+            html += `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <strong>${escapeHtml(infraccion.usuario_nombre)}</strong>
+                            <span class="badge bg-${color} ms-2">${infraccion.tipo_infraccion}</span>
+                            ${infraccion.score_toxicidad ? `<span class="badge bg-secondary ms-1">Score: ${(infraccion.score_toxicidad * 100).toFixed(0)}%</span>` : ''}
+                        </div>
+                        <small class="text-muted">${fechaStr}</small>
+                    </div>
+                    <p class="mb-1 text-muted small">${escapeHtml(infraccion.mensaje_original.substring(0, 100))}${infraccion.mensaje_original.length > 100 ? '...' : ''}</p>
+                    <small class="text-muted">Acción: ${infraccion.accion_tomada}</small>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        container.innerHTML = html;
+
+    } catch (error) {
+        console.error('Error al cargar infracciones:', error);
+        container.innerHTML = '<div class="text-center text-danger py-3">Error al cargar infracciones</div>';
+    }
 }
 </script>
 {% endblock %}

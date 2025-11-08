@@ -61,6 +61,7 @@ urlpatterns = [
 
     # Chat Moderation
     path('chat/delete-message/<int:message_id>/', views.delete_message, name='delete_message'),
+    path('chat/clear/', views.clear_chat_messages, name='clear_chat_messages'),
 
     # Notificaciones
     path('notificaciones/', views.dashboard_notificaciones, name='dashboard_notificaciones'),

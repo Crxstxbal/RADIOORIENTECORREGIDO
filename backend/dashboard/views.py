@@ -8,7 +8,7 @@ from googleapiclient.discovery import build
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -231,13 +231,71 @@ def dashboard_chat(request):
         fecha_envio__lte=today_end
     ).values('id_usuario').distinct().count()
 
+    # Obtener usuarios más activos (top 10 con más mensajes)
+    from django.db.models import Count
+    top_users = ChatMessage.objects.values('id_usuario', 'usuario_nombre').annotate(
+        message_count=Count('id')
+    ).order_by('-message_count')[:10]
+
+    # Obtener información de bloqueo para cada usuario
+    User = get_user_model()
+    top_users_list = []
+    for user_data in top_users:
+        if user_data['id_usuario']:
+            try:
+                user_obj = User.objects.get(id=user_data['id_usuario'])
+                top_users_list.append({
+                    'id': user_data['id_usuario'],
+                    'username': user_data['usuario_nombre'],
+                    'message_count': user_data['message_count'],
+                    'is_blocked': user_obj.chat_bloqueado
+                })
+            except User.DoesNotExist:
+                top_users_list.append({
+                    'id': user_data['id_usuario'],
+                    'username': user_data['usuario_nombre'],
+                    'message_count': user_data['message_count'],
+                    'is_blocked': False
+                })
+
     context = {
         'messages': messages,
         'messages_today': messages_today,
         'active_users_today': active_users_today,
+        'top_users': top_users_list,
     }
 
     return render(request, 'dashboard/chat.html', context)
+
+@require_http_methods(["POST"])
+@login_required
+@user_passes_test(is_staff_user)
+def clear_chat_messages(request):
+    """Limpiar todos los mensajes del chat - Vista de Django pura"""
+    print(f"=== CLEAR CHAT MESSAGES (Django View) ===")
+    print(f"User: {request.user}")
+    print(f"Is staff: {request.user.is_staff}")
+
+    try:
+        data = json.loads(request.body) if request.body else {}
+        sala = data.get('sala', 'radio-oriente')
+
+        print(f"Eliminando mensajes de sala: {sala}")
+        deleted_count = ChatMessage.objects.filter(sala=sala).delete()[0]
+        print(f"Mensajes eliminados: {deleted_count}")
+
+        return JsonResponse({
+            'success': True,
+            'deleted_count': deleted_count,
+            'message': f'Se eliminaron {deleted_count} mensajes correctamente'
+        })
+    except Exception as e:
+        print(f"ERROR: {str(e)}")
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
 
 @login_required
 @user_passes_test(is_staff_user)
