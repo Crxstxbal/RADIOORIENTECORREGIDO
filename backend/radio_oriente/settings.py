@@ -148,7 +148,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
-
 # CORS settings
 # En desarrollo, permitir todos los orígenes para facilitar el desarrollo
 CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo
@@ -182,6 +181,19 @@ CORS_ALLOW_HEADERS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# CSRF trusted origins (para permitir peticiones desde el frontend en desarrollo)
+CSRF_TRUSTED_ORIGINS_STR = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='http://localhost:3000,http://127.0.0.1:3000'
+)
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in CSRF_TRUSTED_ORIGINS_STR.split(',') if o.strip()]
+
+# Cookies en desarrollo
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
 
 # Channels configuration (comentado temporalmente)
 # CHANNEL_LAYERS = {

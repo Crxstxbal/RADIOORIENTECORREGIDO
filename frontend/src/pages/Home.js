@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Radio, Users, Music, Newspaper, Calendar, User, Tag, ArrowRight } from "lucide-react";
 import axios from "axios";
 import "./Home.css";
+import PublicidadCarousel from "../components/PublicidadCarousel";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -312,6 +313,11 @@ const Home = () => {
           )}
         </div>
       </section>
+
+      {/* Publicidad Home 1920x1080 debajo de Últimos Artículos */}
+      <div className="container" style={{ margin: '24px auto' }}>
+        <PublicidadCarousel dimensiones="1920x1080" position="top" autoPlayMs={8000} />
+      </div>
 
       <section className="cards-section">
         <div className="card">

@@ -1,6 +1,7 @@
 from datetime import datetime
 from datetime import timezone as dt_timezone
 import traceback
+import os
 from django.conf import settings
 from django.http import JsonResponse
 from google.oauth2 import service_account
@@ -510,93 +511,393 @@ def api_dashboard_stats(request):
 
 def api_publicidad_ubicaciones(request):
     """API JSON para el frontend: lista tipos activos y sus ubicaciones activas."""
-    include_all = request.GET.get('all') == '1'
-    tipos_qs = TipoUbicacion.objects.all() if include_all else TipoUbicacion.objects.filter(activo=True)
-    tipos = list(
-        tipos_qs.order_by('nombre').values('id', 'nombre', 'codigo', 'descripcion', 'activo')
-    )
-    ubic_qs = UbicacionPublicidadWeb.objects.select_related('tipo')
-    if not include_all:
-        ubic_qs = ubic_qs.filter(activo=True, tipo__activo=True)
-    ubicaciones = list(
-        ubic_qs.order_by('orden', 'nombre').values(
-            'id', 'nombre', 'descripcion', 'dimensiones', 'precio_mensual',
-            'orden', 'activo', 'tipo_id', 'tipo__nombre', 'tipo__codigo', 'tipo__activo'
+    from django.http import JsonResponse
+    from apps.publicidad.models import TipoUbicacion, UbicacionPublicidadWeb
+    
+    try:
+        include_all = request.GET.get('all') == '1'
+        
+        # Obtener tipos de ubicación
+        tipos_qs = TipoUbicacion.objects.all() if include_all else TipoUbicacion.objects.filter(activo=True)
+        tipos = list(
+            tipos_qs.order_by('nombre').values('id', 'nombre', 'codigo', 'descripcion', 'activo')
         )
-    )
-    return JsonResponse({
-        'tipos': tipos,
-        'ubicaciones': ubicaciones,
-    })
+        
+        # Obtener ubicaciones
+        ubic_qs = UbicacionPublicidadWeb.objects.select_related('tipo')
+        if not include_all:
+            ubic_qs = ubic_qs.filter(activo=True, tipo__activo=True)
+            
+        ubicaciones = list(
+            ubic_qs.order_by('orden', 'nombre').values(
+                'id', 'nombre', 'descripcion', 'dimensiones', 'precio_mensual',
+                'orden', 'activo', 'tipo_id', 'tipo__nombre', 'tipo__codigo', 'tipo__activo'
+            )
+        )
+        
+        # Devolver la respuesta JSON
+        return JsonResponse({
+            'success': True,
+            'tipos': tipos,
+            'ubicaciones': ubicaciones
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al obtener ubicaciones: {str(e)}'
+        }, status=500)
 
+def api_publicidad_activas(request):
+    """API pública para el frontend: lista campañas WEB activas con detalles de ubicación.
+    Filtros opcionales:
+      - q: texto a buscar en ubicacion.nombre (case-insensitive)
+      - dimensiones: ej "300x600"
+      - limit: máximo de resultados (por defecto 50)
+    """
+    from django.http import JsonResponse
+    from django.utils import timezone
+    from django.db.models import Q
+    from apps.publicidad.models import Publicidad, ItemSolicitudWeb
+    import re
+
+    try:
+        hoy = timezone.now().date()
+        q = (request.GET.get('q') or '').strip().lower()
+        dimensiones_filter = (request.GET.get('dimensiones') or '').strip().lower()
+        try:
+            limit = int(request.GET.get('limit') or 50)
+        except Exception:
+            limit = 50
+        limit = max(1, min(limit, 200))
+
+        # Cargar campañas WEB activas en rango de fechas y publicadas/aprobadas
+        # Considera:
+        #  - Solicitudes aprobadas o activas
+        #  - Campañas creadas manualmente (sin solicitud asociada)
+        pubs = (Publicidad.objects
+                .filter(
+                    tipo='WEB',
+                    activo=True,
+                    fecha_inicio__lte=hoy,
+                    fecha_fin__gte=hoy,
+                )
+                .filter(Q(solicitud_web__estado__in=['aprobada', 'activa']) | Q(solicitud_web__isnull=True))
+                .select_related('web_config')
+                .order_by('-fecha_creacion')
+                .distinct()[:500])
+
+        items = []
+        for pub in pubs:
+            wc = getattr(pub, 'web_config', None)
+            if not wc:
+                continue
+            # Obtener media url
+            media_val = getattr(wc, 'archivo_media', None)
+            media_url = None
+            if media_val:
+                media_url = getattr(media_val, 'url', None) or str(media_val)
+
+            # Intentar resolver ubicacion desde la descripción (Item #id)
+            ubic = None
+            item_from_desc = None
+            try:
+                desc = getattr(pub, 'descripcion', '') or ''
+                m = re.search(r'Item\s*#(\d+)', desc)
+                if m:
+                    item_id = int(m.group(1))
+                    item = ItemSolicitudWeb.objects.select_related('ubicacion__tipo').get(id=item_id)
+                    item_from_desc = item
+                    if item.ubicacion:
+                        # Normalizar dimensiones de la ubicación a formato 000x000
+                        dims_raw = getattr(item.ubicacion, 'dimensiones', None) or ''
+                        dims_norm = None
+                        try:
+                            m_dims = re.search(r"(\d+\s*[xX]\s*\d+)", str(dims_raw), re.I)
+                            if m_dims:
+                                dims_norm = m_dims.group(1).lower().replace(' ', '')
+                        except Exception:
+                            pass
+                        ubic = {
+                            'nombre': getattr(item.ubicacion, 'nombre', None),
+                            'dimensiones': dims_norm or (getattr(item.ubicacion, 'dimensiones', None) or ''),
+                            'tipo': getattr(getattr(item.ubicacion, 'tipo', None), 'nombre', None),
+                        }
+            except Exception:
+                pass
+
+            # Fallback desde formato
+            if not ubic:
+                formato = getattr(wc, 'formato', '') or ''
+                nombre = None
+                tipo = None
+                dims = None
+                if '—' in formato:
+                    partes = [p.strip() for p in formato.split('—', 1)]
+                    if partes:
+                        nombre = partes[0] or None
+                    if len(partes) > 1:
+                        right = partes[1]
+                        m2 = re.match(r'^([^\d]+)?\s*(\d+\s*x\s*\d+)', right, re.I)
+                        if m2:
+                            tipo = (m2.group(1) or '').strip() or None
+                            dims = (m2.group(2) or '').replace(' ', '')
+                        else:
+                            # Buscar dimensiones en cualquier parte
+                            m3 = re.search(r'(\d+\s*x\s*\d+)', formato, re.I)
+                            if m3:
+                                dims = m3.group(1).replace(' ', '')
+                else:
+                    # Solo dimensiones presentes
+                    m4 = re.search(r'(\d+\s*x\s*\d+)', formato, re.I)
+                    dims = m4.group(1).replace(' ', '') if m4 else None
+                ubic = {
+                    'nombre': nombre,
+                    'tipo': tipo,
+                    'dimensiones': dims,
+                }
+
+            # Si aún no hay ubicación, intentar desde la solicitud asociada
+            if not ubic:
+                try:
+                    sol_rel = getattr(pub, 'solicitud_web', None)
+                    if sol_rel:
+                        item_sol = (ItemSolicitudWeb.objects
+                                    .select_related('ubicacion__tipo')
+                                    .filter(solicitud_id=getattr(sol_rel, 'id', None))
+                                    .order_by('id')
+                                    .first())
+                        if item_sol and item_sol.ubicacion:
+                            dims_raw2 = getattr(item_sol.ubicacion, 'dimensiones', None) or ''
+                            dims_norm2 = None
+                            try:
+                                m_dims2 = re.search(r"(\d+\s*[xX]\s*\d+)", str(dims_raw2), re.I)
+                                if m_dims2:
+                                    dims_norm2 = m_dims2.group(1).lower().replace(' ', '')
+                            except Exception:
+                                pass
+                            ubic = {
+                                'nombre': getattr(item_sol.ubicacion, 'nombre', None),
+                                'dimensiones': dims_norm2 or (getattr(item_sol.ubicacion, 'dimensiones', None) or ''),
+                                'tipo': getattr(getattr(item_sol.ubicacion, 'tipo', None), 'nombre', None),
+                            }
+                            # Media fallback desde imagen del item si sigue faltando
+                            if not media_url:
+                                try:
+                                    img2 = item_sol.imagenes_web.order_by('orden', 'fecha_subida').first()
+                                    if img2 and getattr(img2, 'imagen', None):
+                                        media_url = getattr(img2.imagen, 'url', None) or str(img2.imagen)
+                                except Exception:
+                                    pass
+                except Exception:
+                    pass
+
+            # Fallback de media desde la primera imagen del item asociado
+            if not media_url and item_from_desc is not None:
+                try:
+                    img = item_from_desc.imagenes_web.order_by('orden', 'fecha_subida').first()
+                    if img and getattr(img, 'imagen', None):
+                        media_url = getattr(img.imagen, 'url', None) or str(img.imagen)
+                except Exception:
+                    pass
+
+            if not media_url:
+                continue
+
+            # Asegurar URL absoluta para el frontend
+            try:
+                if isinstance(media_url, str) and media_url.startswith('/'):
+                    media_url = request.build_absolute_uri(media_url)
+            except Exception:
+                pass
+
+            # Aplicar filtros
+            if q:
+                nombre_l = (ubic.get('nombre') or '').lower()
+                tipo_l = (ubic.get('tipo') or '').lower()
+                if (q not in nombre_l) and (q not in tipo_l):
+                    continue
+            if dimensiones_filter and (ubic.get('dimensiones') or '').lower() != dimensiones_filter:
+                continue
+
+            items.append({
+                'id': pub.id,
+                'media_url': media_url,
+                'url_destino': getattr(wc, 'url_destino', None),
+                'formato': getattr(wc, 'formato', None),
+                'fecha_inicio': pub.fecha_inicio.isoformat() if pub.fecha_inicio else None,
+                'fecha_fin': pub.fecha_fin.isoformat() if pub.fecha_fin else None,
+                'ubicacion': ubic,
+            })
+            if len(items) >= limit:
+                break
+
+        return JsonResponse({'success': True, 'items': items})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'message': f'Error al obtener campañas: {str(e)}'}, status=500)
 @login_required
 @user_passes_test(is_staff_user)
 @require_http_methods(["POST"])
 def api_aprobar_solicitud(request, solicitud_id: int):
     """Aprobar una SolicitudPublicidadWeb y generar la campaña Publicidad + PublicidadWeb."""
+    from django.core.files import File
+    from django.conf import settings
+    import os
+    from django.db import transaction
+    
     try:
-        sol = SolicitudPublicidadWeb.objects.select_related('usuario').prefetch_related('items_web__ubicacion').get(id=solicitud_id)
+        # Obtener la solicitud con todas las relaciones necesarias
+        sol = (SolicitudPublicidadWeb.objects
+              .select_related('usuario')
+              .prefetch_related(
+                  'items_web__ubicacion',
+                  'items_web__imagenes_web'  # Incluir las imágenes relacionadas
+              ).get(id=solicitud_id))
     except SolicitudPublicidadWeb.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Solicitud no encontrada'}, status=404)
 
+    # Si ya tiene publicación asociada, verificar si ya está aprobada
     if sol.publicacion_id:
-        return JsonResponse({'success': False, 'message': 'Ya tiene campaña asociada'}, status=400)
+        if sol.estado != 'aprobada':
+            # Si tiene publicación pero no está marcada como aprobada, actualizar estado
+            sol.estado = 'aprobada'
+            sol.fecha_aprobacion = timezone.now()
+            sol.save(update_fields=['estado', 'fecha_aprobacion'])
+            
+            # Intentar notificar al usuario (ignorar errores)
+            try:
+                notificar_aprobacion_solicitud(sol, request.user)
+            except Exception:
+                pass
+                
+        return JsonResponse({
+            'success': True,
+            'message': 'La solicitud ya tenía una campaña asociada. Se ha actualizado el estado a aprobada.',
+            'redirect': '/dashboard/publicidad/'
+        })
 
-    # Usamos las fechas y costo de la solicitud; cliente = nombre_contacto
     try:
-        pub = Publicidad.objects.create(
-            nombre_cliente=sol.nombre_contacto or sol.usuario.get_full_name() or sol.usuario.username,
-            descripcion=f"Solicitud #{sol.id} - {sol.email_contacto}",
-            tipo='WEB',
-            fecha_inicio=sol.fecha_inicio_solicitada,
-            fecha_fin=sol.fecha_fin_solicitada,
-            costo_total=sol.costo_total_estimado,
-            activo=True,
-        )
+        with transaction.atomic():
+            # Crear una campaña por cada item de la solicitud
+            created_campaign_ids = []
+            nombre_cliente = sol.nombre_contacto or sol.usuario.get_full_name() or sol.usuario.username
 
-        # Tomamos el primer item como base para la configuración web (formato/url)
-        primer = sol.items_web.select_related('ubicacion').first()
-        formato = primer.formato if primer else ''
-        url_destino = primer.url_destino if primer else ''
-        PublicidadWeb.objects.create(
-            publicidad=pub,
-            url_destino=url_destino,
-            formato=formato,
-            impresiones=0,
-            clics=0,
-        )
+            for item_solicitud in sol.items_web.all():
+                pub = Publicidad.objects.create(
+                    nombre_cliente=nombre_cliente,
+                    descripcion=f"Solicitud #{sol.id} - Item #{item_solicitud.id}",
+                    tipo='WEB',
+                    fecha_inicio=sol.fecha_inicio_solicitada,
+                    fecha_fin=sol.fecha_fin_solicitada,
+                    costo_total=getattr(item_solicitud, 'precio_acordado', None) or sol.costo_total_estimado,
+                    activo=True,
+                )
 
-        sol.publicacion = pub
-        sol.estado = 'aprobada'
-        sol.aprobado_por = request.user
-        sol.fecha_aprobacion = timezone.now()
-        sol.save(update_fields=['publicacion', 'estado', 'aprobado_por', 'fecha_aprobacion'])
-        return JsonResponse({'success': True, 'message': 'Solicitud aprobada y campaña creada', 'campania_id': pub.id})
+                # Construir formato combinando nombre de ubicación, tipo y dimensiones si existen
+                formato_str = item_solicitud.formato or ''
+                try:
+                    if item_solicitud.ubicacion:
+                        ubic_nombre = getattr(item_solicitud.ubicacion, 'nombre', '') or ''
+                        tipo_nombre = getattr(getattr(item_solicitud.ubicacion, 'tipo', None), 'nombre', '') or ''
+                        dims = getattr(item_solicitud.ubicacion, 'dimensiones', '') or ''
+                        # Ej: "Home Header — Banner 728x90"
+                        left = (ubic_nombre or '').strip()
+                        right = (tipo_nombre + (' ' if tipo_nombre and dims else '') + (dims or '')).strip()
+                        combinado = (left + (' — ' if left and right else '') + right).strip()
+                        formato_str = combinado or formato_str or dims
+                except Exception:
+                    pass
+
+                # Configuración web por item
+                pub_web = PublicidadWeb.objects.create(
+                    publicidad=pub,
+                    url_destino=item_solicitud.url_destino or '',
+                    formato=formato_str,
+                    impresiones=0,
+                    clics=0
+                )
+
+                # Copiar la primera imagen asociada al ítem (si existe)
+                if item_solicitud.imagenes_web.exists():
+                    img = item_solicitud.imagenes_web.first()
+                    if img and img.imagen:
+                        nombre_original = os.path.basename(img.imagen.name)
+                        nombre_destino = f"{pub.id}_{nombre_original}"
+
+                        ruta_origen = os.path.join(settings.MEDIA_ROOT, img.imagen.name)
+                        carpeta_destino = os.path.join(settings.MEDIA_ROOT, 'publicidad', 'web')
+                        ruta_destino = os.path.join(carpeta_destino, nombre_destino)
+
+                        if os.path.exists(ruta_origen):
+                            os.makedirs(carpeta_destino, exist_ok=True)
+                            with open(ruta_origen, 'rb') as fsrc, open(ruta_destino, 'wb') as fdst:
+                                fdst.write(fsrc.read())
+                            media_url = getattr(settings, 'MEDIA_URL', '/media/')
+                            pub_web.archivo_media = f"{media_url}publicidad/web/{nombre_destino}"
+                            if item_solicitud.url_destino:
+                                pub_web.url_destino = item_solicitud.url_destino
+                            pub_web.save()
+                        else:
+                            print(f"Advertencia: No se encontró el archivo {ruta_origen}")
+
+                created_campaign_ids.append(pub.id)
+
+            # Actualizar la solicitud
+            if created_campaign_ids:
+                # opcional: asociar la primera publicación creada
+                try:
+                    sol.publicacion_id = created_campaign_ids[0]
+                except Exception:
+                    pass
+            sol.estado = 'aprobada'
+            sol.fecha_aprobacion = timezone.now()
+            sol.save()
+
+            # Notificar (ignorar errores)
+            try:
+                notificar_aprobacion_solicitud(sol, request.user)
+            except Exception:
+                pass
+
+            return JsonResponse({
+                'success': True,
+                'message': f'Solicitud aprobada: {len(created_campaign_ids)} campañas creadas',
+                'created_campaign_ids': created_campaign_ids,
+                'redirect': '/dashboard/publicidad/'
+            })
+            
     except Exception as e:
-        return JsonResponse({'success': False, 'message': f'Error al aprobar: {str(e)}'}, status=500)
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al aprobar la solicitud: {str(e)}'
+        }, status=500)
 
 @login_required
 @user_passes_test(is_staff_user)
-@require_http_methods(["PATCH"]) 
+@require_http_methods(["PATCH", "POST"])
 def api_cambiar_estado_solicitud(request, solicitud_id: int):
-    """Cambia el estado de una solicitud: pendiente | en_revision | aprobada | rechazada.
-    Si se envía 'aprobada', crea la campaña (igual que api_aprobar_solicitud).
-    Acepta JSON: { estado, motivo (opcional), notas_admin (opcional) }
-    """
+    """Cambia el estado de una solicitud: pendiente | en_revision | aprobada | rechazada."""
     try:
         sol = SolicitudPublicidadWeb.objects.get(id=solicitud_id)
     except SolicitudPublicidadWeb.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Solicitud no encontrada'}, status=404)
+
     try:
         data = json.loads(request.body or '{}')
     except Exception:
         data = {}
 
     nuevo = data.get('estado')
-    if nuevo not in {'pendiente','en_revision','aprobada','rechazada'}:
+    if nuevo not in {'pendiente', 'en_revision', 'aprobada', 'rechazada'}:
         return JsonResponse({'success': False, 'message': 'Estado inválido'}, status=400)
 
-    # Si es aprobación, delegamos
+    # Si es aprobación, delegamos a la función específica
     if nuevo == 'aprobada':
         return api_aprobar_solicitud(request, solicitud_id)
 
@@ -605,9 +906,14 @@ def api_cambiar_estado_solicitud(request, solicitud_id: int):
         sol.notas_admin = data.get('notas_admin') or None
     if nuevo == 'rechazada' and 'motivo' in data:
         sol.motivo_rechazo = data.get('motivo') or None
+    
     sol.estado = nuevo
-    sol.save(update_fields=['estado','notas_admin','motivo_rechazo'])
-    return JsonResponse({'success': True, 'message': f'Solicitud actualizada a {nuevo}'})
+    sol.save(update_fields=['estado', 'notas_admin', 'motivo_rechazo'])
+    
+    return JsonResponse({
+        'success': True, 
+        'message': f'Solicitud actualizada a {nuevo}'
+    })
 
 @login_required
 @user_passes_test(is_staff_user)
@@ -650,6 +956,68 @@ def api_actualizar_campania_web(request, campania_id: int):
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'Error al actualizar: {str(e)}'}, status=500)
 
+@login_required
+@user_passes_test(is_staff_user)
+@require_http_methods(["GET"]) 
+def api_ver_campania(request, campania_id: int):
+    """
+    Devuelve los detalles de una campaña Publicidad (WEB) para la vista de dashboard.
+    Estructura esperada por el frontend (verDetallesCampania):
+    {
+      id, nombre_cliente, activo, fecha_inicio, fecha_fin,
+      web_config: { url_destino, formato, archivo_media, impresiones, clics }
+    }
+    """
+    try:
+        pub = Publicidad.objects.select_related('web_config').get(id=campania_id, tipo='WEB')
+    except Publicidad.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Campaña no encontrada'}, status=404)
+
+    # Construir respuesta
+    data = {
+        'id': pub.id,
+        'nombre_cliente': getattr(pub, 'nombre_cliente', '') or '',
+        'activo': getattr(pub, 'activo', True),
+        'fecha_inicio': pub.fecha_inicio.isoformat() if getattr(pub, 'fecha_inicio', None) else None,
+        'fecha_fin': pub.fecha_fin.isoformat() if getattr(pub, 'fecha_fin', None) else None,
+        'web_config': None,
+        'ubicacion': None,
+    }
+    wc = getattr(pub, 'web_config', None)
+    if wc:
+        media_val = getattr(wc, 'archivo_media', None)
+        media_url = None
+        if media_val:
+            if hasattr(media_val, 'url'):
+                media_url = media_val.url
+            else:
+                media_url = str(media_val)
+        data['web_config'] = {
+            'url_destino': getattr(wc, 'url_destino', '') or None,
+            'formato': getattr(wc, 'formato', '') or None,
+            'archivo_media': media_url,
+            'impresiones': getattr(wc, 'impresiones', 0) or 0,
+            'clics': getattr(wc, 'clics', 0) or 0,
+        }
+
+    # Intentar obtener ubicacion (nombre, tipo, dimensiones) desde el item original
+    try:
+        desc = getattr(pub, 'descripcion', '') or ''
+        import re
+        m = re.search(r'Item\s*#(\d+)', desc)
+        if m:
+            item_id = int(m.group(1))
+            item = ItemSolicitudWeb.objects.select_related('ubicacion__tipo').get(id=item_id)
+            if item.ubicacion:
+                data['ubicacion'] = {
+                    'nombre': getattr(item.ubicacion, 'nombre', None),
+                    'dimensiones': getattr(item.ubicacion, 'dimensiones', None),
+                    'tipo': getattr(getattr(item.ubicacion, 'tipo', None), 'nombre', None),
+                }
+    except Exception:
+        pass
+    return JsonResponse(data)
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_publicidad_solicitar(request):
@@ -663,7 +1031,13 @@ def api_publicidad_solicitar(request):
     except Exception:
         return JsonResponse({'success': False, 'message': 'JSON inválido'}, status=400)
 
-    # Puede venir 'ubicacion_id' (uno) o 'ubicacion_ids' (lista)
+    # Compatibilidad de campos: aceptar tanto 'nombre'/'email' como 'nombre_contacto'/'email_contacto'
+    if not data.get('nombre') and data.get('nombre_contacto'):
+        data['nombre'] = data.get('nombre_contacto')
+    if not data.get('email') and data.get('email_contacto'):
+        data['email'] = data.get('email_contacto')
+
+    # Puede venir 'ubicacion_id' (uno), 'ubicacion_ids' (lista) o 'ubicaciones' (lista de IDs u objetos con id)
     required = ['nombre', 'email']
     missing = [k for k in required if not data.get(k)]
     if missing:
@@ -673,6 +1047,13 @@ def api_publicidad_solicitar(request):
     if not ubicacion_ids:
         single = data.get('ubicacion_id')
         ubicacion_ids = [single] if single else []
+
+    # Otra variante: 'ubicaciones'
+    if not ubicacion_ids and data.get('ubicaciones'):
+        ub = data.get('ubicaciones')
+        if isinstance(ub, list):
+            # Aceptar lista de IDs o lista de objetos {id: ...}
+            ubicacion_ids = [ (x.get('id') if isinstance(x, dict) else x) for x in ub ]
     ubicacion_ids = [uid for uid in ubicacion_ids if uid]
     if not ubicacion_ids:
         return JsonResponse({'success': False, 'message': 'Debe seleccionar al menos una ubicación'}, status=400)
@@ -717,8 +1098,9 @@ def api_publicidad_solicitar(request):
                 mensaje_usuario=mensaje,
                 costo_total_estimado=total_estimado,
             )
+            created_items = []
             for ubic in ubics:
-                ItemSolicitudWeb.objects.create(
+                item = ItemSolicitudWeb.objects.create(
                     solicitud=solicitud,
                     ubicacion=ubic,
                     url_destino=url_destino,
@@ -726,7 +1108,13 @@ def api_publicidad_solicitar(request):
                     precio_acordado=ubic.precio_mensual,
                     notas=f"Tipo: {ubic.tipo.nombre}"
                 )
-            return JsonResponse({'success': True, 'message': 'Solicitud creada. Te contactaremos pronto.'})
+                created_items.append({'id': item.id, 'ubicacion_id': ubic.id})
+            return JsonResponse({
+                'success': True,
+                'message': 'Solicitud creada. Te contactaremos pronto.',
+                'solicitud_id': solicitud.id,
+                'items_web': created_items
+            })
         except Exception as e:
             return JsonResponse({'success': False, 'message': f'Error al crear solicitud: {str(e)}'}, status=500)
 
@@ -763,8 +1151,9 @@ def api_publicidad_solicitar(request):
             mensaje_usuario=mensaje,
             costo_total_estimado=total_estimado,
         )
+        created_items = []
         for ubic in ubics:
-            ItemSolicitudWeb.objects.create(
+            item = ItemSolicitudWeb.objects.create(
                 solicitud=solicitud,
                 ubicacion=ubic,
                 url_destino=url_destino,
@@ -772,9 +1161,268 @@ def api_publicidad_solicitar(request):
                 precio_acordado=ubic.precio_mensual,
                 notas=f"Tipo: {ubic.tipo.nombre}"
             )
-        return JsonResponse({'success': True, 'message': 'Solicitud registrada. Un administrador te contactará.'})
+            created_items.append({'id': item.id, 'ubicacion_id': ubic.id})
+        return JsonResponse({
+            'success': True,
+            'message': 'Solicitud registrada. Un administrador te contactará.',
+            'solicitud_id': solicitud.id,
+            'items_web': created_items
+        })
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'Error al crear solicitud (guest): {str(e)}'}, status=500)
+
+
+def api_ver_solicitud(request, solicitud_id):
+    """
+    Devuelve los detalles completos de una solicitud de publicidad web,
+    incluyendo sus ítems e imágenes asociadas.
+    """
+    from apps.publicidad.models import SolicitudPublicidadWeb, ItemSolicitudWeb, ImagenPublicidadWeb, UbicacionPublicidadWeb
+    from django.core.serializers.json import DjangoJSONEncoder
+    from django.http import JsonResponse
+    import json
+    
+    try:
+        # Obtener la solicitud con relaciones optimizadas
+        solicitud = (SolicitudPublicidadWeb.objects
+            .select_related('usuario')
+            .prefetch_related(
+                'items_web__ubicacion',
+                'items_web__imagenes_web'
+            )
+            .get(id=solicitud_id)
+        )
+        
+        # Construir la respuesta
+        data = {
+            'id': solicitud.id,
+            'nombre_contacto': solicitud.nombre_contacto or '',
+            'email_contacto': solicitud.email_contacto or '',
+            'telefono_contacto': solicitud.telefono_contacto or '',
+            'preferencia_contacto': solicitud.preferencia_contacto or 'email',
+            'estado': solicitud.estado or 'pendiente',
+            'estado_display': 'Contactado en breve' if solicitud.estado == 'en_revision' else solicitud.get_estado_display(),
+            'fecha_solicitud': solicitud.fecha_solicitud.isoformat(),
+            'fecha_inicio_solicitada': solicitud.fecha_inicio_solicitada.isoformat() if hasattr(solicitud, 'fecha_inicio_solicitada') and solicitud.fecha_inicio_solicitada else None,
+            'fecha_fin_solicitada': solicitud.fecha_fin_solicitada.isoformat() if hasattr(solicitud, 'fecha_fin_solicitada') and solicitud.fecha_fin_solicitada else None,
+            'costo_total_estimado': float(solicitud.costo_total_estimado) if hasattr(solicitud, 'costo_total_estimado') and solicitud.costo_total_estimado is not None else 0.0,
+            'mensaje_usuario': solicitud.mensaje_usuario or '',
+            'notas_admin': solicitud.notas_admin or '',
+            'motivo_rechazo': solicitud.motivo_rechazo or '',
+            'items_web': []
+        }
+        
+        # Agregar los ítems de la solicitud
+        for item in solicitud.items_web.all():
+            ubicacion = item.ubicacion
+            item_data = {
+                'id': item.id,
+                'ubicacion_id': ubicacion.id if ubicacion else 0,
+                'ubicacion_nombre': str(ubicacion) if ubicacion else 'Ubicación no especificada',
+                'formato': item.formato or '',
+                'precio_acordado': float(item.precio_acordado) if item.precio_acordado is not None else 0.0,
+                'url_destino': item.url_destino or '',
+                'notas': item.notas or '',
+                'imagenes': []
+            }
+            
+            # Agregar las imágenes del ítem si existen
+            for img in item.imagenes_web.all():
+                item_data['imagenes'].append({
+                    'id': img.id,
+                    'descripcion': img.descripcion or '',
+                    'url': img.imagen.url if img.imagen else None,
+                    'orden': img.orden,
+                    'fecha_subida': img.fecha_subida.isoformat() if img.fecha_subida else None
+                })
+            
+            data['items_web'].append(item_data)
+        
+        return JsonResponse(data, encoder=DjangoJSONEncoder, safe=False)
+        
+    except SolicitudPublicidadWeb.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Solicitud no encontrada'}, status=404)
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Error en api_ver_solicitud: {str(e)}\n{error_details}")
+        return JsonResponse({
+            'success': False, 
+            'message': f'Error al obtener la solicitud: {str(e)}',
+            'error_details': error_details
+        }, status=500, json_dumps_params={'ensure_ascii': False})
+
+@require_http_methods(["GET"])
+def api_item_imagenes(request, item_id: int):
+    """Lista imágenes de un ItemSolicitudWeb."""
+    from apps.publicidad.models import ItemSolicitudWeb
+    try:
+        item = ItemSolicitudWeb.objects.get(id=item_id)
+        imgs = [
+            {
+                'id': img.id,
+                'descripcion': img.descripcion or '',
+                'url': (img.imagen.url if img.imagen else None),
+                'orden': img.orden,
+                'fecha_subida': img.fecha_subida.isoformat() if img.fecha_subida else None,
+            }
+            for img in item.imagenes_web.all()
+        ]
+        return JsonResponse({'success': True, 'imagenes': imgs})
+    except ItemSolicitudWeb.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Item no encontrado'}, status=404)
+
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_item_subir_imagen(request, item_id: int):
+    """Sube una imagen para un ItemSolicitudWeb."""
+    from apps.publicidad.models import ItemSolicitudWeb, ImagenPublicidadWeb
+    try:
+        item = ItemSolicitudWeb.objects.get(id=item_id)
+    except ItemSolicitudWeb.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Item no encontrado'}, status=404)
+
+    file = request.FILES.get('imagen')
+    if not file:
+        return JsonResponse({'success': False, 'message': 'Falta archivo de imagen (campo "imagen")'}, status=400)
+
+    descripcion = request.POST.get('descripcion', '')
+    try:
+        orden = int(request.POST.get('orden', '0'))
+    except Exception:
+        orden = 0
+
+    img = ImagenPublicidadWeb.objects.create(
+        item=item,
+        imagen=file,
+        descripcion=descripcion,
+        orden=orden,
+    )
+    data = {
+        'id': img.id,
+        'descripcion': img.descripcion or '',
+        'url': (img.imagen.url if img.imagen else None),
+        'orden': img.orden,
+        'fecha_subida': img.fecha_subida.isoformat() if img.fecha_subida else None,
+    }
+    return JsonResponse({'success': True, 'imagen': data})
+
+@csrf_exempt
+@require_http_methods(["POST", "DELETE"])
+def api_item_eliminar_imagen(request, imagen_id: int):
+    """Elimina una imagen de un ItemSolicitudWeb."""
+    from apps.publicidad.models import ImagenPublicidadWeb
+    try:
+        img = ImagenPublicidadWeb.objects.get(id=imagen_id)
+    except ImagenPublicidadWeb.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Imagen no encontrada'}, status=404)
+
+    img.delete()
+    return JsonResponse({'success': True})
+
+@login_required
+@require_http_methods(["DELETE", "POST"])
+def eliminar_campania_web(request, campania_id):
+    """
+    Elimina una campaña de publicidad web y sus elementos asociados.
+    Acepta tanto DELETE como POST para mayor compatibilidad.
+    """
+    try:
+        campania = get_object_or_404(Publicidad, id=campania_id, tipo='WEB')
+        
+        # Verificar permisos (solo staff puede eliminar)
+        if not request.user.is_staff:
+            return JsonResponse({'error': 'No tienes permiso para realizar esta acción'}, status=403)
+            
+        # Eliminar la configuración web si existe
+        if hasattr(campania, 'web_config'):
+            # Eliminar el archivo de medios si existe (acepta URL, ruta relativa o FileField)
+            try:
+                media_value = getattr(campania.web_config, 'archivo_media', None)
+                if media_value:
+                    # Si es un FileField con .path
+                    file_path = None
+                    if hasattr(media_value, 'path'):
+                        file_path = media_value.path
+                    else:
+                        # media_value puede ser str (URL absoluta, "/media/..." o relativa)
+                        from urllib.parse import urlparse
+                        raw = str(media_value)
+                        parsed = urlparse(raw)
+                        candidate_path = parsed.path if parsed.scheme in ('http', 'https') else raw
+                        # Normalizar contra MEDIA_URL
+                        if getattr(settings, 'MEDIA_URL', '') and candidate_path.startswith(settings.MEDIA_URL):
+                            rel = candidate_path[len(settings.MEDIA_URL):]
+                            file_path = os.path.join(settings.MEDIA_ROOT, rel)
+                        elif candidate_path.startswith('/'):
+                            # Si es ruta absoluta del sistema, usarla tal cual; si parece bajo /media, unir a MEDIA_ROOT
+                            if getattr(settings, 'MEDIA_URL', '') and candidate_path.startswith(settings.MEDIA_URL):
+                                rel = candidate_path[len(settings.MEDIA_URL):]
+                                file_path = os.path.join(settings.MEDIA_ROOT, rel)
+                            else:
+                                # Podría ya ser una ruta absoluta válida
+                                file_path = candidate_path
+                        else:
+                            # Ruta relativa: asumir relativa a MEDIA_ROOT
+                            file_path = os.path.join(settings.MEDIA_ROOT, candidate_path)
+
+                    if file_path and os.path.isfile(file_path):
+                        os.remove(file_path)
+            except Exception:
+                # No bloquear la eliminación por fallo al borrar archivo
+                pass
+
+            campania.web_config.delete()
+            
+        # Finalmente, eliminar la campaña
+        campania.delete()
+        
+        return JsonResponse({'success': True, 'message': 'Campaña eliminada correctamente'})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def eliminar_solicitud(request, solicitud_id):
+    """
+    Elimina una solicitud de publicidad y sus elementos asociados.
+    """
+    try:
+        solicitud = get_object_or_404(SolicitudPublicidadWeb, id=solicitud_id)
+        
+        # Verificar permisos (solo staff puede eliminar)
+        if not request.user.is_staff:
+            return JsonResponse({'error': 'No tienes permiso para realizar esta acción'}, status=403)
+            
+        # Eliminar los items y sus imágenes asociadas
+        for item in solicitud.items_web.all():
+            # Eliminar las imágenes del storage
+            for img in item.imagenes_web.all():
+                if img.imagen:
+                    if os.path.isfile(img.imagen.path):
+                        os.remove(img.imagen.path)
+                img.delete()
+            item.delete()
+            
+        # Finalmente, eliminar la solicitud
+        solicitud.delete()
+        
+        return JsonResponse({'success': True, 'message': 'Solicitud eliminada correctamente'})
+        
+        # Si no es AJAX, redirigir con mensaje
+        messages.success(request, f'Solicitud #{solicitud_id} eliminada correctamente.')
+        return redirect('dashboard_publicidad')
+        
+    except Exception as e:
+        error_msg = f'Error al eliminar la solicitud: {str(e)}'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': error_msg}, status=500)
+            
+        messages.error(request, error_msg)
+        return redirect('dashboard_publicidad')
 
 # CRUD Operations for Users
 @login_required

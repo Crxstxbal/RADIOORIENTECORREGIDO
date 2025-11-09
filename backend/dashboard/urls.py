@@ -19,11 +19,20 @@ urlpatterns = [
     path('publicidad/ubicaciones/', views.ubicaciones_publicidad, name='dashboard_publicidad_ubicaciones'),
     # API pública para frontend
     path('api/publicidad/ubicaciones/', views.api_publicidad_ubicaciones, name='api_publicidad_ubicaciones'),
+    path('api/publicidad/activas/', views.api_publicidad_activas, name='api_publicidad_activas'),
     path('api/publicidad/solicitar/', views.api_publicidad_solicitar, name='api_publicidad_solicitar'),
+    path('api/publicidad/solicitud/<int:solicitud_id>/', views.api_ver_solicitud, name='api_ver_solicitud'),
+    path('api/publicidad/campanias/<int:campania_id>/', views.api_ver_campania, name='api_ver_campania'),
     # API de administración de publicidad web
     path('api/publicidad/solicitudes/<int:solicitud_id>/aprobar/', views.api_aprobar_solicitud, name='api_aprobar_solicitud'),
     path('api/publicidad/solicitudes/<int:solicitud_id>/estado/', views.api_cambiar_estado_solicitud, name='api_cambiar_estado_solicitud'),
+    path('api/publicidad/campanias-web/<int:campania_id>/', views.eliminar_campania_web, name='api_eliminar_campania_web'),
     path('api/publicidad/campanias-web/<int:campania_id>/actualizar_web/', views.api_actualizar_campania_web, name='api_actualizar_campania_web'),
+    # Imágenes por item de solicitud web
+    path('api/publicidad/items/<int:item_id>/imagenes/', views.api_item_imagenes, name='api_item_imagenes'),
+    path('api/publicidad/items/<int:item_id>/imagenes/subir/', views.api_item_subir_imagen, name='api_item_subir_imagen'),
+    path('api/publicidad/imagenes/<int:imagen_id>/eliminar/', views.api_item_eliminar_imagen, name='api_item_eliminar_imagen'),
+    path('api/publicidad/solicitudes/<int:solicitud_id>/eliminar/', views.eliminar_solicitud, name='api_eliminar_solicitud'),
 
     # Estados CRUD
     path('estados/agregar/', views.agregar_estado, name='agregar_estado'),

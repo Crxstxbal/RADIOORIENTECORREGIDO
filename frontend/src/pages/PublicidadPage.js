@@ -107,14 +107,15 @@ const PublicidadPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [selected, setSelected] = useState(null); // card seleccionada
   const [form, setForm] = useState({
-    nombre: '',
-    email: '',
-    telefono: '',
-    preferencia_contacto: 'telefono',
+    nombre_contacto: '',
+    email_contacto: '',
+    telefono_contacto: '',
+    preferencia_contacto: 'email',
     url_destino: '',
     fecha_inicio: '',
     fecha_fin: '',
     mensaje: '',
+    imagenes: {}, // Para almacenar las imágenes por ubicación
   });
   const [selectedIds, setSelectedIds] = useState([]);
 
@@ -130,7 +131,16 @@ const PublicidadPage = () => {
           console.error('API publicidad no OK', res.status, apiUrl);
           return;
         }
-        const data = await res.json();
+        let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        const text = await res.text().catch(() => '');
+        console.error('[Publicidad] Respuesta no JSON', res.status, text);
+        alert(`Error al crear la solicitud: HTTP ${res.status}`);
+        return;
+      }
+      console.log('[Publicidad] Respuesta crear solicitud:', data);
         console.log('API ubicaciones (debug)', data);
         if (!mounted) return;
         setTipos(Array.isArray(data.tipos) ? data.tipos : []);
@@ -179,37 +189,114 @@ const PublicidadPage = () => {
 
   async function submitSolicitud() {
     try {
-      const payload = {
-        nombre: form.nombre,
-        email: form.email,
-        telefono: form.telefono,
-        preferencia_contacto: form.preferencia_contacto,
-        url_destino: form.url_destino,
-        fecha_inicio: form.fecha_inicio,
-        fecha_fin: form.fecha_fin,
-        mensaje: form.mensaje,
-        ubicacion_ids: selectedCards.length ? selectedCards.map(c => c.id) : (selected ? [selected.id] : []),
-      };
-      if (!payload.nombre || !payload.email || !payload.ubicacion_ids.length) {
+      const ubicaciones = selectedCards.length ? selectedCards : (selected ? [selected] : []);
+      
+      // Validar campos requeridos
+      if (!form.nombre_contacto || !form.email_contacto || !ubicaciones.length) {
         alert('Completa nombre, email y selecciona al menos una ubicación.');
         return;
       }
+
+      // Validar URL de destino (requerida por ItemSolicitudWeb)
+      if (!form.url_destino) {
+        alert('Ingresa la URL de destino de tu publicidad.');
+        return;
+      }
+
+      // Autocompletar fechas por mes si no se proporcionan
+      const fmt = (d) => d.toISOString().split('T')[0];
+      const today = new Date();
+      const startAuto = fmt(today);
+      const endAuto = (() => { const d = new Date(today); d.setMonth(d.getMonth() + 1); return fmt(d); })();
+      const fechaInicio = form.fecha_inicio || startAuto;
+      const fechaFin = form.fecha_fin || endAuto;
+
+      // Nota: el endpoint actual no acepta imágenes. No bloqueamos por falta de imagen.
+
+      const ubicacionIds = ubicaciones.map(u => u.id);
+
+      // Crear el payload en el formato que espera el endpoint de dashboard
+      const payload = {
+        nombre: String(form.nombre_contacto || '').trim(),
+        email: String(form.email_contacto || '').trim(),
+        telefono: form.telefono_contacto || '',
+        preferencia_contacto: form.preferencia_contacto || 'email',
+        ubicacion_ids: ubicacionIds,
+        url_destino: form.url_destino,
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin,
+        mensaje: form.mensaje || '',
+        // Copias de respaldo (por si hay otras vistas que las lean)
+        nombre_contacto: String(form.nombre_contacto || '').trim(),
+        email_contacto: String(form.email_contacto || '').trim(),
+      };
+
+      console.log('[Publicidad] Enviando solicitud:', payload);
+
       const res = await fetch(`${backendBase}/dashboard/api/publicidad/solicitar/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
         credentials: 'include',
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        alert(data.message || 'Error al enviar la solicitud');
+        alert(`Error al crear la solicitud: ${data && data.message ? data.message : 'Error desconocido'}`);
         return;
       }
-      alert(data.message || 'Solicitud enviada');
+
+      console.log('[Publicidad] Solicitud creada:', data);
+
+      // Subir imágenes si existen
+      if (data.items_web && data.items_web.length > 0 && Object.keys(form.imagenes).length > 0) {
+        console.log('[Publicidad] Subiendo imágenes...');
+        
+        for (const item of data.items_web) {
+          const imagen = form.imagenes[item.ubicacion_id];
+          if (imagen) {
+            try {
+              const formData = new FormData();
+              formData.append('imagen', imagen);
+              formData.append('descripcion', `Imagen para ${ubicaciones.find(u => u.id === item.ubicacion_id)?.title || 'ubicación'}`);
+              formData.append('orden', '0');
+
+              const imgRes = await fetch(`${backendBase}/dashboard/api/publicidad/items/${item.id}/imagenes/subir/`, {
+                method: 'POST',
+                credentials: 'include',
+                body: formData,
+              });
+
+              const imgData = await imgRes.json();
+              if (!imgRes.ok || !imgData.success) {
+                console.error(`Error al subir imagen para item ${item.id}:`, imgData.message);
+              } else {
+                console.log(`Imagen subida para item ${item.id}`);
+              }
+            } catch (imgError) {
+              console.error(`Error al subir imagen para item ${item.id}:`, imgError);
+            }
+          }
+        }
+      }
+
+      alert(data.message || 'Solicitud enviada correctamente');
       setShowModal(false);
       setSelected(null);
       setSelectedIds([]);
-      setForm({ nombre: '', email: '', telefono: '', preferencia_contacto: 'telefono', url_destino: '', fecha_inicio: '', fecha_fin: '', mensaje: '' });
+      setForm({
+        nombre_contacto: '',
+        email_contacto: '',
+        telefono_contacto: '',
+        preferencia_contacto: 'email',
+        url_destino: '',
+        fecha_inicio: '',
+        fecha_fin: '',
+        mensaje: '',
+        imagenes: {},
+      });
     } catch (e) {
       console.error(e);
       alert('Ocurrió un error al enviar la solicitud');
@@ -342,44 +429,291 @@ function ModalSolicitud({ open, onClose, onSubmit, selectedCards, selectedSingle
   if (!open) return null;
   const list = selectedSingle ? [selectedSingle] : selectedCards;
   const total = list.reduce((acc, c) => acc + (Number(c.price) || 0), 0);
-  const backdrop = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' };
-  const modal = { width: 'min(720px, 95vw)', background: '#1f1f1f', color: '#fff', border: '1px solid #333', borderRadius: 12, padding: 16 };
-  const input = { width: '100%', padding: 8, borderRadius: 8, border: '1px solid #333', background: '#111', color: '#fff' };
-  const row = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 };
+  const backdrop = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', overflowY: 'auto', padding: '20px 0' };
+  const modal = { width: 'min(720px, 95vw)', background: '#1f1f1f', color: '#fff', border: '1px solid #333', borderRadius: 12, padding: 24, maxHeight: '90vh', overflowY: 'auto' };
+  const input = { width: '100%', padding: 12, borderRadius: 8, border: '1px solid #444', background: '#111', color: '#fff', fontSize: '0.9em' };
+  const row = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 };
+  
+  const handleImageChange = (ubicacionId, event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validar tamaño de la imagen (máx 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen no debe superar los 5MB');
+        return;
+      }
+      
+      // Validar tipo de archivo
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        alert('Formato de archivo no válido. Usa JPG, PNG, GIF o WebP');
+        return;
+      }
+      
+      setForm(prev => ({
+        ...prev,
+        imagenes: {
+          ...prev.imagenes,
+          [ubicacionId]: file
+        }
+      }));
+    }
+  };
+  
+  const renderImagePreview = (ubicacionId) => {
+    const file = form.imagenes[ubicacionId];
+    if (!file) return null;
+    
+    const previewUrl = URL.createObjectURL(file);
+    return (
+      <div style={{ marginTop: 8, position: 'relative' }}>
+        <img 
+          src={previewUrl} 
+          alt="Vista previa" 
+          style={{ 
+            maxWidth: '100%', 
+            maxHeight: '150px', 
+            borderRadius: 8,
+            border: '2px solid #dc143c',
+            boxSizing: 'border-box'
+          }} 
+        />
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            setForm(prev => {
+              const newImagenes = { ...prev.imagenes };
+              delete newImagenes[ubicacionId];
+              return { ...prev, imagenes: newImagenes };
+            });
+          }}
+          style={{
+            position: 'absolute',
+            top: 5,
+            right: 5,
+            background: '#dc143c',
+            border: 'none',
+            borderRadius: '50%',
+            width: 24,
+            height: 24,
+            color: 'white',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0,
+            fontSize: 12,
+            lineHeight: 1
+          }}
+        >
+          ×
+        </button>
+      </div>
+    );
+  };
+  
+  const renderFileInput = (ubicacion) => (
+    <div key={ubicacion.id} style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 8, fontWeight: 500 }}>
+        Imagen para: {ubicacion.title} ({ubicacion.dim})
+      </div>
+      <label 
+        htmlFor={`file-upload-${ubicacion.id}`} 
+        style={{
+          display: 'block',
+          padding: '12px 16px',
+          background: '#2d2d2d',
+          border: '2px dashed #444',
+          borderRadius: 8,
+          textAlign: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.3s ease',
+          ':hover': {
+            borderColor: '#dc143c',
+            background: '#333'
+          }
+        }}
+      >
+        {form.imagenes[ubicacion.id] ? 'Cambiar imagen' : 'Seleccionar imagen'}
+        <input
+          id={`file-upload-${ubicacion.id}`}
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={(e) => handleImageChange(ubicacion.id, e)}
+        />
+      </label>
+      {renderImagePreview(ubicacion.id)}
+      <div style={{ fontSize: '0.8em', color: '#888', marginTop: 4 }}>
+        Formatos: JPG, PNG, GIF, WebP (máx. 5MB)
+      </div>
+    </div>
+  );
   return (
     <div style={backdrop} onClick={onClose}>
       <div style={modal} onClick={e => e.stopPropagation()}>
-        <h3>Solicitud de Publicidad</h3>
-        <p>Espacios seleccionados:</p>
-        <ul>
-          {list.map(c => (
-            <li key={c.id}>{c.title} · {c.dim} · {CLP.format(c.price)}</li>
-          ))}
-        </ul>
-        <p>Total estimado: <strong>{CLP.format(total)}</strong> / mes</p>
-        <div style={{ display: 'grid', gap: 12 }}>
-          <input style={input} placeholder="Nombre" value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} />
-          <input style={input} placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-          <div style={row}>
-            <input style={input} placeholder="Teléfono" value={form.telefono} onChange={e => setForm({ ...form, telefono: e.target.value })} />
-            <select style={input} value={form.preferencia_contacto} onChange={e => setForm({ ...form, preferencia_contacto: e.target.value })}>
-              <option value="telefono">Teléfono</option>
-              <option value="whatsapp">WhatsApp</option>
-              <option value="email">Email</option>
-            </select>
+        <h3 style={{ marginTop: 0, color: '#fff', borderBottom: '1px solid #444', paddingBottom: 12, marginBottom: 20 }}>Solicitud de Publicidad</h3>
+        
+        <div style={{ marginBottom: 24 }}>
+          <h4 style={{ marginTop: 0, marginBottom: 12, color: '#ddd' }}>Espacios seleccionados:</h4>
+          <ul style={{ paddingLeft: 20, margin: '0 0 16px 0' }}>
+            {list.map(c => (
+              <li key={c.id} style={{ marginBottom: 8 }}>
+                <strong>{c.title}</strong> · {c.dim} · {CLP.format(c.price)}
+              </li>
+            ))}
+          </ul>
+          <div style={{ fontSize: '1.1em', fontWeight: 'bold', color: '#fff' }}>
+            Total estimado: <span style={{ color: '#dc143c' }}>{CLP.format(total)}</span> / mes
           </div>
-          <div style={row}>
-            <input style={input} placeholder="URL destino (opcional)" value={form.url_destino} onChange={e => setForm({ ...form, url_destino: e.target.value })} />
-            <input style={input} type="date" placeholder="Fecha inicio" value={form.fecha_inicio} onChange={e => setForm({ ...form, fecha_inicio: e.target.value })} />
-          </div>
-          <div style={row}>
-            <input style={input} type="date" placeholder="Fecha fin" value={form.fecha_fin} onChange={e => setForm({ ...form, fecha_fin: e.target.value })} />
-          </div>
-          <textarea style={{ ...input, minHeight: 90 }} placeholder="Mensaje (opcional)" value={form.mensaje} onChange={e => setForm({ ...form, mensaje: e.target.value })} />
         </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-          <button className={styles.ctaButton} onClick={onClose}>Cancelar</button>
-          <button className={styles.ctaButton} onClick={onSubmit}>Enviar solicitud</button>
+
+        <div style={{ marginBottom: 24 }}>
+          <h4 style={{ marginTop: 0, marginBottom: 16, color: '#ddd', borderBottom: '1px solid #444', paddingBottom: 8 }}>Datos de contacto</h4>
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: 6, color: '#bbb' }}>Nombre completo *</label>
+              <input 
+                style={input} 
+                placeholder="Tu nombre" 
+                value={form.nombre_contacto} 
+                onChange={e => setForm({ ...form, nombre_contacto: e.target.value })} 
+              />
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', marginBottom: 6, color: '#bbb' }}>Email *</label>
+              <input 
+                style={input} 
+                type="email" 
+                placeholder="tu@email.com" 
+                value={form.email_contacto} 
+                onChange={e => setForm({ ...form, email_contacto: e.target.value })} 
+              />
+            </div>
+            
+            <div style={row}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: 6, color: '#bbb' }}>Teléfono</label>
+                <input 
+                  style={input} 
+                  placeholder="+56912345678" 
+                  value={form.telefono_contacto} 
+                  onChange={e => setForm({ ...form, telefono_contacto: e.target.value })} 
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: 6, color: '#bbb' }}>Preferencia de contacto</label>
+                <select 
+                  style={{ ...input, width: '100%' }} 
+                  value={form.preferencia_contacto} 
+                  onChange={e => setForm({ ...form, preferencia_contacto: e.target.value })}
+                >
+                  <option value="telefono">Llamada telefónica</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="email">Correo electrónico</option>
+                </select>
+              </div>
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', marginBottom: 6, color: '#bbb' }}>URL de destino</label>
+              <input 
+                style={input} 
+                type="url" 
+                placeholder="https://tusitio.com" 
+                value={form.url_destino} 
+                onChange={e => setForm({ ...form, url_destino: e.target.value })} 
+              />
+            </div>
+            
+            <div style={row}>
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, color: '#bbb' }}>Fecha de inicio</label>
+                <input 
+                  style={input} 
+                  type="date" 
+                  value={form.fecha_inicio} 
+                  onChange={e => setForm({ ...form, fecha_inicio: e.target.value })} 
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, color: '#bbb' }}>Fecha de término</label>
+                <input 
+                  style={input} 
+                  type="date" 
+                  value={form.fecha_fin} 
+                  onChange={e => setForm({ ...form, fecha_fin: e.target.value })} 
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label style={{ display: 'block', marginBottom: 6, color: '#bbb' }}>Mensaje adicional (opcional)</label>
+              <textarea 
+                style={{ ...input, minHeight: 100 }} 
+                placeholder="¿Algo más que quieras contarnos sobre tu publicidad?" 
+                value={form.mensaje} 
+                onChange={e => setForm({ ...form, mensaje: e.target.value })} 
+              />
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 24 }}>
+          <h4 style={{ marginTop: 0, marginBottom: 16, color: '#ddd', borderBottom: '1px solid #444', paddingBottom: 8 }}>
+            Imágenes para publicidad
+          </h4>
+          <div style={{ display: 'grid', gap: 20 }}>
+            {list.map(ubicacion => renderFileInput(ubicacion))}
+          </div>
+        </div>
+
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          paddingTop: 16,
+          borderTop: '1px solid #444',
+          marginTop: 8
+        }}>
+          <button 
+            onClick={onClose}
+            style={{
+              padding: '10px 24px',
+              background: 'transparent',
+              border: '1px solid #666',
+              color: '#ddd',
+              borderRadius: 6,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              ':hover': {
+                background: '#333',
+                borderColor: '#888'
+              }
+            }}
+          >
+            Cancelar
+          </button>
+          <button 
+            onClick={onSubmit}
+            style={{
+              padding: '10px 32px',
+              background: '#dc143c',
+              border: 'none',
+              color: 'white',
+              borderRadius: 6,
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              ':hover': {
+                background: '#b01030',
+                transform: 'translateY(-1px)'
+              }
+            }}
+          >
+            Enviar solicitud
+          </button>
         </div>
       </div>
     </div>
