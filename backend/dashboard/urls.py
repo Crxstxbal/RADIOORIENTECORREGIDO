@@ -47,6 +47,11 @@ urlpatterns = [
     path('contactos/tipos/agregar/', views.agregar_tipo_asunto, name='agregar_tipo_asunto'),
     path('contactos/tipos/<int:tipo_id>/eliminar/', views.eliminar_tipo_asunto, name='eliminar_tipo_asunto'),
 
+    # Suscripciones
+    path('suscripciones/', views.dashboard_suscripciones, name='dashboard_suscripciones'),
+    path('suscripciones/<int:suscripcion_id>/toggle/', views.toggle_suscripcion, name='toggle_suscripcion'),
+    path('suscripciones/<int:suscripcion_id>/delete/', views.delete_suscripcion, name='delete_suscripcion'),
+
     # User CRUD
     path('users/create/', views.create_user, name='create_user'),
     path('users/edit/<int:user_id>/', views.edit_user, name='edit_user'),

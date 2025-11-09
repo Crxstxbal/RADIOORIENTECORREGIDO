@@ -1,29 +1,33 @@
 .chat-toggle {
   position: fixed;
-  bottom: 140px;
+  bottom: 20px;
   right: 2rem;
-  width: 60px;
-  height: 60px;
+  padding: 0.75rem 1.25rem;
   background: var(--color-red);
   color: var(--color-white);
   border: none;
-  border-radius: 50%;
+  border-radius: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3);
   transition: all 0.3s ease;
   z-index: 1500;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
 .chat-toggle:hover {
   background: var(--color-red-dark);
-  transform: scale(1.1);
+  transform: scale(1.05);
+  box-shadow: 0 6px 25px rgba(220, 38, 38, 0.4);
 }
 
 .chat-toggle.active {
   background: var(--color-red-dark);
+  transform: scale(0.95);
 }
 
 .chat-notification {
@@ -43,7 +47,7 @@
 
 .chat-window {
   position: fixed;
-  bottom: 140px;
+  bottom: 80px;
   right: 2rem;
   width: 350px;
   height: 500px;
@@ -55,10 +59,26 @@
   z-index: 1500;
   border: 1px solid var(--color-gray-200);
   overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.chat-window.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .chat-window.minimized {
   height: 60px;
+}
+
+.chat-window.open.minimized {
+  transition: height 0.3s ease, opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
 }
 
 .chat-header {
@@ -342,14 +362,14 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .chat-toggle {
-    bottom: 120px;
+    bottom: 20px;
     right: 1rem;
-    width: 50px;
-    height: 50px;
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
   }
 
   .chat-window {
-    bottom: 120px;
+    bottom: 70px;
     right: 1rem;
     left: 1rem;
     width: auto;
@@ -466,4 +486,51 @@ html.dark .messages-list::-webkit-scrollbar-thumb {
 
 html.dark .messages-list::-webkit-scrollbar-thumb:hover {
   background: var(--text-tertiary);
+}
+
+/* Animaciones */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

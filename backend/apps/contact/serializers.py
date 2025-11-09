@@ -71,12 +71,52 @@ class SuscripcionSerializer(serializers.ModelSerializer):
 
 class SuscripcionCreateSerializer(serializers.ModelSerializer):
     """Serializer para crear suscripciones"""
-    
+
     class Meta:
         model = Suscripcion
         fields = ['email', 'nombre']
-    
+
+    def validate_email(self, value):
+        """Validar que el email no esté ya suscrito activamente"""
+        # Convertir a minúsculas para comparación case-insensitive
+        email_lower = value.lower()
+
+        # Verificar si existe una suscripción activa con este email
+        suscripcion_existente = Suscripcion.objects.filter(email__iexact=email_lower).first()
+
+        if suscripcion_existente:
+            if suscripcion_existente.activa:
+                raise serializers.ValidationError(
+                    'Este email ya está suscrito a nuestro newsletter. '
+                    '¡Gracias por tu interés!'
+                )
+            # Si existe pero está inactiva, se puede reactivar (se maneja en create)
+
+        return value
+
     def create(self, validated_data):
+        email = validated_data['email']
+        nombre = validated_data.get('nombre', '')
+
+        # Verificar si existe una suscripción inactiva para reactivarla
+        suscripcion_existente = Suscripcion.objects.filter(email__iexact=email).first()
+
+        if suscripcion_existente and not suscripcion_existente.activa:
+            # Reactivar suscripción existente
+            suscripcion_existente.activa = True
+            suscripcion_existente.fecha_baja = None
+            if nombre:
+                suscripcion_existente.nombre = nombre
+
+            # Actualizar usuario si es necesario
+            request = self.context.get('request')
+            if request and request.user.is_authenticated:
+                suscripcion_existente.usuario = request.user
+
+            suscripcion_existente.save()
+            return suscripcion_existente
+
+        # Crear nueva suscripción
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             validated_data['usuario'] = request.user
@@ -87,6 +127,7 @@ class SuscripcionCreateSerializer(serializers.ModelSerializer):
             admin_user = User.objects.filter(is_staff=True).first()
             if admin_user:
                 validated_data['usuario'] = admin_user
+
         return super().create(validated_data)
 
 # Serializers de compatibilidad para el frontend existente

@@ -1854,3 +1854,94 @@ def api_get_calendar_events(request):
         # -----------------------------------
         return JsonResponse({'error': str(e)}, status=500)
 
+# ========================
+# Suscripciones
+# ========================
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def dashboard_suscripciones(request):
+    """Gestión de suscripciones al newsletter"""
+    # Parámetros de filtro
+    estado_filter = request.GET.get('estado')  # 'activa' o 'inactiva'
+    search_query = request.GET.get('q')
+
+    # Query base
+    suscripciones = Suscripcion.objects.select_related('usuario').order_by('-fecha_suscripcion')
+
+    # Aplicar filtros
+    if estado_filter == 'activa':
+        suscripciones = suscripciones.filter(activa=True)
+    elif estado_filter == 'inactiva':
+        suscripciones = suscripciones.filter(activa=False)
+
+    if search_query:
+        suscripciones = suscripciones.filter(
+            Q(nombre__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+
+    # Paginación
+    paginator = Paginator(suscripciones, 10)  # 10 suscripciones por página
+    page_number = request.GET.get('page', 1)
+    suscripciones_page = paginator.get_page(page_number)
+
+    # Estadísticas
+    total_suscripciones = Suscripcion.objects.count()
+    suscripciones_activas = Suscripcion.objects.filter(activa=True).count()
+    suscripciones_inactivas = Suscripcion.objects.filter(activa=False).count()
+
+    # Suscripciones de esta semana
+    last_week = timezone.now() - timedelta(days=7)
+    suscripciones_semana = Suscripcion.objects.filter(fecha_suscripcion__gte=last_week).count()
+
+    # Bajas de esta semana
+    bajas_semana = Suscripcion.objects.filter(
+        activa=False,
+        fecha_baja__isnull=False,
+        fecha_baja__gte=last_week
+    ).count()
+
+    context = {
+        'suscripciones': suscripciones_page,
+        'total_suscripciones': total_suscripciones,
+        'suscripciones_activas': suscripciones_activas,
+        'suscripciones_inactivas': suscripciones_inactivas,
+        'suscripciones_semana': suscripciones_semana,
+        'bajas_semana': bajas_semana,
+        'estado_filter': estado_filter,
+        'search_query': search_query,
+    }
+
+    return render(request, 'dashboard/suscripciones.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+@require_http_methods(["POST"])
+def toggle_suscripcion(request, suscripcion_id):
+    """Activar/desactivar una suscripción"""
+    suscripcion = get_object_or_404(Suscripcion, id=suscripcion_id)
+
+    if suscripcion.activa:
+        suscripcion.activa = False
+        suscripcion.fecha_baja = timezone.now()
+        messages.success(request, f'Suscripción de {suscripcion.email} desactivada')
+    else:
+        suscripcion.activa = True
+        suscripcion.fecha_baja = None
+        messages.success(request, f'Suscripción de {suscripcion.email} reactivada')
+
+    suscripcion.save()
+    return redirect('dashboard_suscripciones')
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+@require_http_methods(["POST"])
+def delete_suscripcion(request, suscripcion_id):
+    """Eliminar una suscripción permanentemente"""
+    suscripcion = get_object_or_404(Suscripcion, id=suscripcion_id)
+    email = suscripcion.email
+    suscripcion.delete()
+    messages.success(request, f'Suscripción de {email} eliminada permanentemente')
+    return redirect('dashboard_suscripciones')
+

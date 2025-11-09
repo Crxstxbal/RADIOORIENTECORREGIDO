@@ -60,6 +60,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/programacion" element={<Programacion />} />
               <Route path="/articulos" element={<Articulos />} />
+              <Route path="/articulos/:slug" element={<Articulos />} /> {/* Artículo individual por slug */}
               <Route path="/noticias" element={<Articulos />} /> {/* Redirecciona a artículos */}
               <Route path="/blog" element={<Articulos />} /> {/* Redirecciona a artículos HAR QUE ARREGLARLO*/}
               <Route path="/contacto" element={<Contacto />} />

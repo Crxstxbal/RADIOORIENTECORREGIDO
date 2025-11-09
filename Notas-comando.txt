@@ -16,6 +16,9 @@ pip install django-cors-headers
 pip install detoxify
 pip install pillow
 
+#nuevo para filtro ML: 
+pip install detoxify
+
 #Frontend
 npm install
 npm start

@@ -27,14 +27,60 @@ const Subscription = () => {
       // Obtener token de autenticación si existe
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Token ${token}` } : {};
-      
+
       const response = await axios.post('/api/contact/api/suscripciones/', formData, { headers });
-      toast.success('Suscripción exitosa. ¡Gracias por unirte!');
+
+      // Manejar respuesta de éxito
+      if (response.data.reactivada) {
+        toast.success('¡Bienvenido de vuelta! Tu suscripción ha sido reactivada exitosamente.', {
+          duration: 5000,
+          icon: '🎉'
+        });
+      } else {
+        toast.success(response.data.message || 'Suscripción exitosa. ¡Gracias por unirte!', {
+          duration: 5000,
+          icon: '✅'
+        });
+      }
+
       setIsSubscribed(true);
       setFormData({ email: '', nombre: '' });
     } catch (error) {
-      const message = error.response?.data?.message || 'Error al suscribirse';
-      toast.error(message);
+      // Manejar diferentes tipos de errores
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 400) {
+          // Email ya suscrito
+          const errorMsg = data.message || 'Ya estás suscrito a nuestro newsletter. ¡Gracias por tu interés!';
+          toast.error(errorMsg, {
+            duration: 5000,
+            icon: '📧'
+          });
+        } else if (status === 500) {
+          // Error del servidor
+          toast.error(data.message || 'Error en el servidor. Por favor, intenta más tarde.', {
+            duration: 5000,
+            icon: '⚠️'
+          });
+        } else {
+          // Otros errores
+          toast.error(data.message || 'Error al procesar la suscripción', {
+            duration: 5000
+          });
+        }
+      } else if (error.request) {
+        // Error de red
+        toast.error('No se pudo conectar al servidor. Verifica tu conexión a internet.', {
+          duration: 5000,
+          icon: '🌐'
+        });
+      } else {
+        // Otros errores
+        toast.error('Ocurrió un error inesperado. Por favor, intenta nuevamente.', {
+          duration: 5000
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -97,7 +143,7 @@ const Subscription = () => {
                   <div className="stat-label">Suscriptores</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-number">Weekly</div>
+                  <div className="stat-number">Semanales</div>
                   <div className="stat-label">Boletines</div>
                 </div>
                 <div className="stat-card">

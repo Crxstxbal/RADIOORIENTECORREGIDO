@@ -18,6 +18,7 @@ class ChatMessageListView(generics.ListCreateAPIView):
     serializer_class = ChatMessageSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
+    pagination_class = None  # Desactivar paginación - se maneja en el frontend
 
     def get_queryset(self):
         sala = self.kwargs.get('sala', 'radio-oriente')

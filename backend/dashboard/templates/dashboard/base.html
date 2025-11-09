@@ -793,6 +793,13 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_suscripciones' %}active{% endif %}"
+                    href="{% url 'dashboard_suscripciones' %}">
+                        <i class="fas fa-users me-2"></i>
+                        Suscripciones
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_notificaciones' %}active{% endif %}"
                     href="{% url 'dashboard_notificaciones' %}">
                         <i class="fas fa-bell me-2"></i>

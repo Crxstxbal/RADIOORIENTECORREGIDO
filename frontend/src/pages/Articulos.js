@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { BookOpen, Calendar, User, Eye, Tag, Filter } from 'lucide-react';
 import axios from 'axios';
 import Pagination from '../components/Pagination';
@@ -7,6 +7,7 @@ import './Pages.css';
 
 const Articles = () => {
   const location = useLocation();
+  const { slug } = useParams(); // Capturar el slug de la URL
   const [articles, setArticles] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -100,6 +101,23 @@ const Articles = () => {
       }
     }
   }, [location.state, articles]);
+
+  // Cargar artículo si hay slug en la URL
+  useEffect(() => {
+    const loadArticleBySlug = async () => {
+      if (slug) {
+        try {
+          const response = await axios.get(`/api/articulos/api/articulos/${slug}/`);
+          setSelectedArticle(response.data);
+        } catch (error) {
+          console.error('Error loading article by slug:', error);
+          // Si no se encuentra el artículo, no hacer nada (quedará en la lista)
+        }
+      }
+    };
+
+    loadArticleBySlug();
+  }, [slug]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('es-ES', {

@@ -1,7 +1,15 @@
 from django.db import models
+from django.conf import settings
 
 class ChatMessage(models.Model):
-    id_usuario = models.IntegerField()
+    # Relación con Usuario
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='mensajes_chat',
+        db_column='id_usuario',
+        help_text="Usuario que envió el mensaje"
+    )
     contenido = models.TextField()
     fecha_envio = models.DateTimeField(auto_now_add=True)
     usuario_nombre = models.CharField(max_length=100, blank=True, null=True)
@@ -11,9 +19,19 @@ class ChatMessage(models.Model):
     class Meta:
         db_table = 'mensajes'
         ordering = ['-fecha_envio']
+        indexes = [
+            models.Index(fields=['usuario']),
+            models.Index(fields=['fecha_envio']),
+            models.Index(fields=['sala']),
+        ]
 
     def __str__(self):
-        return f"{self.usuario_nombre or self.id_usuario}: {self.contenido[:50]}..."
+        return f"{self.usuario_nombre or self.usuario.username}: {self.contenido[:50]}..."
+
+    @property
+    def id_usuario(self):
+        """Propiedad de compatibilidad para código existente"""
+        return self.usuario_id
 
 
 class ContentFilterConfig(models.Model):
@@ -83,7 +101,32 @@ class PalabraProhibida(models.Model):
 
 class InfraccionUsuario(models.Model):
     """Registro de infracciones de usuarios"""
-    id_usuario = models.IntegerField()
+    # Relación con Usuario (SIEMPRE necesaria)
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='infracciones_chat',
+        db_column='id_usuario',
+        help_text="Usuario que cometió la infracción"
+    )
+    # Relación con Mensaje (OPCIONAL: null si fue bloqueado antes de guardarse)
+    mensaje = models.ForeignKey(
+        ChatMessage,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='infracciones',
+        help_text="Mensaje que causó la infracción (null si fue bloqueado)"
+    )
+    # Relación con Palabra Prohibida (OPCIONAL: solo si tipo_infraccion='palabra_prohibida')
+    palabra_prohibida = models.ForeignKey(
+        'PalabraProhibida',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='infracciones',
+        help_text="Palabra prohibida detectada (si aplica)"
+    )
     usuario_nombre = models.CharField(max_length=100)
     mensaje_original = models.TextField()
     tipo_infraccion = models.CharField(
@@ -104,6 +147,17 @@ class InfraccionUsuario(models.Model):
         verbose_name = 'Infracción de Usuario'
         verbose_name_plural = 'Infracciones de Usuarios'
         ordering = ['-fecha_infraccion']
+        indexes = [
+            models.Index(fields=['usuario']),
+            models.Index(fields=['fecha_infraccion']),
+            models.Index(fields=['tipo_infraccion']),
+            models.Index(fields=['palabra_prohibida']),
+        ]
 
     def __str__(self):
         return f"{self.usuario_nombre} - {self.tipo_infraccion} - {self.fecha_infraccion}"
+
+    @property
+    def id_usuario(self):
+        """Propiedad de compatibilidad para código existente"""
+        return self.usuario_id

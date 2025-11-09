@@ -97,19 +97,35 @@ const LiveChat = () => {
       return;
     }
 
+    const messageContent = newMessage.trim();
     setIsSending(true);
     setError('');
+    setNewMessage(''); // Limpiar input inmediatamente
+
+    // Optimistic update: agregar mensaje inmediatamente
+    const tempMessage = {
+      id: `temp-${Date.now()}`,
+      message: messageContent,
+      user_name: user?.username,
+      username: user?.username,
+      timestamp: new Date().toISOString(),
+      isOwn: true
+    };
+    setMessages(prev => [...prev, tempMessage]);
 
     try {
       await api.post('/api/chat/messages/radio-oriente/', {
-        contenido: newMessage.trim()
+        contenido: messageContent
       });
-      setNewMessage('');
-      // Recargar mensajes inmediatamente
+      // Recargar mensajes para obtener el mensaje real del servidor
       await loadMessages();
     } catch (error) {
       console.error('Error sending message:', error);
       console.error('Error response:', error.response?.data);
+
+      // Remover el mensaje temporal si falla
+      setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
+
       if (error.response?.data?.detail) {
         setError(error.response.data.detail);
       } else if (error.response?.data) {
@@ -155,7 +171,8 @@ const LiveChat = () => {
         onClick={toggleChat}
         title="Chat en vivo"
       >
-        <MessageCircle size={24} />
+        <MessageCircle size={22} />
+        <span>Chat en Vivo</span>
         {!isOpen && isRadioOnline && (
           <span className="chat-notification">
             <span className="notification-dot"></span>
@@ -164,8 +181,7 @@ const LiveChat = () => {
       </button>
 
       {/* Chat Window */}
-      {isOpen && (
-        <div className={`chat-window ${isMinimized ? 'minimized' : ''}`}>
+      <div className={`chat-window ${isMinimized ? 'minimized' : ''} ${isOpen ? 'open' : ''}`}>
           {/* Chat Header */}
           <div className="chat-header">
             <div className="chat-title">
@@ -290,7 +306,6 @@ const LiveChat = () => {
             </>
           )}
         </div>
-      )}
     </>
   );
 };

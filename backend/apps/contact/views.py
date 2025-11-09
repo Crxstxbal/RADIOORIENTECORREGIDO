@@ -1,4 +1,6 @@
-from rest_framework import generics, status, viewsets
+from django.shortcuts import render
+from django.utils import timezone
+from rest_framework import generics, serializers, status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -61,12 +63,12 @@ class SuscripcionViewSet(viewsets.ModelViewSet):
     queryset = Suscripcion.objects.select_related('usuario').all()
     serializer_class = SuscripcionSerializer
     permission_classes = [AllowAny]
-    
+
     def get_serializer_class(self):
         if self.action == 'create':
             return SuscripcionCreateSerializer
         return SuscripcionSerializer
-    
+
     def get_queryset(self):
         # Los usuarios solo pueden ver sus propias suscripciones, excepto staff
         if self.request.user.is_staff:
@@ -76,12 +78,70 @@ class SuscripcionViewSet(viewsets.ModelViewSet):
         else:
             # Para usuarios anónimos, devolver queryset vacío (solo pueden crear)
             return self.queryset.none()
-    
+
+    def create(self, request, *args, **kwargs):
+        """Override create para manejar mejor los errores de duplicados"""
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+
+            # Verificar si es una reactivación o una nueva suscripción
+            suscripcion = serializer.instance
+            email_existente = Suscripcion.objects.filter(
+                email__iexact=request.data.get('email')
+            ).exclude(id=suscripcion.id).exists()
+
+            if email_existente:
+                # Es una reactivación
+                return Response(
+                    {
+                        'message': '¡Bienvenido de vuelta! Tu suscripción ha sido reactivada exitosamente.',
+                        'email': suscripcion.email,
+                        'reactivada': True
+                    },
+                    status=status.HTTP_200_OK,
+                    headers=headers
+                )
+            else:
+                # Es nueva suscripción
+                return Response(
+                    {
+                        'message': '¡Suscripción exitosa! Recibirás un email de bienvenida pronto.',
+                        'email': suscripcion.email,
+                        'reactivada': False
+                    },
+                    status=status.HTTP_201_CREATED,
+                    headers=headers
+                )
+
+        except serializers.ValidationError as e:
+            # Manejar errores de validación (email duplicado, etc)
+            return Response(
+                {
+                    'error': e.detail if isinstance(e.detail, str) else e.detail,
+                    'message': 'Ya estás suscrito a nuestro newsletter. ¡Gracias por tu interés!'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            # Manejar otros errores inesperados
+            return Response(
+                {
+                    'error': str(e),
+                    'message': 'Ocurrió un error al procesar tu suscripción. Por favor, intenta nuevamente.'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     @action(detail=True, methods=['post'])
     def desactivar(self, request, pk=None):
         """Desactivar suscripción"""
         suscripcion = self.get_object()
         suscripcion.activa = False
+        suscripcion.fecha_baja = timezone.now()
         suscripcion.save()
         return Response({'message': 'Suscripción desactivada'})
 
@@ -136,3 +196,32 @@ def unsubscribe(request):
         except Suscripcion.DoesNotExist:
             return Response({'error': 'Email no encontrado'}, status=status.HTTP_404_NOT_FOUND)
     return Response({'error': 'Email requerido'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def unsubscribe_by_token(request):
+    """Cancelar suscripción usando token desde el email"""
+    token = request.query_params.get('token')
+
+    if not token:
+        return render(request, 'emails/unsubscribe_result.html', {
+            'success': False,
+            'message': 'Token inválido o no proporcionado'
+        })
+
+    try:
+        suscripcion = Suscripcion.objects.get(token_unsuscribe=token, activa=True)
+        suscripcion.activa = False
+        suscripcion.fecha_baja = timezone.now()
+        suscripcion.save()
+
+        return render(request, 'emails/unsubscribe_result.html', {
+            'success': True,
+            'message': 'Te has desuscrito exitosamente del newsletter de Radio Oriente',
+            'email': suscripcion.email
+        })
+    except Suscripcion.DoesNotExist:
+        return render(request, 'emails/unsubscribe_result.html', {
+            'success': False,
+            'message': 'Suscripción no encontrada o ya cancelada'
+        })

@@ -28,4 +28,6 @@ urlpatterns = [
     path('message/', views.ContactMessageCreateView.as_view(), name='contact-message'),
     path('subscribe/', views.subscribe, name='subscribe'),
     path('unsubscribe/', views.unsubscribe, name='unsubscribe'),
+    # Desuscripción por token (desde email)
+    path('unsubscribe-token/', views.unsubscribe_by_token, name='unsubscribe-by-token'),
 ]
