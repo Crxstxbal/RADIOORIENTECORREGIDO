@@ -33,10 +33,16 @@ class ArticuloViewSet(viewsets.ModelViewSet):
         return ArticuloSerializer
     
     def retrieve(self, request, *args, **kwargs):
-        """Incrementa vistas al obtener un artículo"""
+        """Incrementa vistas al obtener un artículo (solo una vez por usuario)"""
         instance = self.get_object()
-        instance.vistas += 1
-        instance.save(update_fields=['vistas'])
+
+        # Solo incrementar si el usuario está autenticado y no ha visto el artículo antes
+        if request.user.is_authenticated:
+            if not instance.usuarios_que_vieron.filter(id=request.user.id).exists():
+                instance.usuarios_que_vieron.add(request.user)
+                instance.vistas += 1
+                instance.save(update_fields=['vistas'])
+
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
     

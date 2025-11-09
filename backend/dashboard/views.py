@@ -26,8 +26,8 @@ from .forms import BandaEmergenteForm
 
 from apps.users.models import User
 from apps.articulos.models import Articulo, Categoria
-from apps.radio.models import Programa, EstacionRadio, HorarioPrograma, GeneroMusical
-from apps.chat.models import ChatMessage
+from apps.radio.models import Programa, EstacionRadio, HorarioPrograma, GeneroMusical, ReproduccionRadio
+from apps.chat.models import ChatMessage, InfraccionUsuario
 from apps.contact.models import Contacto, Suscripcion, Estado, TipoAsunto
 from apps.emergente.models import BandaEmergente, BandaLink, Integrante, BandaIntegrante
 from apps.ubicacion.models import Pais, Ciudad, Comuna
@@ -499,15 +499,159 @@ def dashboard_logout(request):
 @login_required
 @user_passes_test(is_staff_user)
 def api_dashboard_stats(request):
-    """API endpoint para estadísticas del dashboard"""
-    stats = {
-        'users': User.objects.count(),
-        'posts': Articulo.objects.count(),
-        'programs': Programa.objects.count(),
-        'messages': ChatMessage.objects.count(),
-        'subscriptions': Suscripcion.objects.count(),
+    """API endpoint para estadísticas del dashboard con filtros de tiempo"""
+    from django.db.models.functions import TruncDate
+
+    # Obtener el filtro de tiempo
+    time_filter = request.GET.get('filter', 'hoy')
+
+    # Calcular las fechas según el filtro
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    if time_filter == 'hoy':
+        start_date = today_start
+        prev_start = start_date - timedelta(days=1)
+        prev_end = start_date
+    elif time_filter == 'semana':
+        start_date = today_start - timedelta(days=7)
+        prev_start = start_date - timedelta(days=7)
+        prev_end = start_date
+    elif time_filter == 'mes':
+        start_date = today_start - timedelta(days=30)
+        prev_start = start_date - timedelta(days=30)
+        prev_end = start_date
+    else:  # todos
+        start_date = None
+        prev_start = None
+        prev_end = None
+
+    # Filtrar por fecha si es necesario
+    def filter_by_date(queryset, date_field='created_at'):
+        if start_date:
+            return queryset.filter(**{f'{date_field}__gte': start_date})
+        return queryset
+
+    # KPIs - Totales actuales
+    total_users = filter_by_date(User.objects.all(), 'fecha_creacion').count()
+    total_messages = filter_by_date(ChatMessage.objects.all(), 'fecha_envio').count()
+    total_articles = filter_by_date(Articulo.objects.all(), 'fecha_creacion').count()
+    total_subscriptions = filter_by_date(Suscripcion.objects.all(), 'fecha_suscripcion').count()
+    total_contacts = filter_by_date(Contacto.objects.all(), 'fecha_envio').count()
+    total_publicidad = Publicidad.objects.filter(activo=True).count()
+    total_bandas_emergentes = filter_by_date(BandaEmergente.objects.all(), 'fecha_envio').count()
+    total_reproducciones_unicas = filter_by_date(ReproduccionRadio.objects.all(), 'fecha_reproduccion').count()
+
+    # KPIs - Período anterior para comparación
+    users_change = 0
+    messages_change = 0
+    if prev_start and prev_end:
+        prev_users = User.objects.filter(fecha_creacion__gte=prev_start, fecha_creacion__lt=prev_end).count()
+        prev_messages = ChatMessage.objects.filter(fecha_envio__gte=prev_start, fecha_envio__lt=prev_end).count()
+
+        users_change = ((total_users - prev_users) / prev_users * 100) if prev_users > 0 else 0
+        messages_change = ((total_messages - prev_messages) / prev_messages * 100) if prev_messages > 0 else 0
+
+    # Gráfico 1: Usuarios por día
+    users_by_day = list(
+        filter_by_date(User.objects.all(), 'fecha_creacion')
+        .annotate(date=TruncDate('fecha_creacion'))
+        .values('date')
+        .annotate(count=Count('id'))
+        .order_by('date')
+        .values_list('date', 'count')
+    )
+
+    # Gráfico 2: Mensajes por día
+    messages_by_day = list(
+        filter_by_date(ChatMessage.objects.all(), 'fecha_envio')
+        .annotate(date=TruncDate('fecha_envio'))
+        .values('date')
+        .annotate(count=Count('id'))
+        .order_by('date')
+        .values_list('date', 'count')
+    )
+
+    # Gráfico 3: Artículos por categoría
+    articles_by_category = list(
+        filter_by_date(Articulo.objects.all(), 'fecha_creacion')
+        .values('categoria__nombre')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+        .values_list('categoria__nombre', 'count')
+    )
+
+    # Gráfico 4: Contactos por tipo
+    contacts_by_type = list(
+        filter_by_date(Contacto.objects.all(), 'fecha_envio')
+        .values('tipo_asunto__nombre')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+        .values_list('tipo_asunto__nombre', 'count')
+    )
+
+    # Gráfico 5: Suscripciones por día
+    subscriptions_by_day = list(
+        filter_by_date(Suscripcion.objects.all(), 'fecha_suscripcion')
+        .annotate(date=TruncDate('fecha_suscripcion'))
+        .values('date')
+        .annotate(count=Count('id'))
+        .order_by('date')
+        .values_list('date', 'count')
+    )
+
+    # Gráfico 6: Infracciones por tipo
+    infractions_by_type = list(
+        filter_by_date(InfraccionUsuario.objects.all(), 'fecha_infraccion')
+        .values('tipo_infraccion')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+        .values_list('tipo_infraccion', 'count')
+    )
+
+    # Gráfico 7: Top artículos más vistos (solo con vistas > 0)
+    top_articles = list(
+        filter_by_date(Articulo.objects.all(), 'fecha_creacion')
+        .filter(vistas__gt=0)
+        .order_by('-vistas')[:5]
+        .values_list('titulo', 'vistas')
+    )
+
+    # Gráfico 8: Estado de publicidad
+    publicidad_activa = Publicidad.objects.filter(activo=True).count()
+    publicidad_inactiva = Publicidad.objects.filter(activo=False).count()
+
+    # Respuesta en el formato esperado por el frontend
+    response_data = {
+        'kpis': {
+            'total_users': total_users,
+            'total_messages': total_messages,
+            'total_articles': total_articles,
+            'total_subscriptions': total_subscriptions,
+            'total_contacts': total_contacts,
+            'total_publicidad': total_publicidad,
+            'total_bandas_emergentes': total_bandas_emergentes,
+            'total_reproducciones_unicas': total_reproducciones_unicas,
+            'users_change': round(users_change, 1),
+            'messages_change': round(messages_change, 1),
+        },
+        'charts': {
+            'users_by_day': [{'date': str(date), 'count': count} for date, count in users_by_day],
+            'messages_by_day': [{'date': str(date), 'count': count} for date, count in messages_by_day],
+            'articles_by_category': [{'category': str(cat) if cat else 'Sin categoría', 'count': count} for cat, count in articles_by_category],
+            'contacts_by_type': [{'type': str(tipo) if tipo else 'Sin tipo', 'count': count} for tipo, count in contacts_by_type],
+            'subscriptions_by_day': [{'date': str(date), 'count': count} for date, count in subscriptions_by_day],
+            'infractions_by_type': [{'type': str(tipo) if tipo else 'Sin tipo', 'count': count} for tipo, count in infractions_by_type],
+            'top_articles': [{'title': str(title) if title else 'Sin título', 'views': views or 0} for title, views in top_articles],
+            'publicidad_status': {
+                'activa': publicidad_activa,
+                'inactiva': publicidad_inactiva
+            }
+        },
+        'filter': time_filter
     }
-    return JsonResponse(stats)
+
+    return JsonResponse(response_data)
 
 def api_publicidad_ubicaciones(request):
     """API JSON para el frontend: lista tipos activos y sus ubicaciones activas."""

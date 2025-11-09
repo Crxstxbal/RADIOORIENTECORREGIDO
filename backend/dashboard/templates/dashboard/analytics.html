@@ -1,346 +1,746 @@
-{% extends 'dashboard/base.html' %} 
-{% block page_title %} Analytics
-{% endblock %} 
+{% extends 'dashboard/base.html' %}
+{% block page_title %}Estadísticas{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h2>
-    <i class="fas fa-chart-line text-primary me-2"></i>
-    Analytics y Estadísticas
-  </h2>
-  <div class="btn-group" role="group">
-    <button type="button" class="btn btn-outline-primary active">7 días</button>
-    <button type="button" class="btn btn-outline-primary">30 días</button>
-    <button type="button" class="btn btn-outline-primary">90 días</button>
-  </div>
-</div>
 
-<!-- Métricas principales -->
-<div class="row mb-4">
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="card text-center">
-      <div class="card-body">
-        <i class="fas fa-users fa-2x text-primary mb-3"></i>
-        <h3 class="mb-1">1,247</h3>
-        <p class="text-muted mb-0">Visitantes Únicos</p>
-        <small class="text-success">
-          <i class="fas fa-arrow-up"></i> +12% vs semana anterior
-        </small>
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="card text-center">
-      <div class="card-body">
-        <i class="fas fa-play fa-2x text-success mb-3"></i>
-        <h3 class="mb-1">3,842</h3>
-        <p class="text-muted mb-0">Reproducciones</p>
-        <small class="text-success">
-          <i class="fas fa-arrow-up"></i> +8% vs semana anterior
-        </small>
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="card text-center">
-      <div class="card-body">
-        <i class="fas fa-clock fa-2x text-warning mb-3"></i>
-        <h3 class="mb-1">24:32</h3>
-        <p class="text-muted mb-0">Tiempo Promedio</p>
-        <small class="text-danger">
-          <i class="fas fa-arrow-down"></i> -3% vs semana anterior
-        </small>
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="card text-center">
-      <div class="card-body">
-        <i class="fas fa-heart fa-2x text-danger mb-3"></i>
-        <h3 class="mb-1">89%</h3>
-        <p class="text-muted mb-0">Satisfacción</p>
-        <small class="text-success">
-          <i class="fas fa-arrow-up"></i> +2% vs semana anterior
-        </small>
-      </div>
-    </div>
-  </div>
-</div>
+<style>
+  .stat-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+    background: white;
+  }
 
-<div class="row">
-  <!-- Gráfico de usuarios -->
-  <div class="col-lg-8 mb-4">
-    <div class="card">
-      <div class="card-header bg-white">
-        <h5 class="mb-0">
-          <i class="fas fa-chart-area text-primary me-2"></i>
-          Usuarios por Día (Últimos 30 días)
-        </h5>
-      </div>
-      <div class="card-body">
-        <canvas id="usersChart" height="100"></canvas>
-      </div>
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .stat-card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: white;
+  }
+
+  .chart-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    height: 100%;
+    background: white;
+  }
+
+  .chart-card-header {
+    background: linear-gradient(135deg, #E8F0FE 0%, #F1F5F9 100%);
+    color: #334155;
+    border-radius: 16px 16px 0 0 !important;
+    padding: 18px 20px;
+    border-bottom: 1px solid #E2E8F0;
+  }
+
+  .filter-btn {
+    border: 2px solid #E2E8F0;
+    background: white;
+    color: #64748B;
+    font-weight: 600;
+    padding: 10px 24px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .filter-btn:hover {
+    border-color: #94A3B8;
+    color: #475569;
+    background: #F8FAFC;
+  }
+
+  .filter-btn.active {
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    color: white;
+    border-color: #3B82F6;
+  }
+
+  .stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1E293B;
+  }
+
+  .stat-label {
+    color: #64748B;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .stat-change {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 16px;
+  }
+
+  .stat-change.positive {
+    background: #D1FAE5;
+    color: #047857;
+  }
+
+  .stat-change.negative {
+    background: #FEE2E2;
+    color: #DC2626;
+  }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #F1F5F9;
+    border-radius: 50%;
+    border-top-color: #3B82F6;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Colores suaves y profesionales para los iconos */
+  .gradient-bg-1 { background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%); }
+  .gradient-bg-2 { background: linear-gradient(135deg, #34D399 0%, #10B981 100%); }
+  .gradient-bg-3 { background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%); }
+  .gradient-bg-4 { background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); }
+  .gradient-bg-5 { background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%); }
+  .gradient-bg-6 { background: linear-gradient(135deg, #2DD4BF 0%, #14B8A6 100%); }
+  .gradient-bg-7 { background: linear-gradient(135deg, #FB923C 0%, #F97316 100%); }
+  .gradient-bg-8 { background: linear-gradient(135deg, #C084FC 0%, #A855F7 100%); }
+</style>
+
+<div class="container-fluid">
+  <!-- Header con filtros -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1" style="font-weight: 700; color: #1f2937;">
+        <i class="fas fa-chart-line me-2" style="color: #667eea;"></i>
+        Estadísticas
+      </h2>
+      <p class="text-muted mb-0">Panel de análisis y métricas en tiempo real</p>
+    </div>
+    <div class="btn-group" role="group">
+      <button type="button" class="filter-btn active" data-filter="hoy">Hoy</button>
+      <button type="button" class="filter-btn" data-filter="semana">Semana</button>
+      <button type="button" class="filter-btn" data-filter="mes">Mes</button>
+      <button type="button" class="filter-btn" data-filter="todos">Todos</button>
     </div>
   </div>
 
-  <!-- Top páginas -->
-  <div class="col-lg-4 mb-4">
-    <div class="card">
-      <div class="card-header bg-white">
-        <h5 class="mb-0">
-          <i class="fas fa-trophy text-warning me-2"></i>
-          Páginas Más Visitadas
-        </h5>
-      </div>
-      <div class="card-body">
-        <div class="d-flex justify-content-between mb-3">
-          <span>Inicio</span>
-          <div>
-            <span class="badge bg-primary">2,847</span>
+  <!-- Loading state -->
+  <div id="loadingState" class="text-center py-5">
+    <div class="loading-spinner mx-auto"></div>
+    <p class="text-muted mt-3">Cargando estadísticas...</p>
+  </div>
+
+  <!-- Content -->
+  <div id="statsContent" style="display: none;">
+    <!-- KPIs principales -->
+    <div class="row mb-4" id="kpiCards">
+      <!-- Los KPIs se insertarán dinámicamente aquí -->
+    </div>
+
+    <!-- Gráficos principales -->
+    <div class="row mb-4">
+      <!-- Usuarios por día -->
+      <div class="col-lg-8 mb-4">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h5 class="mb-0 fw-bold">
+              <i class="fas fa-users me-2"></i>
+              Usuarios Registrados
+            </h5>
+          </div>
+          <div class="card-body">
+            <canvas id="usersChart" height="100"></canvas>
           </div>
         </div>
-        <div class="progress mb-3" style="height: 6px">
-          <div class="progress-bar" style="width: 85%"></div>
-        </div>
+      </div>
 
-        <div class="d-flex justify-content-between mb-3">
-          <span>Artículos</span>
-          <div>
-            <span class="badge bg-primary">1,923</span>
+      <!-- Contactos por tipo -->
+      <div class="col-lg-4 mb-4">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h5 class="mb-0 fw-bold">
+              <i class="fas fa-envelope me-2"></i>
+              Contactos por Tipo
+            </h5>
+          </div>
+          <div class="card-body">
+            <canvas id="contactsChart" height="200"></canvas>
           </div>
         </div>
-        <div class="progress mb-3" style="height: 6px">
-          <div class="progress-bar" style="width: 57%"></div>
-        </div>
+      </div>
+    </div>
 
-        <div class="d-flex justify-content-between mb-3">
-          <span>Programación</span>
-          <div>
-            <span class="badge bg-primary">1,456</span>
+    <!-- Segunda fila de gráficos -->
+    <div class="row mb-4">
+      <!-- Mensajes de chat -->
+      <div class="col-lg-6 mb-4">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h5 class="mb-0 fw-bold">
+              <i class="fas fa-comments me-2"></i>
+              Mensajes de Chat
+            </h5>
+          </div>
+          <div class="card-body">
+            <canvas id="messagesChart" height="150"></canvas>
           </div>
         </div>
-        <div class="progress mb-3" style="height: 6px">
-          <div class="progress-bar" style="width: 43%"></div>
-        </div>
+      </div>
 
-        <div class="d-flex justify-content-between mb-3">
-          <span>Contacto</span>
-          <div>
-            <span class="badge bg-primary">892</span>
+      <!-- Artículos por categoría -->
+      <div class="col-lg-6 mb-4">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h5 class="mb-0 fw-bold">
+              <i class="fas fa-newspaper me-2"></i>
+              Artículos por Categoría
+            </h5>
+          </div>
+          <div class="card-body">
+            <canvas id="articlesChart" height="150"></canvas>
           </div>
         </div>
-        <div class="progress mb-3" style="height: 6px">
-          <div class="progress-bar" style="width: 27%"></div>
+      </div>
+    </div>
+
+    <!-- Tercera fila de gráficos -->
+    <div class="row mb-4">
+      <!-- Suscripciones -->
+      <div class="col-lg-8 mb-4">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h5 class="mb-0 fw-bold">
+              <i class="fas fa-user-plus me-2"></i>
+              Suscripciones al Newsletter
+            </h5>
+          </div>
+          <div class="card-body">
+            <canvas id="subscriptionsChart" height="100"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Infracciones -->
+      <div class="col-lg-4 mb-4">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h5 class="mb-0 fw-bold">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              Infracciones de Chat
+            </h5>
+          </div>
+          <div class="card-body">
+            <canvas id="infractionsChart" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cuarta fila -->
+    <div class="row mb-4">
+      <!-- Top artículos -->
+      <div class="col-lg-8 mb-4">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h5 class="mb-0 fw-bold">
+              <i class="fas fa-star me-2"></i>
+              Top 5 Artículos
+            </h5>
+          </div>
+          <div class="card-body">
+            <canvas id="topArticlesChart" height="120"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado publicidad -->
+      <div class="col-lg-4 mb-4">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h5 class="mb-0 fw-bold">
+              <i class="fas fa-ad me-2"></i>
+              Estado de Publicidad
+            </h5>
+          </div>
+          <div class="card-body">
+            <canvas id="publicidadChart" height="200"></canvas>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="row">
-  <!-- Gráfico de artículos -->
-  <div class="col-lg-6 mb-4">
-    <div class="card">
-      <div class="card-header bg-white">
-        <h5 class="mb-0">
-          <i class="fas fa-chart-bar text-success me-2"></i>
-          Artículos por Mes
-        </h5>
-      </div>
-      <div class="card-body">
-        <canvas id="postsChart" height="150"></canvas>
-      </div>
-    </div>
-  </div>
+{% endblock %}
 
-  <!-- Dispositivos -->
-  <div class="col-lg-6 mb-4">
-    <div class="card">
-      <div class="card-header bg-white">
-        <h5 class="mb-0">
-          <i class="fas fa-mobile-alt text-info me-2"></i>
-          Dispositivos
-        </h5>
-      </div>
-      <div class="card-body">
-        <canvas id="devicesChart" height="150"></canvas>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Tabla de eventos recientes -->
-<div class="row">
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header bg-white">
-        <h5 class="mb-0">
-          <i class="fas fa-list text-secondary me-2"></i>
-          Actividad Reciente
-        </h5>
-      </div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Evento</th>
-                <th>Usuario</th>
-                <th>IP</th>
-                <th>Dispositivo</th>
-                <th>Fecha</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <i class="fas fa-play text-success me-2"></i>
-                  Reproducir radio
-                </td>
-                <td>Usuario anónimo</td>
-                <td>192.168.1.100</td>
-                <td>
-                  <i class="fas fa-mobile me-1"></i>
-                  Mobile
-                </td>
-                <td>Hace 2 min</td>
-              </tr>
-              <tr>
-                <td>
-                  <i class="fas fa-eye text-info me-2"></i>
-                  Ver artículo
-                </td>
-                <td>juan.perez</td>
-                <td>10.0.0.15</td>
-                <td>
-                  <i class="fas fa-desktop me-1"></i>
-                  Desktop
-                </td>
-                <td>Hace 5 min</td>
-              </tr>
-              <tr>
-                <td>
-                  <i class="fas fa-comment text-primary me-2"></i>
-                  Nuevo comentario
-                </td>
-                <td>maria.garcia</td>
-                <td>172.16.0.5</td>
-                <td>
-                  <i class="fas fa-tablet me-1"></i>
-                  Tablet
-                </td>
-                <td>Hace 8 min</td>
-              </tr>
-              <tr>
-                <td>
-                  <i class="fas fa-user-plus text-success me-2"></i>
-                  Nuevo registro
-                </td>
-                <td>carlos.lopez</td>
-                <td>203.0.113.42</td>
-                <td>
-                  <i class="fas fa-mobile me-1"></i>
-                  Mobile
-                </td>
-                <td>Hace 15 min</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-{% endblock %} {% block scripts %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-  // Gráfico de usuarios por día
-  const usersCtx = document.getElementById("usersChart").getContext("2d");
-  const usersChart = new Chart(usersCtx, {
-    type: "line",
+let charts = {};
+let currentFilter = 'hoy';
+
+// Verificar que Chart.js se haya cargado
+if (typeof Chart === 'undefined') {
+  console.error('Chart.js no se ha cargado correctamente');
+  document.getElementById('loadingState').innerHTML = `
+    <div class="alert alert-danger">
+      <i class="fas fa-exclamation-circle me-2"></i>
+      Error: Chart.js no se pudo cargar. Verifica tu conexión a internet.
+    </div>
+  `;
+}
+
+// Configuración global de Chart.js
+Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+Chart.defaults.responsive = true;
+Chart.defaults.maintainAspectRatio = false;
+
+// Función para cargar estadísticas
+async function loadStats(filter = 'hoy') {
+  currentFilter = filter;
+
+  // Mostrar loading
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('statsContent').style.display = 'none';
+
+  try {
+    const response = await fetch(`/dashboard/api/stats/?filter=${filter}`, {
+      credentials: 'same-origin',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Renderizar KPIs
+    renderKPIs(data.kpis);
+
+    // Renderizar gráficos
+    renderCharts(data.charts, filter);
+
+    // Mostrar contenido
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('statsContent').style.display = 'block';
+  } catch (error) {
+    console.error('Error loading stats:', error);
+    document.getElementById('loadingState').innerHTML = `
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        Error al cargar las estadísticas: ${error.message}
+        <br><small>Revisa la consola para más detalles.</small>
+      </div>
+    `;
+  }
+}
+
+// Renderizar KPIs
+function renderKPIs(kpis) {
+  const kpiData = [
+    {
+      icon: 'fa-users',
+      label: 'Usuarios',
+      value: kpis.total_users,
+      change: kpis.users_change,
+      gradient: 'gradient-bg-1'
+    },
+    {
+      icon: 'fa-comments',
+      label: 'Mensajes',
+      value: kpis.total_messages,
+      change: kpis.messages_change,
+      gradient: 'gradient-bg-2'
+    },
+    {
+      icon: 'fa-newspaper',
+      label: 'Artículos',
+      value: kpis.total_articles,
+      change: 0,
+      gradient: 'gradient-bg-3'
+    },
+    {
+      icon: 'fa-user-check',
+      label: 'Suscriptores',
+      value: kpis.total_subscriptions,
+      change: 0,
+      gradient: 'gradient-bg-4'
+    },
+    {
+      icon: 'fa-envelope',
+      label: 'Contactos',
+      value: kpis.total_contacts,
+      change: 0,
+      gradient: 'gradient-bg-5'
+    },
+    {
+      icon: 'fa-ad',
+      label: 'Publicidad',
+      value: kpis.total_publicidad,
+      change: 0,
+      gradient: 'gradient-bg-6'
+    },
+    {
+      icon: 'fa-guitar',
+      label: 'Bandas Postulantes',
+      value: kpis.total_bandas_emergentes,
+      change: 0,
+      gradient: 'gradient-bg-7'
+    },
+    {
+      icon: 'fa-play-circle',
+      label: 'Reproducciones Únicas',
+      value: kpis.total_reproducciones_unicas,
+      change: 0,
+      gradient: 'gradient-bg-8'
+    }
+  ];
+
+  const container = document.getElementById('kpiCards');
+  container.innerHTML = kpiData.map(kpi => `
+    <div class="col-lg-3 col-md-6 col-sm-6 mb-3">
+      <div class="stat-card card">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="stat-card-icon ${kpi.gradient}">
+              <i class="fas ${kpi.icon} text-white"></i>
+            </div>
+            ${kpi.change !== 0 ? `
+              <span class="stat-change ${kpi.change > 0 ? 'positive' : 'negative'}">
+                <i class="fas fa-arrow-${kpi.change > 0 ? 'up' : 'down'} me-1"></i>
+                ${Math.abs(kpi.change)}%
+              </span>
+            ` : ''}
+          </div>
+          <h3 class="stat-number mb-1">${kpi.value.toLocaleString()}</h3>
+          <p class="stat-label mb-0">${kpi.label}</p>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Renderizar gráficos
+function renderCharts(chartsData, filter) {
+  // Destruir gráficos existentes
+  Object.values(charts).forEach(chart => chart.destroy());
+  charts = {};
+
+  // Usuarios por día (línea)
+  const usersCtx = document.getElementById('usersChart').getContext('2d');
+  charts.users = new Chart(usersCtx, {
+    type: 'line',
     data: {
-      labels: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
-      datasets: [
-        {
-          label: "Usuarios",
-          data: [12, 19, 3, 5, 2, 3, 8],
-          borderColor: "#dc2626",
-          backgroundColor: "rgba(220, 38, 38, 0.1)",
-          tension: 0.4,
-          fill: true,
-        },
-      ],
+      labels: chartsData.users_by_day.map(d => formatDate(d.date, filter)),
+      datasets: [{
+        label: 'Nuevos Usuarios',
+        data: chartsData.users_by_day.map(d => d.count),
+        borderColor: '#3B82F6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#3B82F6',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      animation: {
+        duration: 1500,
+        easing: 'easeInOutQuart'
+      },
       plugins: {
-        legend: {
-          display: false,
-        },
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: 12,
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: '#3B82F6',
+          borderWidth: 1
+        }
       },
       scales: {
         y: {
           beginAtZero: true,
+          grid: { color: 'rgba(0, 0, 0, 0.05)' }
         },
-      },
-    },
+        x: {
+          grid: { display: false }
+        }
+      }
+    }
   });
 
-  // Gráfico de artículos por mes
-  const postsCtx = document.getElementById("postsChart").getContext("2d");
-  const postsChart = new Chart(postsCtx, {
-    type: "bar",
+  // Mensajes de chat (área)
+  const messagesCtx = document.getElementById('messagesChart').getContext('2d');
+  charts.messages = new Chart(messagesCtx, {
+    type: 'line',
     data: {
-      labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
-      datasets: [
-        {
-          label: "Artículos",
-          data: [5, 8, 12, 7, 15, 10],
-          backgroundColor: "rgba(16, 185, 129, 0.8)",
-          borderColor: "#10b981",
-          borderWidth: 1,
-        },
-      ],
+      labels: chartsData.messages_by_day.map(d => formatDate(d.date, filter)),
+      datasets: [{
+        label: 'Mensajes',
+        data: chartsData.messages_by_day.map(d => d.count),
+        borderColor: '#10B981',
+        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4
+      }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false,
-        },
-      },
+      animation: { duration: 1500, easing: 'easeInOutQuart' },
+      plugins: { legend: { display: false } },
       scales: {
-        y: {
-          beginAtZero: true,
-        },
-      },
-    },
+        y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+        x: { grid: { display: false } }
+      }
+    }
   });
 
-  // Gráfico de dispositivos
-  const devicesCtx = document.getElementById("devicesChart").getContext("2d");
-  const devicesChart = new Chart(devicesCtx, {
-    type: "doughnut",
+  // Artículos por categoría (barras)
+  const articlesCtx = document.getElementById('articlesChart').getContext('2d');
+  charts.articles = new Chart(articlesCtx, {
+    type: 'bar',
     data: {
-      labels: ["Desktop", "Mobile", "Tablet"],
-      datasets: [
-        {
-          data: [45, 35, 20],
-          backgroundColor: ["#3b82f6", "#10b981", "#f59e0b"],
-          borderWidth: 2,
-          borderColor: "#fff",
-        },
-      ],
+      labels: chartsData.articles_by_category.map(d => d.category || 'Sin categoría'),
+      datasets: [{
+        label: 'Artículos',
+        data: chartsData.articles_by_category.map(d => d.count),
+        backgroundColor: [
+          'rgba(96, 165, 250, 0.7)',
+          'rgba(52, 211, 153, 0.7)',
+          'rgba(167, 139, 250, 0.7)',
+          'rgba(251, 191, 36, 0.7)',
+          'rgba(244, 114, 182, 0.7)',
+          'rgba(45, 212, 191, 0.7)'
+        ],
+        borderWidth: 0,
+        borderRadius: 8
+      }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      animation: { duration: 1500, easing: 'easeInOutQuart' },
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Contactos por tipo (donut)
+  const contactsCtx = document.getElementById('contactsChart').getContext('2d');
+  charts.contacts = new Chart(contactsCtx, {
+    type: 'doughnut',
+    data: {
+      labels: chartsData.contacts_by_type.map(d => d.type || 'Sin tipo'),
+      datasets: [{
+        data: chartsData.contacts_by_type.map(d => d.count),
+        backgroundColor: [
+          '#60A5FA', '#34D399', '#A78BFA', '#FBBF24', '#F472B6', '#2DD4BF'
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      animation: {
+        animateRotate: true,
+        animateScale: true,
+        duration: 1500
+      },
+      layout: {
+        padding: {
+          top: 20,
+          bottom: 10
+        }
+      },
       plugins: {
         legend: {
-          position: "bottom",
-        },
+          position: 'bottom',
+          labels: { padding: 12, font: { size: 11 } }
+        }
       },
-    },
+      cutout: '65%'
+    }
   });
+
+  // Suscripciones (línea)
+  const subscriptionsCtx = document.getElementById('subscriptionsChart').getContext('2d');
+  charts.subscriptions = new Chart(subscriptionsCtx, {
+    type: 'line',
+    data: {
+      labels: chartsData.subscriptions_by_day.map(d => formatDate(d.date, filter)),
+      datasets: [{
+        label: 'Suscripciones',
+        data: chartsData.subscriptions_by_day.map(d => d.count),
+        borderColor: '#8B5CF6',
+        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      animation: { duration: 2000, easing: 'easeInOutQuart' },
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Infracciones (donut)
+  const infractionsCtx = document.getElementById('infractionsChart').getContext('2d');
+  const infractionLabels = {
+    'toxicidad_ml': 'Toxicidad ML',
+    'palabra_prohibida': 'Palabra Prohibida',
+    'enlace_prohibido': 'Enlace Prohibido',
+    'spam': 'Spam'
+  };
+  charts.infractions = new Chart(infractionsCtx, {
+    type: 'doughnut',
+    data: {
+      labels: chartsData.infractions_by_type.map(d => infractionLabels[d.type] || d.type),
+      datasets: [{
+        data: chartsData.infractions_by_type.map(d => d.count),
+        backgroundColor: ['#FBBF24', '#EF4444', '#A78BFA', '#EC4899'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      animation: { animateRotate: true, duration: 1500 },
+      layout: {
+        padding: {
+          top: 20,
+          bottom: 10
+        }
+      },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { padding: 12, font: { size: 11 } }
+        }
+      },
+      cutout: '65%'
+    }
+  });
+
+  // Top artículos (barras horizontales)
+  const topArticlesCtx = document.getElementById('topArticlesChart').getContext('2d');
+  charts.topArticles = new Chart(topArticlesCtx, {
+    type: 'bar',
+    data: {
+      labels: chartsData.top_articles.map(d => d.title ? (d.title.length > 40 ? d.title.substring(0, 40) + '...' : d.title) : 'Sin título'),
+      datasets: [{
+        label: 'Vistas',
+        data: chartsData.top_articles.map(d => d.views),
+        backgroundColor: 'rgba(96, 165, 250, 0.7)',
+        borderWidth: 0,
+        borderRadius: 8
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      animation: { duration: 1500, easing: 'easeInOutQuart' },
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Publicidad (donut)
+  const publicidadCtx = document.getElementById('publicidadChart').getContext('2d');
+  charts.publicidad = new Chart(publicidadCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Activa', 'Inactiva'],
+      datasets: [{
+        data: [chartsData.publicidad_status.activa, chartsData.publicidad_status.inactiva],
+        backgroundColor: ['#34D399', '#F87171'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      animation: { animateRotate: true, duration: 1500 },
+      layout: {
+        padding: {
+          top: 20,
+          bottom: 10
+        }
+      },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { padding: 12 }
+        }
+      },
+      cutout: '65%'
+    }
+  });
+}
+
+// Formatear fecha según el filtro
+function formatDate(dateStr, filter) {
+  const date = new Date(dateStr);
+  if (filter === 'hoy') {
+    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  } else if (filter === 'semana') {
+    return date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
+  } else {
+    return date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+  }
+}
+
+// Event listeners para filtros
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    loadStats(this.dataset.filter);
+  });
+});
+
+// Cargar estadísticas cuando el DOM y Chart.js estén completamente listos
+window.addEventListener('load', function() {
+  // Verificar que Chart.js esté disponible antes de cargar
+  if (typeof Chart !== 'undefined') {
+    loadStats('hoy');
+  } else {
+    console.error('Chart.js not available after window load');
+    document.getElementById('loadingState').innerHTML = `
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        Error: No se pudo cargar la librería de gráficos.
+      </div>
+    `;
+  }
+});
 </script>
 {% endblock %}

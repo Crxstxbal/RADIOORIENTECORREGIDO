@@ -96,14 +96,34 @@ class HorarioPrograma(models.Model):
     hora_inicio = models.TimeField()
     hora_fin = models.TimeField()
     activo = models.BooleanField(default=True)
-    
+
     class Meta:
         db_table = 'horario_programa'
         ordering = ['dia_semana', 'hora_inicio']
         verbose_name = 'Horario de Programa'
         verbose_name_plural = 'Horarios de Programas'
-    
+
     def __str__(self):
         days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
         day_name = days[self.dia_semana]
         return f"{self.programa.nombre} - {day_name} {self.hora_inicio}-{self.hora_fin}"
+
+class ReproduccionRadio(models.Model):
+    """Seguimiento de reproducciones únicas de la radio"""
+    estacion = models.ForeignKey(EstacionRadio, on_delete=models.CASCADE, related_name='reproducciones')
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reproducciones_radio')
+    fecha_reproduccion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'reproduccion_radio'
+        verbose_name = 'Reproducción de Radio'
+        verbose_name_plural = 'Reproducciones de Radio'
+        unique_together = ['estacion', 'usuario']
+        indexes = [
+            models.Index(fields=['estacion']),
+            models.Index(fields=['usuario']),
+            models.Index(fields=['fecha_reproduccion']),
+        ]
+
+    def __str__(self):
+        return f"{self.usuario.username} - {self.estacion.nombre} - {self.fecha_reproduccion}"

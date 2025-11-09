@@ -127,8 +127,16 @@ const Articles = () => {
     });
   };
 
-  const handleArticleClick = (article) => {
-    setSelectedArticle(article);
+  const handleArticleClick = async (article) => {
+    // Hacer petición al backend para obtener el detalle (esto incrementa las vistas)
+    try {
+      const response = await axios.get(`/api/articulos/api/articulos/${article.slug}/`);
+      setSelectedArticle(response.data);
+    } catch (error) {
+      console.error('Error loading article detail:', error);
+      // Si falla, usar los datos que ya tenemos
+      setSelectedArticle(article);
+    }
   };
 
   const closeModal = () => {

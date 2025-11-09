@@ -115,7 +115,13 @@ class Articulo(models.Model):
     
     # Metadatos
     vistas = models.PositiveIntegerField(default=0, verbose_name='Vistas')
-    
+    usuarios_que_vieron = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='articulos_vistos',
+        blank=True,
+        verbose_name='Usuarios que vieron este artículo'
+    )
+
     class Meta:
         db_table = 'articulo'
         ordering = ['-fecha_publicacion', '-fecha_creacion']
