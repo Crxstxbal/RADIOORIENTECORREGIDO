@@ -65,7 +65,7 @@ class ChatMessageListView(generics.ListCreateAPIView):
 
         sala = self.kwargs.get('sala', 'radio-oriente')
         serializer.save(
-            id_usuario=self.request.user.id,
+            usuario=self.request.user,
             usuario_nombre=self.request.user.username,
             sala=sala,
             tipo='user'
