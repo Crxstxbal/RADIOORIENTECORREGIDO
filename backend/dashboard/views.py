@@ -231,11 +231,11 @@ def dashboard_chat(request):
     active_users_today = ChatMessage.objects.filter(
         fecha_envio__gte=today_start,
         fecha_envio__lte=today_end
-    ).values('id_usuario').distinct().count()
+    ).values('usuario_id').distinct().count()
 
     # Obtener usuarios más activos (top 10 con más mensajes)
     from django.db.models import Count
-    top_users = ChatMessage.objects.values('id_usuario', 'usuario_nombre').annotate(
+    top_users = ChatMessage.objects.values('usuario_id', 'usuario_nombre').annotate(
         message_count=Count('id')
     ).order_by('-message_count')[:10]
 
@@ -243,18 +243,18 @@ def dashboard_chat(request):
     User = get_user_model()
     top_users_list = []
     for user_data in top_users:
-        if user_data['id_usuario']:
+        if user_data['usuario_id']:
             try:
-                user_obj = User.objects.get(id=user_data['id_usuario'])
+                user_obj = User.objects.get(id=user_data['usuario_id'])
                 top_users_list.append({
-                    'id': user_data['id_usuario'],
+                    'id': user_data['usuario_id'],
                     'username': user_data['usuario_nombre'],
                     'message_count': user_data['message_count'],
                     'is_blocked': user_obj.chat_bloqueado
                 })
             except User.DoesNotExist:
                 top_users_list.append({
-                    'id': user_data['id_usuario'],
+                    'id': user_data['usuario_id'],
                     'username': user_data['usuario_nombre'],
                     'message_count': user_data['message_count'],
                     'is_blocked': False
