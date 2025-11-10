@@ -27,4 +27,4 @@ npm install react-tsparticles tsparticles
 npm install gsap
 npm list react-icons
 npm install framer-motion
-
+npm install color-thief-react

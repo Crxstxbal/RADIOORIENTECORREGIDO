@@ -220,8 +220,8 @@ const Home = () => {
             </div>
             <div className="stat-item">
               <Newspaper className="stat-icon" />
-              <div className="stat-number">50+</div>
-              <div className="stat-label">Noticias Diarias</div>
+              <div className="stat-number">Noticias</div>
+              <div className="stat-label">Diarias</div>
             </div>
             
             <div className="stat-item">
@@ -354,6 +354,27 @@ const Home = () => {
           </div>
           <Link to="/suscripcion" className="btn-white mt-2">
             Suscribirse ahora
+          </Link>
+        </div>
+
+        <div className="card">
+          <div>
+            <div className="icon mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon-white">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+              </svg>
+            </div>
+            <h2 className="title mb-2 text-2xl font-bold">
+              Publicidad en Radio Oriente
+            </h2>
+            <p className="description mb-4 text-lg">
+              Llega a miles de oyentes con nuestra publicidad radial. Paquetes personalizados para tu negocio o emprendimiento.
+            </p>
+          </div>
+          <Link to="/publicidad" className="btn-white mt-2">
+            Ver Oportunidades
           </Link>
         </div>
       </section>

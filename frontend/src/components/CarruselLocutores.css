@@ -6,52 +6,343 @@
   margin: 40px auto; /* Espacio arriba y abajo */
 }
 
-.locutores-carrusel-container h2 {
+/* Contenedor para el título - Mismo estilo que Últimos Artículos */
+.locutores-carrusel-container .title-container {
+  width: 100%;
   text-align: center;
-  color: #FFF; /* Color de título (ajusta según tu sitio) */
-  margin-bottom: 30px;
-  font-weight: bold;
+  margin-bottom: 2.5rem;
 }
 
+.locutores-carrusel-container h2 {
+  display: inline-block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-black, #111827);
+  margin: 0 0 1.5rem;
+  position: relative;
+  padding-bottom: 0.75rem;
+  text-align: center;
+}
+
+/* Línea decorativa debajo del título */
+.locutores-carrusel-container h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background-color: #dc2626; /* Color rojo de la radio */
+  border-radius: 3px;
+}
+
+/* Efecto hover sutil */
+.locutores-carrusel-container h2 {
+  transition: color 0.3s ease;
+}
+
+.locutores-carrusel-container h2:hover {
+  color: #dc2626; /* Rojo al hacer hover */
+}
+
+.locutores-carrusel-container h2::after {
+  transition: all 0.3s ease;
+}
+
+.locutores-carrusel-container h2:hover::after {
+  width: 100px;
+  background-color: #b91c1c; /* Rojo más oscuro al hacer hover */
+}
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .locutores-carrusel-container h2 {
+    color: #f3f4f6 !important; /* Blanco en modo oscuro */
+  }
+  
+  .locutores-carrusel-container h2:hover {
+    color: #f87171 !important; /* Rojo más claro en modo oscuro al hacer hover */
+  }
+}
+
+/* Compatibilidad con temas que usan clase .dark */
+html.dark .locutores-carrusel-container h2 {
+  color: #f3f4f6 !important; /* Blanco cuando el sitio fuerza modo oscuro */
+}
+
+html.dark .locutores-carrusel-container h2:hover {
+  color: #f87171 !important; /* Rojo más claro en modo oscuro al hacer hover */
+}
+
+html:not(.dark) .locutores-carrusel-container h2 {
+  color: #111827 !important; /* Negro cuando el sitio fuerza modo claro */
+}
+
+/* Slide tipo card minimal */
 .locutor-slide {
   text-align: center;
-  background: #2a2a2a; /* Fondo de la tarjeta (ajusta) */
-  border-radius: 10px;
-  overflow: hidden;
-  padding-bottom: 20px;
-  transition: transform 0.3s ease;
+  background: transparent;
+  border-radius: 12px;
+  padding: 8px 0 16px; /* sin card, solo separación vertical */
+  border: none; /* sin borde de tarjeta */
+  box-shadow: none; /* sin sombra de tarjeta */
+  transition: none;
 }
 
 .locutor-slide:hover {
-  transform: scale(1.05);
+  transform: none;
+  box-shadow: none;
+  filter: none;
 }
 
-.locutor-slide img {
+/* Avatar circular con anillo degradado */
+.avatar-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-ring {
+  padding: 3px;
+  border-radius: 9999px;
+  /* Degradado marca: rojo -> negro */
+  background: conic-gradient(from 0deg, #dc2626, #7f1d1d 25%, #0b0b0b 60%, #111111 85%, #dc2626 100%);
+  box-shadow: 0 8px 24px rgba(220,38,38,0.25), 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.avatar-inner {
+  width: 220px;
+  height: 220px;
+  border-radius: 9999px;
+  overflow: hidden;
+  /* Fondo del avatar: rojo a negro */
+  background: radial-gradient(120% 120% at 10% 10%, #ef4444 0%, #0b0b0b 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-inner img {
   width: 100%;
-  height: 250px; /* Altura fija para la imagen */
-  object-fit: cover; /* Asegura que la imagen cubra el espacio */
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
-.locutor-slide h3 {
-  font-size: 1.2rem;
-  color: #FFF;
-  font-weight: bold;
-  margin-top: 15px;
-  margin-bottom: 5px;
+.placeholder-avatar {
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 48px;
+  display: none;
+  background: linear-gradient(135deg, #ef4444 0%, #0b0b0b 100%);
 }
 
+.locutor-slide .locutor-nombre {
+  margin-top: 16px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827; /* Negro por defecto (modo claro) */
+}
+
+/* Modo oscuro: texto blanco */
+@media (prefers-color-scheme: dark) {
+  .locutor-slide .locutor-nombre {
+    color: #f3f4f6; /* Blanco en modo oscuro */
+  }
+  .locutor-slide .locutor-rol {
+    color: #f3f4f6; /* Blanco en modo oscuro */
+  }
+}
+
+/* Modo claro: texto negro/gris oscuro */
+@media (prefers-color-scheme: light) {
+  .locutor-slide .locutor-nombre {
+    color: #111827; /* Negro en modo claro */
+  }
+  .locutor-slide .locutor-rol {
+    color: #111827; /* Negro en modo claro */
+  }
+}
+
+.locutor-slide .locutor-rol {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #111827; /* Negro por defecto (modo claro) */
+}
+
+/* Reset genérico de h3/p dentro del slide para no interferir con clases personalizadas */
+.locutor-slide h3,
 .locutor-slide p {
-  font-size: 0.9rem;
-  color: #ccc;
+  margin: 0;
 }
 
-/* Estilos para las flechas y puntos de Swiper */
+/* ====================================
+   ESTILOS MEJORADOS PARA NAVEGACIÓN
+   ==================================== */
+
+/* Contenedor de navegación */
+.locutores-carrusel-container .swiper {
+  position: relative;
+  padding: 0 40px; /* Espacio para los botones */
+}
+
+/* Botones de navegación - Estilo moderno */
 .swiper-button-next,
 .swiper-button-prev {
-  color: #FFF !important; /* Color de las flechas */
+  --swiper-navigation-size: 20px;
+  --btn-size: 48px;
+  width: var(--btn-size);
+  height: var(--btn-size);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #dc2626;
+  z-index: 10;
+  margin: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Posicionamiento específico para cada botón */
+.swiper-button-prev {
+  left: -10px;
+}
+
+.swiper-button-next {
+  right: -10px;
+}
+
+/* Efecto hover moderno */
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+  background: rgba(220, 38, 38, 0.9);
+  color: white;
+  transform: translateY(-50%) scale(1.05);
+  box-shadow: 0 6px 25px rgba(220, 38, 38, 0.4);
+}
+
+/* Efecto al hacer clic */
+.swiper-button-next:active,
+.swiper-button-prev:active {
+  transform: translateY(calc(-50% + 1px)) scale(0.98);
+  background: rgba(185, 28, 28, 0.95);
+}
+
+/* Flechas personalizadas */
+.swiper-button-next::after,
+.swiper-button-prev::after {
+  font-size: var(--swiper-navigation-size);
+  font-weight: 800;
+  transition: all 0.3s ease;
+}
+
+/* Efecto hover en las flechas */
+.swiper-button-next:hover::after {
+  transform: translateX(2px);
+}
+
+.swiper-button-prev:hover::after {
+  transform: translateX(-2px);
+}
+
+/* Estado deshabilitado */
+.swiper-button-disabled {
+  opacity: 0.3 !important;
+  transform: translateY(-50%) scale(0.9);
+  cursor: not-allowed;
+  pointer-events: auto; /* Permite mostrar tooltips */
+}
+
+/* Paginación mejorada */
+.swiper-pagination {
+  position: relative;
+  margin-top: 20px;
+  bottom: 0 !important;
+}
+
+.swiper-pagination-bullet {
+  width: 10px;
+  height: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 1;
+  transition: all 0.3s ease;
+  margin: 0 5px !important;
 }
 
 .swiper-pagination-bullet-active {
-  background: #dc2626 !important; /* Color de tu radio (rojo) */
+  width: 30px;
+  height: 10px;
+  border-radius: 5px;
+  background: #dc2626 !important;
+  transform: scale(1);
+}
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .swiper-button-next,
+  .swiper-button-prev {
+    background: rgba(30, 30, 30, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #f87171;
+  }
+  
+  .swiper-button-next:hover,
+  .swiper-button-prev:hover {
+    background: rgba(220, 38, 38, 0.9);
+    color: white;
+  }
+  
+  .swiper-pagination-bullet {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Efecto de foco para accesibilidad */
+.swiper-button-next:focus-visible,
+.swiper-button-prev:focus-visible {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.3);
+}
+
+/* Responsivo: ajustar tamaño del avatar en pantallas pequeñas */
+@media (max-width: 768px) {
+  .avatar-inner {
+    width: 160px;
+    height: 160px;
+  }
+}
+
+/* Fuerza colores con mayor especificidad (por si hay estilos globales) */
+@media (prefers-color-scheme: light) {
+  .locutores-carrusel-container .locutor-slide .locutor-nombre,
+  .locutores-carrusel-container .locutor-slide .locutor-rol {
+    color: #111827 !important; /* Negro en modo claro */
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .locutores-carrusel-container .locutor-slide .locutor-nombre,
+  .locutores-carrusel-container .locutor-slide .locutor-rol {
+    color: #f3f4f6 !important; /* Blanco en modo oscuro */
+  }
+}
+
+/* Compatibilidad con temas que usan clase .dark en <html> (e.g., Tailwind) */
+html.dark .locutores-carrusel-container .locutor-slide .locutor-nombre,
+html.dark .locutores-carrusel-container .locutor-slide .locutor-rol {
+  color: #f3f4f6 !important; /* Blanco cuando el sitio fuerza modo oscuro */
+}
+html:not(.dark) .locutores-carrusel-container .locutor-slide .locutor-nombre,
+html:not(.dark) .locutores-carrusel-container .locutor-slide .locutor-rol {
+  color: #111827 !important; /* Negro cuando el sitio fuerza modo claro */
 }
