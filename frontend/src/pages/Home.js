@@ -4,6 +4,7 @@ import { Radio, Users, Music, Newspaper, Calendar, User, Tag, ArrowRight } from 
 import axios from "axios";
 import "./Home.css";
 import PublicidadCarousel from "../components/PublicidadCarousel";
+import CarruselLocutores from '../components/CarruselLocutores';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -233,6 +234,8 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      <CarruselLocutores />
 
       {/* Noticias */}
       <section className="featured-news">

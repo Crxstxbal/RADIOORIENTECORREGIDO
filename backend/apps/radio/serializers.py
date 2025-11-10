@@ -12,14 +12,32 @@ class GeneroMusicalSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'descripcion']
 
 class ConductorSerializer(serializers.ModelSerializer):
-    nombre_completo = serializers.SerializerMethodField()
-    
+    """
+    Serializador para el modelo Conductor (versión pública).
+    """
+    # Creamos un campo 'foto_url' que devuelva la URL completa de la imagen
+    foto_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Conductor
-        fields = ['id', 'nombre', 'apellido', 'apodo', 'foto_url', 'email', 'telefono', 'activo', 'nombre_completo']
-    
-    def get_nombre_completo(self, obj):
-        return str(obj)
+        # Definimos los campos que queremos mostrar al público
+        fields = [
+            'id', 
+            'nombre', 
+            'apellido', 
+            'apodo', 
+            'foto_url'  # Usamos el campo personalizado
+        ]
+
+    def get_foto_url(self, obj):
+        # Esta función construye la URL absoluta de la foto
+        if obj.foto:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.foto.url)
+            # Fallback (aunque no debería pasar en una API)
+            return obj.foto.url
+        return None
 
 class HorarioProgramaSerializer(serializers.ModelSerializer):
     dia_semana_display = serializers.CharField(source='get_dia_semana_display', read_only=True)

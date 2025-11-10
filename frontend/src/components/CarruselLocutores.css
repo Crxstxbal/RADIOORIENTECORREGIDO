@@ -1,0 +1,57 @@
+/* frontend/src/components/CarruselLocutores.css */
+
+.locutores-carrusel-container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 40px auto; /* Espacio arriba y abajo */
+}
+
+.locutores-carrusel-container h2 {
+  text-align: center;
+  color: #FFF; /* Color de título (ajusta según tu sitio) */
+  margin-bottom: 30px;
+  font-weight: bold;
+}
+
+.locutor-slide {
+  text-align: center;
+  background: #2a2a2a; /* Fondo de la tarjeta (ajusta) */
+  border-radius: 10px;
+  overflow: hidden;
+  padding-bottom: 20px;
+  transition: transform 0.3s ease;
+}
+
+.locutor-slide:hover {
+  transform: scale(1.05);
+}
+
+.locutor-slide img {
+  width: 100%;
+  height: 250px; /* Altura fija para la imagen */
+  object-fit: cover; /* Asegura que la imagen cubra el espacio */
+  display: block;
+}
+
+.locutor-slide h3 {
+  font-size: 1.2rem;
+  color: #FFF;
+  font-weight: bold;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.locutor-slide p {
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+/* Estilos para las flechas y puntos de Swiper */
+.swiper-button-next,
+.swiper-button-prev {
+  color: #FFF !important; /* Color de las flechas */
+}
+
+.swiper-pagination-bullet-active {
+  background: #dc2626 !important; /* Color de tu radio (rojo) */
+}

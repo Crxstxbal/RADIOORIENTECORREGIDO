@@ -1,3 +1,5 @@
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import AllowAny
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -110,3 +112,14 @@ def update_current_song(request):
         return Response({'message': 'Funcionalidad en desarrollo'})
     except EstacionRadio.DoesNotExist:
         return Response({'error': 'Estación no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
+class LocutoresActivosListView(ListAPIView):
+    """
+    API endpoint que devuelve una lista de locutores (conductores)
+    que están marcados como 'activos'.
+    """
+    queryset = Conductor.objects.filter(activo=True).order_by('nombre')
+
+    serializer_class = ConductorSerializer
+
+    permission_classes = [AllowAny]

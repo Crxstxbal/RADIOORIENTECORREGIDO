@@ -6,6 +6,8 @@
 # Entorno virtual
 backend/venv/
 
+# Secretos
+
 # Base de datos local
 backend/*.sqlite3
 backend/radio_o..._normalized.db

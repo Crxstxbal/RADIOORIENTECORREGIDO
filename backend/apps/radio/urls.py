@@ -33,4 +33,5 @@ urlpatterns = [
     path('programs/', views.ProgramListView.as_view(), name='program-list'),
     path('programs/<int:pk>/', views.ProgramDetailView.as_view(), name='program-detail'),
     path('update-song/', views.update_current_song, name='update-current-song'),
+    path('locutores/activos/', views.LocutoresActivosListView.as_view(), name='api_locutores_activos'),
 ]
