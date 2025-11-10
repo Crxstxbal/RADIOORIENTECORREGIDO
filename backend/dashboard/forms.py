@@ -2,6 +2,7 @@ from django import forms
 from django.forms import ModelForm
 from apps.emergente.models import BandaEmergente, BandaLink, Integrante, BandaIntegrante
 from apps.ubicacion.models import Pais, Ciudad, Comuna
+from apps.radio.models import Conductor
 
 class BandaEmergenteForm(ModelForm):
     """Formulario para crear y editar bandas emergentes"""
@@ -70,3 +71,20 @@ class BandaEmergenteForm(ModelForm):
             self.fields['ciudad'].required = True
             if 'ciudad' in self.data and self.data['ciudad']:
                 self.fields['comuna'].required = True
+
+class ConductorForm(forms.ModelForm):
+    class Meta:
+        model = Conductor
+        # Definimos los campos que queremos en el formulario
+        fields = ['nombre', 'apellido', 'apodo', 'foto', 'email', 'telefono', 'activo']
+
+        # Añadimos clases de Bootstrap a los campos para que se vean bien
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellido': forms.TextInput(attrs={'class': 'form-control'}),
+            'apodo': forms.TextInput(attrs={'class': 'form-control'}),
+            'foto': forms.FileInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }

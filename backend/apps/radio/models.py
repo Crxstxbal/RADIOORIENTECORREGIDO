@@ -39,7 +39,7 @@ class Conductor(models.Model):
     nombre = models.CharField(max_length=150)
     apellido = models.CharField(max_length=150)
     apodo = models.CharField(max_length=150, blank=True, null=True)
-    foto_url = models.URLField(max_length=500, blank=True, null=True)
+    foto = models.ImageField(upload_to='locutores/', null=True, blank=True, verbose_name="Foto")
     email = models.EmailField(max_length=254, blank=True, null=True, unique=True)
     telefono = models.CharField(max_length=20, blank=True, null=True)
     activo = models.BooleanField(default=True)
