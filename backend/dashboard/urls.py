@@ -24,6 +24,7 @@ urlpatterns = [
     # API pública para frontend
     path('api/publicidad/ubicaciones/', views.api_publicidad_ubicaciones, name='api_publicidad_ubicaciones'),
     path('api/publicidad/activas/', views.api_publicidad_activas, name='api_publicidad_activas'),
+    path('api/publicidad/media/<int:campania_id>/', views.api_publicidad_media, name='api_publicidad_media'),
     path('api/publicidad/solicitar/', views.api_publicidad_solicitar, name='api_publicidad_solicitar'),
     path('api/publicidad/solicitud/<int:solicitud_id>/', views.api_ver_solicitud, name='api_ver_solicitud'),
     path('api/publicidad/campanias/<int:campania_id>/', views.api_ver_campania, name='api_ver_campania'),

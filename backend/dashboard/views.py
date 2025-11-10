@@ -871,9 +871,20 @@ def api_publicidad_activas(request):
             if dimensiones_filter and (ubic.get('dimensiones') or '').lower() != dimensiones_filter:
                 continue
 
+            # Forzar uso de proxy anti-adblock (ruta neutral)
+            try:
+                from django.urls import reverse
+                try:
+                    proxy_path = reverse('api_adimg_media', args=[pub.id])
+                except Exception:
+                    proxy_path = reverse('api_publicidad_media', args=[pub.id])  # compat
+                media_url_proxy = request.build_absolute_uri(proxy_path)
+            except Exception:
+                media_url_proxy = media_url
+
             items.append({
                 'id': pub.id,
-                'media_url': media_url,
+                'media_url': media_url_proxy,
                 'url_destino': getattr(wc, 'url_destino', None),
                 'formato': getattr(wc, 'formato', None),
                 'fecha_inicio': pub.fecha_inicio.isoformat() if pub.fecha_inicio else None,
@@ -888,6 +899,105 @@ def api_publicidad_activas(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({'success': False, 'message': f'Error al obtener campañas: {str(e)}'}, status=500)
+
+from django.utils import timezone as dj_tz
+from django.http import FileResponse, HttpResponseNotFound
+import mimetypes
+import os as _os
+
+def api_publicidad_media(request, campania_id: int):
+    """Proxy neutral para servir imágenes de campañas evitando bloqueadores.
+    Resuelve la misma lógica de media que api_publicidad_activas.
+    """
+    from apps.publicidad.models import Publicidad, ItemSolicitudWeb
+    hoy = dj_tz.now().date()
+    try:
+        pub = (Publicidad.objects
+               .filter(id=campania_id, tipo='WEB', activo=True,
+                       fecha_inicio__lte=hoy, fecha_fin__gte=hoy)
+               .select_related('web_config')
+               .first())
+        if not pub:
+            return HttpResponseNotFound()
+
+        # Validar estado de solicitud (aprobada/activa) o sin solicitud
+        try:
+            sw = getattr(pub, 'solicitud_web', None)
+            if sw and getattr(sw, 'estado', None) not in ['aprobada', 'activa']:
+                return HttpResponseNotFound()
+        except Exception:
+            pass
+
+        wc = getattr(pub, 'web_config', None)
+        media_url = None
+        if wc:
+            mv = getattr(wc, 'archivo_media', None)
+            if mv:
+                media_url = getattr(mv, 'url', None) or str(mv)
+
+        # Fallback: imagen del item asociado
+        if not media_url:
+            try:
+                # Intento 1: Item #id en la descripción
+                import re as _re
+                desc = getattr(pub, 'descripcion', '') or ''
+                m = _re.search(r'Item\s*#(\d+)', desc)
+                item = None
+                if m:
+                    item = ItemSolicitudWeb.objects.filter(id=int(m.group(1))).first()
+                # Intento 2: primer item de su solicitud
+                if not item:
+                    sw = getattr(pub, 'solicitud_web', None)
+                    if sw:
+                        item = (ItemSolicitudWeb.objects
+                                .filter(solicitud_id=getattr(sw, 'id', None))
+                                .order_by('id').first())
+                if item:
+                    img = item.imagenes_web.order_by('orden', 'fecha_subida').first()
+                    if img and getattr(img, 'imagen', None):
+                        media_url = getattr(img.imagen, 'url', None) or str(img.imagen)
+            except Exception:
+                pass
+
+        if not media_url:
+            return HttpResponseNotFound()
+
+        # Resolver a path local si apunta al MEDIA_URL
+        try:
+            from django.conf import settings as _settings
+            if isinstance(media_url, str) and media_url.startswith('/'):  # relativo a raíz
+                # intentar construir path absoluto
+                # Si comienza con MEDIA_URL, mapear a MEDIA_ROOT
+                media_url_nohost = media_url
+            elif isinstance(media_url, str) and media_url.startswith(getattr(_settings, 'MEDIA_URL', '/media/')):
+                media_url_nohost = media_url
+            else:
+                # Podría ser absoluta completa http(s), devolver redirect temporal
+                from django.http import HttpResponseRedirect
+                return HttpResponseRedirect(media_url)
+
+            # Normalizar MEDIA_URL
+            media_prefix = getattr(_settings, 'MEDIA_URL', '/media/')
+            if media_url_nohost.startswith('http'):
+                # recortar host si corresponde
+                from urllib.parse import urlparse
+                parsed = urlparse(media_url_nohost)
+                media_url_nohost = parsed.path
+            if not media_prefix.endswith('/'):
+                media_prefix = media_prefix + '/'
+            rel_path = media_url_nohost[len(media_prefix):] if media_url_nohost.startswith(media_prefix) else media_url_nohost.lstrip('/')
+            abs_path = _os.path.join(getattr(_settings, 'MEDIA_ROOT', ''), rel_path)
+            if not _os.path.isfile(abs_path):
+                return HttpResponseNotFound()
+
+            ctype, _ = mimetypes.guess_type(abs_path)
+            resp = FileResponse(open(abs_path, 'rb'), content_type=ctype or 'application/octet-stream')
+            resp['Cache-Control'] = 'public, max-age=86400'
+            return resp
+        except Exception:
+            return HttpResponseNotFound()
+    except Exception:
+        return HttpResponseNotFound()
 @login_required
 @user_passes_test(is_staff_user)
 @require_http_methods(["POST"])

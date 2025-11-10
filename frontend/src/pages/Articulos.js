@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import { BookOpen, Calendar, User, Eye, Tag, Filter } from 'lucide-react';
+import { BookOpen, Calendar, User, Eye, Tag, Filter, ArrowRight } from 'lucide-react';
 import axios from 'axios';
-import Pagination from '../components/Pagination';
+import PaginacionFusion from '../components/PaginacionFusion';
+import PublicidadCarousel from '../components/PublicidadCarousel';
 import './Pages.css';
 
 const Articles = () => {
@@ -17,7 +18,7 @@ const Articles = () => {
 
   // Estados de paginación
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize] = useState(6); // Mostrar 6 artículos por página
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
@@ -155,28 +156,35 @@ const Articles = () => {
     return article.imagen_portada || article.imagen_url;
   };
 
-  // Filtrar artículos solo por búsqueda local (categoría se filtra en la API)
+  // Filtrar artículos por búsqueda local (categoría se filtra en la API)
   const filteredArticles = articles.filter(article => {
     const matchesSearch = !searchTerm ||
       article.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.contenido.toLowerCase().includes(searchTerm.toLowerCase());
+      (article.contenido && article.contenido.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesSearch;
   });
 
   // Artículos destacados (mostrados aparte, sin paginación)
   const featuredArticles = filteredArticles.filter(article => article.destacado).slice(0, 3);
+  
+  // Artículos regulares con paginación
   const regularArticles = filteredArticles.filter(article => !article.destacado);
+  
+  // Calcular artículos a mostrar en la página actual
+  const indexOfLastArticle = currentPage * pageSize;
+  const indexOfFirstArticle = indexOfLastArticle - pageSize;
+  const currentArticles = regularArticles.slice(0, pageSize); // Solo mostramos los artículos de la página actual
+  
+  // Mostrar mensaje de carga o sin resultados
+  const showLoading = loading && articles.length === 0;
+  const showNoResults = !loading && regularArticles.length === 0 && !searchTerm;
+  const showNoSearchResults = !loading && regularArticles.length === 0 && searchTerm;
 
   // Handlers de paginación
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
     // Scroll suave hacia arriba
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handlePageSizeChange = (newSize) => {
-    setPageSize(newSize);
-    setCurrentPage(1); // Resetear a primera página
   };
 
   // Resetear a página 1 cuando cambia la categoría
@@ -198,8 +206,8 @@ const Articles = () => {
           </div>
         </div>
 
-        {/* Filtros */}
-        <div className="news-container">
+        {/* Contenido principal */}
+        <div className="container">
           <div className="filters-section" style={{display: 'flex', gap: '2rem', marginBottom: '2rem', alignItems: 'center', flexWrap: 'wrap'}}>
             <div className="search-filter" style={{flex: '1', minWidth: '300px'}}>
               <input
@@ -285,15 +293,27 @@ const Articles = () => {
                   }
                 </h2>
                 
-                {regularArticles.length === 0 ? (
-                  <div className="no-programs" style={{textAlign: 'center', padding: '3rem'}}>
-                    <BookOpen size={48} style={{color: 'var(--color-gray-400)', marginBottom: '1rem'}} />
-                    <h3>No hay artículos disponibles</h3>
-                    <p>No se encontraron artículos que coincidan con los filtros seleccionados.</p>
-                  </div>
-                ) : (
-                  <div className="news-grid">
-                    {regularArticles.map(article => (
+                <div className="articles-content">
+                  {showLoading ? (
+                    <div className="loading-container">
+                      <div className="loading-spinner"></div>
+                      <p>Cargando artículos...</p>
+                    </div>
+                  ) : showNoResults ? (
+                    <div className="no-programs" style={{textAlign: 'center', padding: '3rem'}}>
+                      <BookOpen size={48} style={{color: 'var(--color-gray-400)', marginBottom: '1rem'}} />
+                      <h3>No hay artículos disponibles</h3>
+                      <p>No se encontraron artículos en esta categoría.</p>
+                    </div>
+                  ) : showNoSearchResults ? (
+                    <div className="no-programs" style={{textAlign: 'center', padding: '3rem'}}>
+                      <BookOpen size={48} style={{color: 'var(--color-gray-400)', marginBottom: '1rem'}} />
+                      <h3>No se encontraron resultados</h3>
+                      <p>No hay artículos que coincidan con tu búsqueda: "{searchTerm}"</p>
+                    </div>
+                  ) : (
+                    <div className="news-grid">
+                      {currentArticles.map(article => (
                       <article 
                         key={article.id} 
                         className="news-card"
@@ -321,25 +341,29 @@ const Articles = () => {
                               <span>{formatDate(article.fecha_publicacion || article.fecha_creacion)}</span>
                             </div>
                           </div>
-                          <button className="read-more-btn">
-                            Leer más
-                          </button>
+                          <div className="read-more-container">
+                            <button className="read-more-btn">
+                              <span>Leer más</span>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M5 12h14M12 5l7 7-7 7"></path>
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                       </article>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-                {/* Componente de paginación */}
-                {!loading && regularArticles.length > 0 && (
-                  <Pagination
+                {/* Paginación */}
+                {totalPages > 0 && (
+                  <PaginacionFusion
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                    pageSize={pageSize}
-                    onPageSizeChange={handlePageSizeChange}
                     totalItems={totalItems}
-                    showPageSize={true}
+                    itemsPerPage={pageSize}
+                    onPageChange={handlePageChange}
                   />
                 )}
               </section>

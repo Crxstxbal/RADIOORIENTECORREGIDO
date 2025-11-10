@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function parseDims(dimStr) {
   if (!dimStr) return null;
@@ -8,6 +10,24 @@ function parseDims(dimStr) {
   return { w: parseInt(m[1], 10), h: parseInt(m[2], 10) };
 }
 
+//Variantes de animacion para los paneles
+const panelVariants = {
+  hidden: (position) => ({
+    opacity: 0,
+    x: position === 'left-fixed' ? -80 : 80,
+    transition: { duration: 0.4, ease: 'easeInOut' }
+  }),
+  visible: { 
+    opacity: 1,
+    x: 0,
+    transition: { 
+      duration: 0.5,
+      ease: [0.16, 1, 0.3, 1],
+      delay: 0.1
+    }
+  }
+};
+
 export default function PublicidadCarousel({ 
   dimensiones, 
   query, 
@@ -15,6 +35,10 @@ export default function PublicidadCarousel({
   autoPlayMs = 5000,
   debug = true
 }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
+  const panelRef = useRef(null);
   const [items, setItems] = useState([]);
   const [index, setIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,7 +46,7 @@ export default function PublicidadCarousel({
   const timerRef = useRef(null);
   const dims = useMemo(() => parseDims(dimensiones), [dimensiones]);
 
-  // Debug log when component mounts
+  //Log de debug cuando se monta el componente
   useEffect(() => {
     if (debug) {
       console.log(`[PublicidadCarousel] Mounted with position=${position}, dimensiones=${dimensiones}, query=${query}`);
@@ -34,7 +58,7 @@ export default function PublicidadCarousel({
     };
   }, [position, dimensiones, query, debug]);
 
-  // Fetch ads data
+  //Obtener datos de publicidad
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
@@ -102,7 +126,70 @@ export default function PublicidadCarousel({
     };
   }, [dimensiones, query, position, debug]);
 
-  // Auto-advance slides
+  const throttle = (func, limit) => {
+    let inThrottle;
+    return function() {
+      const args = arguments;
+      const context = this;
+      if (!inThrottle) {
+        func.apply(context, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
+  };
+
+  const lastScrollY = useRef(0);
+  
+  useEffect(() => {
+    if (!isHomePage || (position !== 'left-fixed' && position !== 'right-fixed')) {
+      return;
+    }
+
+    const handleScroll = () => {
+      //Para que aparezca la animacion de la publicidad cuando se llega a la seccion de ultimos articulos
+      const sections = document.querySelectorAll('section');
+      let articlesSection = null;
+      
+      for (const section of sections) {
+        const h2 = section.querySelector('h2.section-title');
+        if (h2 && h2.textContent.includes('Últimos Artículos')) {
+          articlesSection = section;
+          break;
+        }
+      }
+      
+      if (!articlesSection) {
+        if (debug) console.log('No se encontró la sección de Últimos Artículos');
+        return;
+      }
+      
+      const sectionRect = articlesSection.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const currentScrollY = window.scrollY;
+      const isScrollingUp = currentScrollY < lastScrollY.current;
+      lastScrollY.current = currentScrollY;
+      
+      if (isScrollingUp) {
+        const triggerPoint = windowHeight * 0.3;
+        setIsVisible(sectionRect.top <= triggerPoint);
+      } else {
+        const triggerPoint = windowHeight * 0.7;
+        setIsVisible(sectionRect.top <= triggerPoint);
+      }
+    };
+
+    const throttledScroll = throttle(handleScroll, 100);
+    window.addEventListener('scroll', throttledScroll, { passive: true });
+    
+    handleScroll();
+    
+    return () => {
+      window.removeEventListener('scroll', throttledScroll);
+    };
+  }, [position, isHomePage, debug]);
+
+  //Avance automático
   useEffect(() => {
     if (!items.length || autoPlayMs <= 0) return;
 
@@ -118,7 +205,7 @@ export default function PublicidadCarousel({
     };
   }, [items, autoPlayMs]);
 
-  // Log slide changes
+  //Log de cambios de diapositiva
   useEffect(() => {
     if (debug && items.length > 0) {
       console.log(`[PublicidadCarousel] Changed to slide ${index + 1}/${items.length}`, {
@@ -127,70 +214,138 @@ export default function PublicidadCarousel({
     }
   }, [index, items, debug]);
 
-  // Base container styles
+  //Calcular dimensiones responsivas manteniendo la proporción
+  const calculateDimensions = (width, height, maxWidth = '100%') => {
+    if (!width || !height) return { width: '100%', height: 'auto' };
+    
+    const aspectRatio = height / width;
+    let maxW = maxWidth === '100%' ? '100%' : Math.min(Number(maxWidth), width);
+    if (typeof maxW === 'number') {
+      maxW = `${maxW}px`;
+    }
+    
+    return {
+      width: maxW,
+      height: 'auto',
+      aspectRatio: `${width}/${height}`,
+      maxWidth: '100%',
+      margin: '0 auto'
+    };
+  };
+
+  //Contenido base con estilo
   const baseContainerStyle = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(245, 245, 245, 0.9)',
-    borderRadius: '8px',
-    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'transparent',
     overflow: 'hidden',
     position: 'relative',
-    border: '1px solid #e0e0e0'
+    padding: 0,
+    margin: '5px auto',
+    maxWidth: '100%',
+    width: '100%',
+    boxSizing: 'border-box'
   };
 
-  // Position-specific styles
+  //No renderizar paneles fijos en móvil
+  if ((position === 'left-fixed' || position === 'right-fixed') && window.innerWidth < 1024) {
+    return null;
+  }
+
+  //Estilos específicos de posición
   const positionStyles = {
     'top': {
       ...baseContainerStyle,
+      display: 'flex',
+      margin: '0 auto',
+      padding: '8px 0',
+      maxWidth: '100%',
       width: '100%',
-      maxWidth: dims ? `${dims.w}px` : '100%',
-      margin: '16px auto',
-      minHeight: dims ? `${dims.h}px` : '200px',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#fff',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+      borderBottom: '1px solid #f0f0f0',
+      height: 'auto',
+      maxHeight: '110px',
+      overflow: 'hidden',
+      '@media (max-width: 768px)': {
+        maxHeight: '70px',
+        padding: '4px 0',
+      },
+      '@media (min-width: 1200px)': {
+        maxHeight: '130px',
+        padding: '10px 0',
+      }
     },
     'left-fixed': {
       ...baseContainerStyle,
-      position: 'fixed',
-      left: '16px',
-      top: '140px',
-      zIndex: 1000,
-      width: dims ? `${dims.w}px` : '300px',
-      minHeight: dims ? `${dims.h}px` : '600px',
+      width: dims ? `${Math.min(dims.w, 180)}px` : '180px',
+      height: dims ? `${dims.h * (180 / dims.w)}px` : 'auto',
+      maxHeight: '450px',
+      minHeight: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+      borderRadius: '6px',
+      overflow: 'hidden',
+      backgroundColor: '#fff',
+      transition: 'all 0.3s ease'
     },
     'right-fixed': {
       ...baseContainerStyle,
-      position: 'fixed',
-      right: '16px',
-      top: '140px',
-      zIndex: 1000,
-      width: dims ? `${dims.w}px` : '300px',
-      minHeight: dims ? `${dims.h}px` : '600px',
+      width: dims ? `${Math.min(dims.w, 180)}px` : '180px',
+      height: dims ? `${dims.h * (180 / dims.w)}px` : 'auto',
+      maxHeight: '450px',
+      minHeight: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+      borderRadius: '6px',
+      overflow: 'hidden',
+      backgroundColor: '#fff',
+      transition: 'all 0.3s ease'
     },
     'inline': {
       ...baseContainerStyle,
-      width: '100%',
-      margin: '16px 0',
-      minHeight: dims ? `${dims.h}px` : '200px',
+      display: 'flex',
+      margin: '5px auto',
+      justifyContent: 'center',
+      alignItems: 'center'
     }
   };
 
   const containerStyle = {
     ...positionStyles[position] || positionStyles.inline,
     ...(position.includes('fixed') && {
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-      borderRadius: '12px'
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
     })
   };
 
   const imageStyle = {
-    width: '100%',
-    height: '100%',
-    objectFit: 'contain',
-    display: 'block'
+    maxWidth: position === 'top' ? 'min(100%, 1200px)' : '100%',
+    maxHeight: position === 'top' ? '90px' : '450px',
+    height: 'auto',
+    width: position === 'top' ? 'auto' : '100%',
+    display: 'block',
+    padding: 0,
+    margin: '0 auto',
+    borderRadius: position === 'top' ? '4px' : '4px',
+    objectFit: position === 'top' ? 'contain' : 'cover',
+    transition: 'all 0.3s ease',
+    '@media (max-width: 768px)': {
+      maxHeight: position === 'top' ? '60px' : '300px',
+      borderRadius: position === 'top' ? '3px' : '4px',
+    },
+    '@media (min-width: 1200px)': {
+      maxHeight: position === 'top' ? '110px' : '450px',
+    }
   };
 
-  // Loading state
+  //Mientras carga
   if (isLoading) {
     return (
       <div style={containerStyle}>
@@ -211,7 +366,7 @@ export default function PublicidadCarousel({
     );
   }
 
-  // Error state
+  //En estado de error por si acaso
   if (error) {
     return (
       <div style={containerStyle}>
@@ -227,7 +382,7 @@ export default function PublicidadCarousel({
     );
   }
 
-  // No items state
+  //Sin items
   if (items.length === 0) {
     return (
       <div style={containerStyle}>
@@ -254,75 +409,162 @@ export default function PublicidadCarousel({
 
   const currentItem = items[index];
 
-  return (
-    <div 
-      className={`pub-carousel pos-${position}`} 
-      style={containerStyle}
-      title={currentItem?.ubicacion?.nombre || 'Publicidad'}
-    >
-      <a 
-        href={currentItem?.url_destino || '#'} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        style={{ 
-          display: 'block', 
-          width: '100%', 
-          height: '100%',
-          position: 'relative'
-        }}
-      >
-        <img 
-          src={currentItem?.media_url} 
-          alt={currentItem?.ubicacion?.nombre || 'Publicidad'} 
-          style={imageStyle} 
-          onError={(e) => {
-            console.error(`[PublicidadCarousel] Error loading image: ${currentItem?.media_url}`);
-            e.target.style.display = 'none';
-          }}
-        />
-        
-        {/* Navigation dots */}
-        {items.length > 1 && (
-          <div style={{
-            position: 'absolute',
-            bottom: '10px',
-            left: 0,
-            right: 0,
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '8px',
-            padding: '4px'
-          }}>
-            {items.map((_, i) => (
-              <div 
-                key={i}
-                style={{
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  backgroundColor: i === index ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.4)',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.3s',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
-                }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIndex(i);
-                  // Reset auto-play timer
-                  if (timerRef.current) {
-                    clearInterval(timerRef.current);
-                    timerRef.current = setInterval(() => {
-                      setIndex(i => (i + 1) % items.length);
-                    }, autoPlayMs);
-                  }
-                }}
-                aria-label={`Ir al slide ${i + 1}`}
-              />
-            ))}
-          </div>
-        )}
-      </a>
+  //Contenido para el carousel
+  const content = (
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <img
+        src={currentItem?.media_url}
+        alt={currentItem?.nombre || 'Publicidad'}
+        style={imageStyle}
+      />
+      {items.length > 1 && (
+        <div style={{
+          position: 'absolute',
+          bottom: '10px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          gap: '5px',
+          zIndex: 10
+        }}>
+          {items.map((_, i) => (
+            <button
+              key={i}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIndex(i);
+              }}
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                border: 'none',
+                padding: 0,
+                backgroundColor: i === index ? '#007bff' : 'rgba(0,0,0,0.2)',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                transform: i === index ? 'scale(1.3)' : 'scale(1)'
+              }}
+              aria-label={`Ir al slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
+
+  //Para paneles fijos (izquierda y derecha)
+  if (position === 'left-fixed' || position === 'right-fixed') {
+    const isArticlesPage = location.pathname.includes('/articulos');
+    const shouldAnimate = isHomePage && !isArticlesPage; // Solo animar en la página de inicio
+    
+    //Estilo del panel
+    const panelStyle = {
+      position: 'fixed',
+      [position === 'left-fixed' ? 'left' : 'right']: '8px',
+      top: isArticlesPage ? '50%' : '30%', // Centrado vertical en artículos, 30% en home
+      transform: 'translateY(-50%)',
+      zIndex: 1000,
+    };
+
+    //En articulos sin animacion
+    if (isArticlesPage) {
+      return (
+        <div style={panelStyle}>
+          <div 
+            className={`pub-carousel pos-${position}`} 
+            style={containerStyle}
+            title={currentItem?.ubicacion?.nombre || 'Publicidad'}
+          >
+            <a 
+              href={currentItem?.url_destino || '#'} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ 
+                display: 'block', 
+                width: '100%',
+                top: '0%',
+                height: '100%',
+                textDecoration: 'none',
+                color: 'inherit'
+              }}
+              onClick={(e) => {
+                if (!currentItem?.url_destino) {
+                  e.preventDefault();
+                }
+              }}
+            >
+              {content}
+            </a>
+          </div>
+        </div>
+      );
+    }
+    
+    //En home con animacion
+    return (
+      <motion.div
+        initial="hidden"
+        animate={isVisible ? "visible" : "hidden"}
+        variants={panelVariants}
+        custom={position}
+        style={panelStyle}
+      >
+        <div 
+          className={`pub-carousel pos-${position}`} 
+          style={containerStyle}
+          title={currentItem?.ubicacion?.nombre || 'Publicidad'}
+        >
+          <a 
+            href={currentItem?.url_destino || '#'} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ 
+              display: 'block', 
+              width: '100%', 
+              height: '100%',
+              textDecoration: 'none',
+              color: 'inherit'
+            }}
+            onClick={(e) => {
+              if (!currentItem?.url_destino) {
+                e.preventDefault();
+              }
+            }}
+          >
+            {content}
+          </a>
+        </div>
+      </motion.div>
+    );
+  } else {
+    return (
+      <div 
+        className={`pub-carousel pos-${position}`} 
+        style={containerStyle}
+        title={currentItem?.ubicacion?.nombre || 'Publicidad'}
+      >
+        <a 
+          href={currentItem?.url_destino || '#'} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          style={{ 
+            display: 'block', 
+            width: '100%', 
+            height: '100%',
+            textDecoration: 'none',
+            color: 'inherit'
+          }}
+          onClick={(e) => {
+            if (!currentItem?.url_destino) {
+              e.preventDefault();
+            }
+          }}
+        >
+          {content}
+        </a>
+      </div>
+    );
+  }
 }
