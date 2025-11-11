@@ -62,7 +62,7 @@ db.sqlite3-journal
 backend/google-credentials.json
 
 # Media y archivos estáticos
-backend/media/
+
 backend/staticfiles/
 
 # Archivos de cobertura
