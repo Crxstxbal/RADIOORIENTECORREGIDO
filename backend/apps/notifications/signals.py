@@ -43,6 +43,27 @@ def notificar_nuevo_contacto(sender, instance, created, **kwargs):
             object_id=instance.id
         )
 
+# Signal para Solicitudes de Publicidad Web
+@receiver(post_save, sender='publicidad.SolicitudPublicidadWeb')
+def notificar_nueva_solicitud_publicidad(sender, instance, created, **kwargs):
+    """Notificar cuando se crea una nueva solicitud de publicidad web"""
+    if created:
+        titulo = f"Nueva solicitud de publicidad: {instance.nombre_contacto or instance.usuario.email}"
+        mensaje = (
+            f"Solicitud #{instance.id} - Estado: {instance.get_estado_display()} - "
+            f"{instance.fecha_inicio_solicitada} a {instance.fecha_fin_solicitada}"
+        )
+        enlace = f"/dashboard/publicidad/?id={instance.id}"
+
+        crear_notificacion_para_staff(
+            tipo='publicidad',
+            titulo=titulo,
+            mensaje=mensaje,
+            enlace=enlace,
+            content_type='solicitud_publicidad',
+            object_id=instance.id
+        )
+
 # Signal para Bandas Emergentes
 @receiver(post_save, sender='emergente.BandaEmergente')
 def notificar_nueva_banda(sender, instance, created, **kwargs):

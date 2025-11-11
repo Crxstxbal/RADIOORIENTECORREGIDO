@@ -370,7 +370,7 @@ const Home = () => {
               Publicidad en Radio Oriente
             </h2>
             <p className="description mb-4 text-lg">
-              Llega a miles de oyentes con nuestra publicidad radial. Paquetes personalizados para tu negocio o emprendimiento.
+              Llega a miles de oyentes con nuestra publicidad radial. Paneles de publicidad personalizados para tu negocio o emprendimiento.
             </p>
           </div>
           <Link to="/publicidad" className="btn-white mt-2">

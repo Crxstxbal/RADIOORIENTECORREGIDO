@@ -63,7 +63,7 @@ class PublicidadWeb(models.Model):
         limit_choices_to={'tipo': 'WEB'}
     )
     url_destino = models.URLField(max_length=500, verbose_name="URL de Destino")
-    formato = models.CharField(max_length=50, verbose_name="Formato (ej: 728x90)")
+    formato = models.CharField(max_length=200, verbose_name="Formato (ej: 728x90)")
     impresiones = models.IntegerField(
         default=0, 
         validators=[MinValueValidator(0)],

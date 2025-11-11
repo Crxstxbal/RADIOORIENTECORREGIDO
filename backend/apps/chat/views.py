@@ -317,11 +317,11 @@ def get_blocked_users(request):
         # Para cada usuario, contar sus infracciones
         users_data = []
         for user in blocked_users:
-            infracciones_count = InfraccionUsuario.objects.filter(id_usuario=user.id).count()
+            infracciones_count = InfraccionUsuario.objects.filter(usuario_id=user.id).count()
 
             # Obtener última infracción
             ultima_infraccion = InfraccionUsuario.objects.filter(
-                id_usuario=user.id
+                usuario_id=user.id
             ).order_by('-fecha_infraccion').first()
 
             users_data.append({

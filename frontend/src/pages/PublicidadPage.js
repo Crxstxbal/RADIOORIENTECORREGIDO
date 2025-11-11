@@ -382,9 +382,9 @@ const PublicidadPage = () => {
         )}
 
         <div className={styles.locationMap}>
-          <h2>📍 Mapa de Ubicaciones Publicitarias</h2>
+          <h2>Mapa de Ubicaciones Publicitarias</h2>
           <div className={styles.websitePreview}>
-            <div className={styles.locationHeader}>RADIO ORIENTE - HEADER</div>
+            <div className={styles.locationHeader}>Radio Oriente FM - Header</div>
             <div className={styles.locationSpot}>Banner Superior Premium (728x90) - $299/mes</div>
             <div className={styles.locationSpot}>Billboard Destacado (970x250) - $349/mes</div>
             <div className={styles.locationSidebar}>

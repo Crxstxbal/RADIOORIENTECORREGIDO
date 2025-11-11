@@ -171,7 +171,7 @@ class ContentAnalyzer:
         """Registrar infracción en la base de datos"""
         try:
             InfraccionUsuario.objects.create(
-                id_usuario=id_usuario,
+                usuario_id=id_usuario,
                 usuario_nombre=usuario_nombre,
                 mensaje_original=mensaje,
                 tipo_infraccion=tipo,
@@ -187,7 +187,7 @@ class ContentAnalyzer:
         por acumular demasiadas infracciones
         """
         infracciones_count = InfraccionUsuario.objects.filter(
-            id_usuario=id_usuario
+            usuario_id=id_usuario
         ).count()
 
         if infracciones_count >= config.strikes_para_bloqueo:

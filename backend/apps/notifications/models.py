@@ -11,6 +11,7 @@ class Notification(models.Model):
         ('articulo', 'Articulo Nuevo'),
         ('programa', 'Cambio en Programacion'),
         ('suscripcion', 'Nueva Suscripcion'),
+        ('publicidad', 'Solicitud de Publicidad'),
     ]
 
     usuario = models.ForeignKey(

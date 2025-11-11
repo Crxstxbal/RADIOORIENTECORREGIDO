@@ -182,11 +182,11 @@ select::-webkit-scrollbar-thumb:hover {
                 <label for="tipo" class="notif-filter-label" style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">Tipo de notificación</label>
                 <select name="tipo" id="tipo" style="width: 100%; padding: 10px 14px; border-radius: 6px; font-size: 14px;">
                     <option value="">Todas</option>
-                    <option value="contacto" {% if filtro_tipo == 'contacto' %}selected{% endif %}>📧 Contactos</option>
-                    <option value="banda" {% if filtro_tipo == 'banda' %}selected{% endif %}>🎵 Bandas Emergentes</option>
-                    <option value="articulo" {% if filtro_tipo == 'articulo' %}selected{% endif %}>📰 Artículos</option>
-                    <option value="programa" {% if filtro_tipo == 'programa' %}selected{% endif %}>🎤 Programas</option>
-                    <option value="suscripcion" {% if filtro_tipo == 'suscripcion' %}selected{% endif %}>👤 Suscripciones</option>
+                    <option value="contacto" {% if filtro_tipo == 'contacto' %}selected{% endif %}>Contactos</option>
+                    <option value="banda" {% if filtro_tipo == 'banda' %}selected{% endif %}>Bandas Emergentes</option>
+                    <option value="articulo" {% if filtro_tipo == 'articulo' %}selected{% endif %}>Artículos</option>
+                    <option value="programa" {% if filtro_tipo == 'programa' %}selected{% endif %}>Programas</option>
+                    <option value="suscripcion" {% if filtro_tipo == 'suscripcion' %}selected{% endif %}>Suscripciones</option>
                 </select>
             </div>
 
@@ -194,8 +194,8 @@ select::-webkit-scrollbar-thumb:hover {
                 <label for="leidas" class="notif-filter-label" style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">Estado</label>
                 <select name="leidas" id="leidas" style="width: 100%; padding: 10px 14px; border-radius: 6px; font-size: 14px;">
                     <option value="">Todas</option>
-                    <option value="no" {% if filtro_leidas == 'no' %}selected{% endif %}>📬 No leídas</option>
-                    <option value="si" {% if filtro_leidas == 'si' %}selected{% endif %}>✅ Leídas</option>
+                    <option value="no" {% if filtro_leidas == 'no' %}selected{% endif %}>No leídas</option>
+                    <option value="si" {% if filtro_leidas == 'si' %}selected{% endif %}>Leídas</option>
                 </select>
             </div>
 

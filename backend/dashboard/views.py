@@ -28,6 +28,7 @@ from .forms import ConductorForm
 
 from apps.users.models import User
 from apps.articulos.models import Articulo, Categoria
+from .models import Notificacion
 from apps.radio.models import Programa, EstacionRadio, HorarioPrograma, GeneroMusical, ReproduccionRadio, Conductor
 from apps.chat.models import ChatMessage, InfraccionUsuario
 from apps.contact.models import Contacto, Suscripcion, Estado, TipoAsunto
@@ -952,6 +953,720 @@ def api_publicidad_activas(request):
         traceback.print_exc()
         return JsonResponse({'success': False, 'message': f'Error al obtener campañas: {str(e)}'}, status=500)
 
+@login_required
+@user_passes_test(is_staff_user)
+def dashboard_radio(request):
+    """Gestión de radio y programas"""
+    programs = Programa.objects.all().order_by('nombre')
+    try:
+        station = EstacionRadio.objects.first()
+    except EstacionRadio.DoesNotExist:
+        station = None
+    
+    # Obtener los 3 artículos más recientes
+    articulos_recientes = Articulo.objects.filter(
+        publicado=True
+    ).select_related('categoria', 'autor').order_by('-fecha_publicacion')[:3]
+    
+    # Obtener el total de artículos
+    total_articulos = Articulo.objects.count()
+
+    conductores = Conductor.objects.all().order_by('nombre')
+    
+    context = {
+        'programs': programs,
+        'station': station,
+        'articulos_recientes': articulos_recientes,
+        'total_articulos': total_articulos,
+        'total_articulos_count': total_articulos,
+        'conductores': conductores
+    }
+    return render(request, 'dashboard/radio.html', context)
+
+@login_required
+@user_passes_test(is_staff_user)
+def dashboard_chat(request):
+    """Moderación del chat"""
+    # Obtener todos los mensajes
+    messages = ChatMessage.objects.all().order_by('-fecha_envio')[:50]
+
+    # Calcular estadísticas usando timezone aware datetime
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    messages_today = ChatMessage.objects.filter(
+        fecha_envio__gte=today_start,
+        fecha_envio__lte=today_end
+    ).count()
+
+    # Usuarios únicos activos hoy (basado en mensajes)
+    active_users_today = ChatMessage.objects.filter(
+        fecha_envio__gte=today_start,
+        fecha_envio__lte=today_end
+    ).values('usuario_id').distinct().count()
+
+    # Obtener usuarios más activos (top 10 con más mensajes)
+    from django.db.models import Count
+    top_users = ChatMessage.objects.values('usuario_id', 'usuario_nombre').annotate(
+        message_count=Count('id')
+    ).order_by('-message_count')[:10]
+
+    # Obtener información de bloqueo para cada usuario
+    User = get_user_model()
+    top_users_list = []
+    for user_data in top_users:
+        if user_data['usuario_id']:
+            try:
+                user_obj = User.objects.get(id=user_data['usuario_id'])
+                top_users_list.append({
+                    'id': user_data['usuario_id'],
+                    'username': user_data['usuario_nombre'],
+                    'message_count': user_data['message_count'],
+                    'is_blocked': user_obj.chat_bloqueado
+                })
+            except User.DoesNotExist:
+                top_users_list.append({
+                    'id': user_data['usuario_id'],
+                    'username': user_data['usuario_nombre'],
+                    'message_count': user_data['message_count'],
+                    'is_blocked': False
+                })
+
+    context = {
+        'messages': messages,
+        'messages_today': messages_today,
+        'active_users_today': active_users_today,
+        'top_users': top_users_list,
+    }
+
+    return render(request, 'dashboard/chat.html', context)
+
+@require_http_methods(["POST"])
+@login_required
+@user_passes_test(is_staff_user)
+def clear_chat_messages(request):
+    """Limpiar todos los mensajes del chat - Vista de Django pura"""
+    print(f"=== CLEAR CHAT MESSAGES (Django View) ===")
+    print(f"User: {request.user}")
+    print(f"Is staff: {request.user.is_staff}")
+
+    try:
+        data = json.loads(request.body) if request.body else {}
+        sala = data.get('sala', 'radio-oriente')
+
+        print(f"Eliminando mensajes de sala: {sala}")
+        deleted_count = ChatMessage.objects.filter(sala=sala).delete()[0]
+        print(f"Mensajes eliminados: {deleted_count}")
+
+        return JsonResponse({
+            'success': True,
+            'deleted_count': deleted_count,
+            'message': f'Se eliminaron {deleted_count} mensajes correctamente'
+        })
+    except Exception as e:
+        print(f"ERROR: {str(e)}")
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+@login_required
+@user_passes_test(is_staff_user)
+def dashboard_analytics(request):
+    """Analytics y estadísticas detalladas"""
+    # Datos para gráficos
+    last_30_days = timezone.now() - timedelta(days=30)
+    
+    # Usuarios por día (últimos 30 días)
+    users_by_day = []
+    for i in range(30):
+        date = timezone.now() - timedelta(days=i)
+        count = User.objects.filter(fecha_creacion__date=date.date()).count()
+        users_by_day.append({'date': date.strftime('%Y-%m-%d'), 'count': count})
+    
+    # Posts por mes (últimos 6 meses)
+    posts_by_month = []
+    for i in range(6):
+        date = timezone.now() - timedelta(days=30*i)
+        count = Articulo.objects.filter(
+            fecha_creacion__year=date.year,
+            fecha_creacion__month=date.month
+        ).count()
+        posts_by_month.append({'month': date.strftime('%Y-%m'), 'count': count})
+    
+    context = {
+        'users_by_day': users_by_day,
+        'posts_by_month': posts_by_month,
+    }
+    
+    return render(request, 'dashboard/analytics.html', context)
+
+@login_required
+@user_passes_test(is_staff_user)
+def dashboard_publicidad(request):
+    """Gestión de Publicidad Web: solicitudes y campañas publicadas"""
+    solicitudes = SolicitudPublicidadWeb.objects.select_related('usuario').order_by('-fecha_solicitud')[:100]
+    campanias = Publicidad.objects.filter(tipo='WEB').select_related('web_config').order_by('-fecha_creacion')[:100]
+    return render(request, 'dashboard/publicidad.html', {
+        'solicitudes': solicitudes,
+        'campanias': campanias,
+    })
+
+@login_required
+@user_passes_test(is_staff_user)
+def ubicaciones_publicidad(request):
+    """Gestión de ubicaciones de publicidad (carousels, banners, etc.)"""
+    ubicaciones = (
+        UbicacionPublicidadWeb.objects
+        .select_related('tipo')
+        .annotate(items_count=Count('items_solicitud_web'))
+        .all()
+        .order_by('orden', 'nombre')
+    )
+    tipos_ubicacion_select = TipoUbicacion.objects.filter(activo=True).order_by('nombre')
+    tipos_ubicacion_all = TipoUbicacion.objects.annotate(ubicaciones_count=Count('ubicaciones')).order_by('nombre')
+    
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+
+        # Gestión de eliminación de Ubicación
+        if form_type == 'delete_ubicacion':
+            del_id = request.POST.get('ubicacion_id')
+            try:
+                ubic = UbicacionPublicidadWeb.objects.get(id=del_id)
+                # Evitar borrar si tiene items asociados
+                if ubic.items_solicitud_web.exists():
+                    messages.warning(request, 'No se puede eliminar: la ubicación tiene elementos asociados.')
+                else:
+                    ubic.delete()
+                    messages.success(request, 'Ubicación eliminada correctamente')
+            except ProtectedError:
+                messages.error(request, 'No se puede eliminar la ubicación porque está protegida por relaciones.')
+            except Exception as e:
+                messages.error(request, f'Error al eliminar la ubicación: {str(e)}')
+            return redirect('dashboard_publicidad_ubicaciones')
+
+        # Gestión de eliminación de Tipo
+        if form_type == 'delete_tipo':
+            del_tipo_id = request.POST.get('tipo_id')
+            try:
+                t = TipoUbicacion.objects.get(id=del_tipo_id)
+                if t.ubicaciones.exists():
+                    messages.warning(request, 'No se puede eliminar: el tipo tiene ubicaciones asociadas.')
+                else:
+                    t.delete()
+                    messages.success(request, 'Tipo de ubicación eliminado correctamente')
+            except ProtectedError:
+                messages.error(request, 'No se puede eliminar el tipo porque está protegido por relaciones.')
+            except Exception as e:
+                messages.error(request, f'Error al eliminar el tipo de ubicación: {str(e)}')
+            return redirect('dashboard_publicidad_ubicaciones')
+
+        # Gestión de Tipos de Ubicación
+        if form_type == 'tipo':
+            tipo_id_form = request.POST.get('tipo_id')
+            nombre_tipo = request.POST.get('tipo_nombre')
+            codigo_tipo = request.POST.get('tipo_codigo')
+            descripcion_tipo = request.POST.get('tipo_descripcion', '')
+            activo_tipo = 'tipo_activo' in request.POST
+
+            try:
+                if tipo_id_form:
+                    tipo = TipoUbicacion.objects.get(id=tipo_id_form)
+                    tipo.nombre = nombre_tipo
+                    # Mantener codigo inmutable al editar (como en admin)
+                    tipo.descripcion = descripcion_tipo
+                    tipo.activo = activo_tipo
+                    tipo.save()
+                    messages.success(request, 'Tipo de ubicación actualizado correctamente')
+                else:
+                    TipoUbicacion.objects.create(
+                        codigo=codigo_tipo,
+                        nombre=nombre_tipo,
+                        descripcion=descripcion_tipo,
+                        activo=activo_tipo
+                    )
+                    messages.success(request, 'Tipo de ubicación creado correctamente')
+                return redirect('dashboard_publicidad_ubicaciones')
+            except Exception as e:
+                messages.error(request, f'Error al guardar el tipo de ubicación: {str(e)}')
+
+        # Gestión de Ubicaciones
+        else:
+            # Handle form submission for creating/updating locations
+            ubicacion_id = request.POST.get('ubicacion_id')
+            nombre = request.POST.get('nombre')
+            tipo_id = request.POST.get('tipo')
+            descripcion = request.POST.get('descripcion', '')
+            dimensiones = request.POST.get('dimensiones')
+            precio_mensual = request.POST.get('precio_mensual')
+            activo = 'activo' in request.POST
+            orden = request.POST.get('orden', 0)
+            
+            try:
+                tipo = TipoUbicacion.objects.get(id=tipo_id)
+                
+                if ubicacion_id:  # Update existing
+                    ubicacion = UbicacionPublicidadWeb.objects.get(id=ubicacion_id)
+                    ubicacion.nombre = nombre
+                    ubicacion.tipo = tipo
+                    ubicacion.descripcion = descripcion
+                    ubicacion.dimensiones = dimensiones
+                    ubicacion.precio_mensual = precio_mensual
+                    ubicacion.activo = activo
+                    ubicacion.orden = orden
+                    ubicacion.save()
+                    messages.success(request, 'Ubicación actualizada correctamente')
+                else:  # Create new
+                    UbicacionPublicidadWeb.objects.create(
+                        nombre=nombre,
+                        tipo=tipo,
+                        descripcion=descripcion,
+                        dimensiones=dimensiones,
+                        precio_mensual=precio_mensual,
+                        activo=activo,
+                        orden=orden
+                    )
+                    messages.success(request, 'Ubicación creada correctamente')
+                return redirect('dashboard_publicidad_ubicaciones')
+                
+            except TipoUbicacion.DoesNotExist:
+                messages.error(request, 'El tipo de ubicación seleccionado no existe')
+            except Exception as e:
+                messages.error(request, f'Error al guardar la ubicación: {str(e)}')
+    
+    return render(request, 'dashboard/ubicaciones_publicidad.html', {
+        'ubicaciones': ubicaciones,
+        'tipos_ubicacion': tipos_ubicacion_select,
+        'tipos_ubicacion_all': tipos_ubicacion_all,
+    })
+
+def dashboard_login(request):
+    """Login específico para el dashboard"""
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect('dashboard_home')
+    
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        
+        user = authenticate(request, username=email, password=password)
+        if user and user.is_staff:
+            login(request, user)
+            return redirect('dashboard_home')
+        else:
+            return render(request, 'dashboard/login.html', {
+                'error': 'Credenciales inválidas o sin permisos de administrador'
+            })
+    
+    return render(request, 'dashboard/login.html')
+
+def dashboard_logout(request):
+    """Logout del dashboard"""
+    logout(request)
+    return redirect('dashboard_login')
+
+@login_required
+@user_passes_test(is_staff_user)
+def api_dashboard_stats(request):
+    """API endpoint para estadísticas del dashboard con filtros de tiempo"""
+    from django.db.models.functions import TruncDate
+
+    # Obtener el filtro de tiempo
+    time_filter = request.GET.get('filter', 'hoy')
+
+    # Calcular las fechas según el filtro
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    if time_filter == 'hoy':
+        start_date = today_start
+        prev_start = start_date - timedelta(days=1)
+        prev_end = start_date
+    elif time_filter == 'semana':
+        start_date = today_start - timedelta(days=7)
+        prev_start = start_date - timedelta(days=7)
+        prev_end = start_date
+    elif time_filter == 'mes':
+        start_date = today_start - timedelta(days=30)
+        prev_start = start_date - timedelta(days=30)
+        prev_end = start_date
+    else:  # todos
+        start_date = None
+        prev_start = None
+        prev_end = None
+
+    # Filtrar por fecha si es necesario
+    def filter_by_date(queryset, date_field='created_at'):
+        if start_date:
+            return queryset.filter(**{f'{date_field}__gte': start_date})
+        return queryset
+
+    # KPIs - Totales actuales
+    total_users = filter_by_date(User.objects.all(), 'fecha_creacion').count()
+    total_messages = filter_by_date(ChatMessage.objects.all(), 'fecha_envio').count()
+    total_articles = filter_by_date(Articulo.objects.all(), 'fecha_creacion').count()
+    total_subscriptions = filter_by_date(Suscripcion.objects.all(), 'fecha_suscripcion').count()
+    total_contacts = filter_by_date(Contacto.objects.all(), 'fecha_envio').count()
+    total_publicidad = Publicidad.objects.filter(activo=True).count()
+    total_bandas_emergentes = filter_by_date(BandaEmergente.objects.all(), 'fecha_envio').count()
+    total_reproducciones_unicas = filter_by_date(ReproduccionRadio.objects.all(), 'fecha_reproduccion').count()
+
+    # KPIs - Período anterior para comparación
+    users_change = 0
+    messages_change = 0
+    if prev_start and prev_end:
+        prev_users = User.objects.filter(fecha_creacion__gte=prev_start, fecha_creacion__lt=prev_end).count()
+        prev_messages = ChatMessage.objects.filter(fecha_envio__gte=prev_start, fecha_envio__lt=prev_end).count()
+
+        users_change = ((total_users - prev_users) / prev_users * 100) if prev_users > 0 else 0
+        messages_change = ((total_messages - prev_messages) / prev_messages * 100) if prev_messages > 0 else 0
+
+    # Gráfico 1: Usuarios por día
+    users_by_day = list(
+        filter_by_date(User.objects.all(), 'fecha_creacion')
+        .annotate(date=TruncDate('fecha_creacion'))
+        .values('date')
+        .annotate(count=Count('id'))
+        .order_by('date')
+        .values_list('date', 'count')
+    )
+
+    # Gráfico 2: Mensajes por día
+    messages_by_day = list(
+        filter_by_date(ChatMessage.objects.all(), 'fecha_envio')
+        .annotate(date=TruncDate('fecha_envio'))
+        .values('date')
+        .annotate(count=Count('id'))
+        .order_by('date')
+        .values_list('date', 'count')
+    )
+
+    # Gráfico 3: Artículos por categoría
+    articles_by_category = list(
+        filter_by_date(Articulo.objects.all(), 'fecha_creacion')
+        .values('categoria__nombre')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+        .values_list('categoria__nombre', 'count')
+    )
+
+    # Gráfico 4: Contactos por tipo
+    contacts_by_type = list(
+        filter_by_date(Contacto.objects.all(), 'fecha_envio')
+        .values('tipo_asunto__nombre')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+        .values_list('tipo_asunto__nombre', 'count')
+    )
+
+    # Gráfico 5: Suscripciones por día
+    subscriptions_by_day = list(
+        filter_by_date(Suscripcion.objects.all(), 'fecha_suscripcion')
+        .annotate(date=TruncDate('fecha_suscripcion'))
+        .values('date')
+        .annotate(count=Count('id'))
+        .order_by('date')
+        .values_list('date', 'count')
+    )
+
+    # Gráfico 6: Infracciones por tipo
+    infractions_by_type = list(
+        filter_by_date(InfraccionUsuario.objects.all(), 'fecha_infraccion')
+        .values('tipo_infraccion')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+        .values_list('tipo_infraccion', 'count')
+    )
+
+    # Gráfico 7: Top artículos más vistos (solo con vistas > 0)
+    top_articles = list(
+        filter_by_date(Articulo.objects.all(), 'fecha_creacion')
+        .filter(vistas__gt=0)
+        .order_by('-vistas')[:5]
+        .values_list('titulo', 'vistas')
+    )
+
+    # Gráfico 8: Estado de publicidad
+    publicidad_activa = Publicidad.objects.filter(activo=True).count()
+    publicidad_inactiva = Publicidad.objects.filter(activo=False).count()
+
+    # Respuesta en el formato esperado por el frontend
+    response_data = {
+        'kpis': {
+            'total_users': total_users,
+            'total_messages': total_messages,
+            'total_articles': total_articles,
+            'total_subscriptions': total_subscriptions,
+            'total_contacts': total_contacts,
+            'total_publicidad': total_publicidad,
+            'total_bandas_emergentes': total_bandas_emergentes,
+            'total_reproducciones_unicas': total_reproducciones_unicas,
+            'users_change': round(users_change, 1),
+            'messages_change': round(messages_change, 1),
+        },
+        'charts': {
+            'users_by_day': [{'date': str(date), 'count': count} for date, count in users_by_day],
+            'messages_by_day': [{'date': str(date), 'count': count} for date, count in messages_by_day],
+            'articles_by_category': [{'category': str(cat) if cat else 'Sin categoría', 'count': count} for cat, count in articles_by_category],
+            'contacts_by_type': [{'type': str(tipo) if tipo else 'Sin tipo', 'count': count} for tipo, count in contacts_by_type],
+            'subscriptions_by_day': [{'date': str(date), 'count': count} for date, count in subscriptions_by_day],
+            'infractions_by_type': [{'type': str(tipo) if tipo else 'Sin tipo', 'count': count} for tipo, count in infractions_by_type],
+            'top_articles': [{'title': str(title) if title else 'Sin título', 'views': views or 0} for title, views in top_articles],
+            'publicidad_status': {
+                'activa': publicidad_activa,
+                'inactiva': publicidad_inactiva
+            }
+        },
+        'filter': time_filter
+    }
+
+    return JsonResponse(response_data)
+
+def api_publicidad_ubicaciones(request):
+    """API JSON para el frontend: lista tipos activos y sus ubicaciones activas."""
+    from django.http import JsonResponse
+    from apps.publicidad.models import TipoUbicacion, UbicacionPublicidadWeb
+    
+    try:
+        include_all = request.GET.get('all') == '1'
+        
+        # Obtener tipos de ubicación
+        tipos_qs = TipoUbicacion.objects.all() if include_all else TipoUbicacion.objects.filter(activo=True)
+        tipos = list(
+            tipos_qs.order_by('nombre').values('id', 'nombre', 'codigo', 'descripcion', 'activo')
+        )
+        
+        # Obtener ubicaciones
+        ubic_qs = UbicacionPublicidadWeb.objects.select_related('tipo')
+        if not include_all:
+            ubic_qs = ubic_qs.filter(activo=True, tipo__activo=True)
+            
+        ubicaciones = list(
+            ubic_qs.order_by('orden', 'nombre').values(
+                'id', 'nombre', 'descripcion', 'dimensiones', 'precio_mensual',
+                'orden', 'activo', 'tipo_id', 'tipo__nombre', 'tipo__codigo', 'tipo__activo'
+            )
+        )
+        
+        # Devolver la respuesta JSON
+        return JsonResponse({
+            'success': True,
+            'tipos': tipos,
+            'ubicaciones': ubicaciones
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al obtener ubicaciones: {str(e)}'
+        }, status=500)
+
+def api_publicidad_activas(request):
+    """API pública para el frontend: lista campañas WEB activas con detalles de ubicación.
+    Filtros opcionales:
+      - q: texto a buscar en ubicacion.nombre (case-insensitive)
+      - dimensiones: ej "300x600"
+      - limit: máximo de resultados (por defecto 50)
+    """
+    from django.http import JsonResponse
+    from django.utils import timezone
+    from django.db.models import Q
+    from apps.publicidad.models import Publicidad, ItemSolicitudWeb
+    import re
+
+    try:
+        hoy = timezone.now().date()
+        q = (request.GET.get('q') or '').strip().lower()
+        dimensiones_filter = (request.GET.get('dimensiones') or '').strip().lower()
+        try:
+            limit = int(request.GET.get('limit') or 50)
+        except Exception:
+            limit = 50
+        limit = max(1, min(limit, 200))
+
+        # Cargar campañas WEB activas en rango de fechas y publicadas/aprobadas
+        # Considera:
+        #  - Solicitudes aprobadas o activas
+        #  - Campañas creadas manualmente (sin solicitud asociada)
+        pubs = (Publicidad.objects
+                .filter(
+                    tipo='WEB',
+                    activo=True,
+                    fecha_inicio__lte=hoy,
+                    fecha_fin__gte=hoy,
+                )
+                .filter(Q(solicitud_web__estado__in=['aprobada', 'activa']) | Q(solicitud_web__isnull=True))
+                .select_related('web_config')
+                .order_by('-fecha_creacion')
+                .distinct()[:500])
+
+        items = []
+        for pub in pubs:
+            wc = getattr(pub, 'web_config', None)
+            if not wc:
+                continue
+            # Obtener media url
+            media_val = getattr(wc, 'archivo_media', None)
+            media_url = None
+            if media_val:
+                media_url = getattr(media_val, 'url', None) or str(media_val)
+
+            # Intentar resolver ubicacion desde la descripción (Item #id)
+            ubic = None
+            item_from_desc = None
+            try:
+                desc = getattr(pub, 'descripcion', '') or ''
+                m = re.search(r'Item\s*#(\d+)', desc)
+                if m:
+                    item_id = int(m.group(1))
+                    item = ItemSolicitudWeb.objects.select_related('ubicacion__tipo').get(id=item_id)
+                    item_from_desc = item
+                    if item.ubicacion:
+                        # Normalizar dimensiones de la ubicación a formato 000x000
+                        dims_raw = getattr(item.ubicacion, 'dimensiones', None) or ''
+                        dims_norm = None
+                        try:
+                            m_dims = re.search(r"(\d+\s*[xX]\s*\d+)", str(dims_raw), re.I)
+                            if m_dims:
+                                dims_norm = m_dims.group(1).lower().replace(' ', '')
+                        except Exception:
+                            pass
+                        ubic = {
+                            'nombre': getattr(item.ubicacion, 'nombre', None),
+                            'dimensiones': dims_norm or (getattr(item.ubicacion, 'dimensiones', None) or ''),
+                            'tipo': getattr(getattr(item.ubicacion, 'tipo', None), 'nombre', None),
+                        }
+            except Exception:
+                pass
+
+            # Fallback desde formato
+            if not ubic:
+                formato = getattr(wc, 'formato', '') or ''
+                nombre = None
+                tipo = None
+                dims = None
+                if '—' in formato:
+                    partes = [p.strip() for p in formato.split('—', 1)]
+                    if partes:
+                        nombre = partes[0] or None
+                    if len(partes) > 1:
+                        right = partes[1]
+                        m2 = re.match(r'^([^\d]+)?\s*(\d+\s*x\s*\d+)', right, re.I)
+                        if m2:
+                            tipo = (m2.group(1) or '').strip() or None
+                            dims = (m2.group(2) or '').replace(' ', '')
+                        else:
+                            # Buscar dimensiones en cualquier parte
+                            m3 = re.search(r'(\d+\s*x\s*\d+)', formato, re.I)
+                            if m3:
+                                dims = m3.group(1).replace(' ', '')
+                else:
+                    # Solo dimensiones presentes
+                    m4 = re.search(r'(\d+\s*x\s*\d+)', formato, re.I)
+                    dims = m4.group(1).replace(' ', '') if m4 else None
+                ubic = {
+                    'nombre': nombre,
+                    'tipo': tipo,
+                    'dimensiones': dims,
+                }
+
+            # Si aún no hay ubicación, intentar desde la solicitud asociada
+            if not ubic:
+                try:
+                    sol_rel = getattr(pub, 'solicitud_web', None)
+                    if sol_rel:
+                        item_sol = (ItemSolicitudWeb.objects
+                                    .select_related('ubicacion__tipo')
+                                    .filter(solicitud_id=getattr(sol_rel, 'id', None))
+                                    .order_by('id')
+                                    .first())
+                        if item_sol and item_sol.ubicacion:
+                            dims_raw2 = getattr(item_sol.ubicacion, 'dimensiones', None) or ''
+                            dims_norm2 = None
+                            try:
+                                m_dims2 = re.search(r"(\d+\s*[xX]\s*\d+)", str(dims_raw2), re.I)
+                                if m_dims2:
+                                    dims_norm2 = m_dims2.group(1).lower().replace(' ', '')
+                            except Exception:
+                                pass
+                            ubic = {
+                                'nombre': getattr(item_sol.ubicacion, 'nombre', None),
+                                'dimensiones': dims_norm2 or (getattr(item_sol.ubicacion, 'dimensiones', None) or ''),
+                                'tipo': getattr(getattr(item_sol.ubicacion, 'tipo', None), 'nombre', None),
+                            }
+                            # Media fallback desde imagen del item si sigue faltando
+                            if not media_url:
+                                try:
+                                    img2 = item_sol.imagenes_web.order_by('orden', 'fecha_subida').first()
+                                    if img2 and getattr(img2, 'imagen', None):
+                                        media_url = getattr(img2.imagen, 'url', None) or str(img2.imagen)
+                                except Exception:
+                                    pass
+                except Exception:
+                    pass
+
+            # Fallback de media desde la primera imagen del item asociado
+            if not media_url and item_from_desc is not None:
+                try:
+                    img = item_from_desc.imagenes_web.order_by('orden', 'fecha_subida').first()
+                    if img and getattr(img, 'imagen', None):
+                        media_url = getattr(img.imagen, 'url', None) or str(img.imagen)
+                except Exception:
+                    pass
+
+            if not media_url:
+                continue
+
+            # Asegurar URL absoluta para el frontend
+            try:
+                if isinstance(media_url, str) and media_url.startswith('/'):
+                    media_url = request.build_absolute_uri(media_url)
+            except Exception:
+                pass
+
+            # Aplicar filtros
+            if q:
+                nombre_l = (ubic.get('nombre') or '').lower()
+                tipo_l = (ubic.get('tipo') or '').lower()
+                if (q not in nombre_l) and (q not in tipo_l):
+                    continue
+            if dimensiones_filter and (ubic.get('dimensiones') or '').lower() != dimensiones_filter:
+                continue
+
+            # Forzar uso de proxy anti-adblock (ruta neutral)
+            try:
+                from django.urls import reverse
+                try:
+                    proxy_path = reverse('api_adimg_media', args=[pub.id])
+                except Exception:
+                    proxy_path = reverse('api_publicidad_media', args=[pub.id])  # compat
+                media_url_proxy = request.build_absolute_uri(proxy_path)
+            except Exception:
+                media_url_proxy = media_url
+
+            items.append({
+                'id': pub.id,
+                'media_url': media_url_proxy,
+                'url_destino': getattr(wc, 'url_destino', None),
+                'formato': getattr(wc, 'formato', None),
+                'fecha_inicio': pub.fecha_inicio.isoformat() if pub.fecha_inicio else None,
+                'fecha_fin': pub.fecha_fin.isoformat() if pub.fecha_fin else None,
+                'ubicacion': ubic,
+            })
+            if len(items) >= limit:
+                break
+
+        return JsonResponse({'success': True, 'items': items})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'message': f'Error al obtener campañas: {str(e)}'}, status=500)
+
 from django.utils import timezone as dj_tz
 from django.http import FileResponse, HttpResponseNotFound
 import mimetypes
@@ -961,14 +1676,20 @@ def api_publicidad_media(request, campania_id: int):
     """Proxy neutral para servir imágenes de campañas evitando bloqueadores.
     Resuelve la misma lógica de media que api_publicidad_activas.
     """
-    from apps.publicidad.models import Publicidad, ItemSolicitudWeb
-    hoy = dj_tz.now().date()
+    from apps.publicidad.models import Publicidad, ItemSolicitudWeb, ImagenPublicidadWeb
+    from django.conf import settings as _settings
+    from django.http import HttpResponseRedirect
+    from urllib.parse import urlparse
+    import re as _re
+    
     try:
+        hoy = dj_tz.now().date()
         pub = (Publicidad.objects
                .filter(id=campania_id, tipo='WEB', activo=True,
-                       fecha_inicio__lte=hoy, fecha_fin__gte=hoy)
+                      fecha_inicio__lte=hoy, fecha_fin__gte=hoy)
                .select_related('web_config')
                .first())
+        
         if not pub:
             return HttpResponseNotFound()
 
@@ -991,7 +1712,6 @@ def api_publicidad_media(request, campania_id: int):
         if not media_url:
             try:
                 # Intento 1: Item #id en la descripción
-                import re as _re
                 desc = getattr(pub, 'descripcion', '') or ''
                 m = _re.search(r'Item\s*#(\d+)', desc)
                 item = None
@@ -1015,41 +1735,41 @@ def api_publicidad_media(request, campania_id: int):
             return HttpResponseNotFound()
 
         # Resolver a path local si apunta al MEDIA_URL
-        try:
-            from django.conf import settings as _settings
-            if isinstance(media_url, str) and media_url.startswith('/'):  # relativo a raíz
-                # intentar construir path absoluto
-                # Si comienza con MEDIA_URL, mapear a MEDIA_ROOT
-                media_url_nohost = media_url
-            elif isinstance(media_url, str) and media_url.startswith(getattr(_settings, 'MEDIA_URL', '/media/')):
-                media_url_nohost = media_url
-            else:
-                # Podría ser absoluta completa http(s), devolver redirect temporal
-                from django.http import HttpResponseRedirect
-                return HttpResponseRedirect(media_url)
+        if isinstance(media_url, str) and media_url.startswith('/'):  # relativo a raíz
+            # intentar construir path absoluto
+            # Si comienza con MEDIA_URL, mapear a MEDIA_ROOT
+            media_url_nohost = media_url
+        elif isinstance(media_url, str) and media_url.startswith(getattr(_settings, 'MEDIA_URL', '/media/')):
+            media_url_nohost = media_url
+        else:
+            # Podría ser absoluta completa http(s), devolver redirect temporal
+            return HttpResponseRedirect(media_url)
 
-            # Normalizar MEDIA_URL
-            media_prefix = getattr(_settings, 'MEDIA_URL', '/media/')
-            if media_url_nohost.startswith('http'):
-                # recortar host si corresponde
-                from urllib.parse import urlparse
-                parsed = urlparse(media_url_nohost)
-                media_url_nohost = parsed.path
-            if not media_prefix.endswith('/'):
-                media_prefix = media_prefix + '/'
-            rel_path = media_url_nohost[len(media_prefix):] if media_url_nohost.startswith(media_prefix) else media_url_nohost.lstrip('/')
-            abs_path = _os.path.join(getattr(_settings, 'MEDIA_ROOT', ''), rel_path)
-            if not _os.path.isfile(abs_path):
-                return HttpResponseNotFound()
-
-            ctype, _ = mimetypes.guess_type(abs_path)
-            resp = FileResponse(open(abs_path, 'rb'), content_type=ctype or 'application/octet-stream')
-            resp['Cache-Control'] = 'public, max-age=86400'
-            return resp
-        except Exception:
+        # Normalizar MEDIA_URL
+        media_prefix = getattr(_settings, 'MEDIA_URL', '/media/')
+        if media_url_nohost.startswith('http'):
+            # recortar host si corresponde
+            parsed = urlparse(media_url_nohost)
+            media_url_nohost = parsed.path
+            
+        if not media_prefix.endswith('/'):
+            media_prefix = media_prefix + '/'
+            
+        rel_path = media_url_nohost[len(media_prefix):] if media_url_nohost.startswith(media_prefix) else media_url_nohost.lstrip('/')
+        abs_path = _os.path.join(getattr(_settings, 'MEDIA_ROOT', ''), rel_path)
+        if not _os.path.isfile(abs_path):
             return HttpResponseNotFound()
-    except Exception:
+
+        ctype, _ = mimetypes.guess_type(abs_path)
+        resp = FileResponse(open(abs_path, 'rb'), content_type=ctype or 'application/octet-stream')
+        resp['Cache-Control'] = 'public, max-age=86400'
+        return resp
+        
+    except Exception as e:
+        import traceback
+        print(f"Error en api_publicidad_media: {str(e)}\n{traceback.format_exc()}")
         return HttpResponseNotFound()
+
 @login_required
 @user_passes_test(is_staff_user)
 @require_http_methods(["POST"])
@@ -1583,8 +2303,6 @@ def api_item_imagenes(request, item_id: int):
     except ItemSolicitudWeb.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Item no encontrado'}, status=404)
 
-from django.views.decorators.csrf import csrf_exempt
-
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_item_subir_imagen(request, item_id: int):
@@ -1808,47 +2526,63 @@ def delete_user(request, user_id):
 def create_articulo(request):
     """Crear nuevo artículo con soporte multimedia"""
     if request.method == 'POST':
-        titulo = request.POST.get('titulo')
-        contenido = request.POST.get('contenido')
-        resumen = request.POST.get('resumen')
-        categoria = request.POST.get('categoria')
-        publicado = request.POST.get('publicado') == 'on'
-        imagen_url = request.POST.get('imagen_url')
-        video_url = request.POST.get('video_url')
-        
-        # Obtener archivos subidos
-        imagen_portada = request.FILES.get('imagen_portada')
-        imagen_thumbnail = request.FILES.get('imagen_thumbnail')
-        archivo_adjunto = request.FILES.get('archivo_adjunto')
-        
         try:
-            # Obtener la categoría por ID
-            if categoria:
-                categoria_obj = Categoria.objects.get(id=categoria)
-            else:
-                # Crear categoría por defecto si no existe
-                categoria_obj, _ = Categoria.objects.get_or_create(
-                    nombre='General',
-                    defaults={'descripcion': 'Categoría general'}
-                )
+            # Obtener datos del formulario
+            titulo = request.POST.get('titulo')
+            contenido = request.POST.get('contenido')
+            categoria_id = request.POST.get('categoria')
+            resumen = request.POST.get('resumen', '')
+            publicado = request.POST.get('publicado') == 'on'
             
-            articulo = Articulo.objects.create(
+            # Obtener archivos
+            imagen_portada = request.FILES.get('imagen_portada')
+            imagen_thumbnail = request.FILES.get('imagen_thumbnail')
+            archivo_adjunto = request.FILES.get('archivo_adjunto')
+            
+            # Obtener URLs
+            imagen_url = request.POST.get('imagen_url', '')
+            video_url = request.POST.get('video_url', '')
+            
+            # Validaciones básicas
+            if not titulo or not contenido or not categoria_id:
+                messages.error(request, 'Por favor complete todos los campos requeridos')
+                return redirect('dashboard_articulos')
+                
+            # Crear el artículo
+            articulo = Articulo(
                 titulo=titulo,
                 contenido=contenido,
+                categoria_id=categoria_id,
                 resumen=resumen,
-                categoria=categoria_obj,
                 publicado=publicado,
-                imagen_url=imagen_url,
-                video_url=video_url,
-                imagen_portada=imagen_portada,
-                imagen_thumbnail=imagen_thumbnail,
-                archivo_adjunto=archivo_adjunto,
-                autor=request.user
+                autor=request.user,
+                imagen_url=imagen_url if imagen_url else None,
+                video_url=video_url if video_url else None
             )
-            messages.success(request, f'Artículo "{titulo}" creado exitosamente')
+            
+            # Guardar el artículo para obtener un ID
+            articulo.save()
+            
+            # Manejar archivos
+            if imagen_portada:
+                articulo.imagen_portada = imagen_portada
+            if imagen_thumbnail:
+                articulo.imagen_thumbnail = imagen_thumbnail
+            if archivo_adjunto:
+                articulo.archivo_adjunto = archivo_adjunto
+                
+            # Guardar nuevamente con los archivos
+            articulo.save()
+            
+            # La notificación se maneja mediante la señal post_save en el modelo Notificacion
+            messages.success(request, 'Artículo creado exitosamente')
+            return redirect('dashboard_articulos')
+            
         except Exception as e:
-            messages.error(request, f'Error al crear artículo: {str(e)}')
+            messages.error(request, f'Error al crear el artículo: {str(e)}')
+            return redirect('dashboard_articulos')
     
+    # Si no es POST, redirigir a la lista de artículos
     return redirect('dashboard_articulos')
 
 @login_required
