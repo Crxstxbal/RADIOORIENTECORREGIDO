@@ -2,6 +2,7 @@
 {% block page_title %} Dashboard Principal
 {%endblock %}
 
+{% block content %}
 <style>
     /* Variables CSS para tema claro y oscuro */
     :root {
@@ -19,7 +20,8 @@
         --home-gradient-posts: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         --home-gradient-programs: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         --home-gradient-subs: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        --home-welcome-bg: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --home-welcome-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --home-welcome-text: #ffffff;
     }
 
     html.dark {
@@ -37,21 +39,23 @@
         --home-gradient-posts: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         --home-gradient-programs: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         --home-gradient-subs: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        --home-welcome-bg: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --home-welcome-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --home-welcome-text: #ffffff;
     }
 
     #home-page {
         color: var(--home-text-primary);
     }
 
-    /* Welcome Section */
-    #home-page .welcome-card {
+    /* Welcome Section - Forzar estilos sobre base.html */
+    #home-page .welcome-card,
+    div#home-page .card.welcome-card {
         background: var(--home-welcome-bg) !important;
+        background-color: transparent !important;
         border: none !important;
         border-radius: 16px !important;
         box-shadow: 0 4px 15px var(--home-shadow) !important;
         margin-bottom: 2rem !important;
-        color: white !important;
         overflow: hidden !important;
         position: relative !important;
     }
@@ -63,7 +67,7 @@
         right: -10%;
         width: 300px;
         height: 300px;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.15);
         border-radius: 50%;
     }
 
@@ -73,16 +77,29 @@
         z-index: 1;
     }
 
-    #home-page .welcome-card h2 {
+    #home-page .welcome-card h2,
+    div#home-page .card.welcome-card .card-body h2 {
         font-size: 2rem !important;
         font-weight: 700 !important;
         margin-bottom: 0.5rem !important;
+        color: #ffffff !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+        opacity: 1 !important;
+        padding: 0 !important;
     }
 
-    #home-page .welcome-card p {
+    #home-page .welcome-card p,
+    div#home-page .card.welcome-card .card-body p {
         font-size: 1.1rem !important;
-        opacity: 0.95 !important;
         margin-bottom: 1.5rem !important;
+        color: #ffffff !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
+        opacity: 1 !important;
+        padding: 0 !important;
     }
 
     #home-page .welcome-card .quick-actions {
@@ -92,20 +109,27 @@
     }
 
     #home-page .welcome-card .quick-action-btn {
-        background: rgba(255, 255, 255, 0.2) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        background: rgba(255, 255, 255, 0.25) !important;
+        border: 2px solid rgba(255, 255, 255, 0.5) !important;
         color: white !important;
         padding: 0.6rem 1.2rem !important;
         border-radius: 8px !important;
-        font-weight: 500 !important;
+        font-weight: 600 !important;
         transition: all 0.3s ease !important;
         backdrop-filter: blur(10px) !important;
+        text-decoration: none !important;
     }
 
     #home-page .welcome-card .quick-action-btn:hover {
-        background: rgba(255, 255, 255, 0.3) !important;
+        background: rgba(255, 255, 255, 0.4) !important;
+        border-color: rgba(255, 255, 255, 0.7) !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        color: white !important;
+    }
+
+    #home-page .welcome-card .quick-action-btn i {
+        color: white !important;
     }
 
     /* Stat Cards con diseño moderno y visual */
@@ -511,7 +535,6 @@
     }
 </style>
 
-{% block content %}
 <div id="home-page">
     <!-- Welcome Section -->
     <div class="row mb-4">
@@ -752,16 +775,21 @@
           </div>
         </div>
       </div>
-      <div class="card-body" style="min-height: 350px;">
+      <div class="card-body" style="height: 400px; padding: 1.5rem;">
         <canvas id="activityChart"></canvas>
       </div>
     </div>
   </div>
 </div>
 </div>
-{% endblock %} {% block scripts %}
+{% endblock %}
 
+{% block extra_js %}
 <script>
+// Esperar a que todo esté cargado
+window.addEventListener('load', function() {
+  console.log('Iniciando carga del gráfico...');
+
   // Función para detectar modo oscuro
   function getChartColors() {
     const isDark = document.documentElement.classList.contains('dark');
@@ -772,8 +800,21 @@
     };
   }
 
+  // Verificar que Chart.js esté disponible
+  if (typeof Chart === 'undefined') {
+    console.error('Chart.js no está cargado');
+    return;
+  }
+
   // Gráfico de actividad
-  const ctx = document.getElementById("activityChart").getContext("2d");
+  const canvas = document.getElementById("activityChart");
+  if (!canvas) {
+    console.error("No se encontró el canvas activityChart");
+    return;
+  }
+
+  console.log('Canvas encontrado, creando gráfico...');
+  const ctx = canvas.getContext("2d");
   const colors = getChartColors();
 
   const activityChart = new Chart(ctx, {
@@ -789,8 +830,8 @@
           tension: 0.4,
           fill: true,
           borderWidth: 3,
-          pointRadius: 5,
-          pointHoverRadius: 7,
+          pointRadius: 6,
+          pointHoverRadius: 8,
           pointBackgroundColor: "#667eea",
           pointBorderColor: "#fff",
           pointBorderWidth: 2,
@@ -803,8 +844,8 @@
           tension: 0.4,
           fill: true,
           borderWidth: 3,
-          pointRadius: 5,
-          pointHoverRadius: 7,
+          pointRadius: 6,
+          pointHoverRadius: 8,
           pointBackgroundColor: "#f5576c",
           pointBorderColor: "#fff",
           pointBorderWidth: 2,
@@ -817,8 +858,8 @@
           tension: 0.4,
           fill: true,
           borderWidth: 3,
-          pointRadius: 5,
-          pointHoverRadius: 7,
+          pointRadius: 6,
+          pointHoverRadius: 8,
           pointBackgroundColor: "#43e97b",
           pointBorderColor: "#fff",
           pointBorderWidth: 2,
@@ -883,6 +924,8 @@
     },
   });
 
+  console.log('Gráfico creado exitosamente:', activityChart);
+
   // Actualizar estadísticas cada 30 segundos
   setInterval(function () {
     fetch('{% url "api_dashboard_stats" %}')
@@ -892,5 +935,6 @@
         console.log("Stats updated:", data);
       });
   }, 30000);
+});
 </script>
 {% endblock %}
