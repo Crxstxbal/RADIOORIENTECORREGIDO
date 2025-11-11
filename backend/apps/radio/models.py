@@ -61,14 +61,33 @@ class Programa(models.Model):
     descripcion = models.TextField(blank=True, null=True)
     imagen_url = models.URLField(max_length=500, blank=True, null=True)
     activo = models.BooleanField(default=True)
-    
+
     class Meta:
         db_table = 'programa'
         verbose_name = 'Programa'
         verbose_name_plural = 'Programas'
-    
+
     def __str__(self):
         return self.nombre
+
+    def get_dias_display(self):
+        """Retorna los días de la semana en formato legible"""
+        dias_map = {
+            0: 'Dom', 1: 'Lun', 2: 'Mar', 3: 'Mié',
+            4: 'Jue', 5: 'Vie', 6: 'Sáb'
+        }
+        horarios = self.horarios.filter(activo=True).order_by('dia_semana')
+        if not horarios:
+            return "Sin horario"
+        dias = [dias_map[h.dia_semana] for h in horarios]
+        return ", ".join(dias)
+
+    def get_horario_display(self):
+        """Retorna el horario en formato legible"""
+        horarios = self.horarios.filter(activo=True).first()
+        if not horarios:
+            return "Sin horario"
+        return f"{horarios.hora_inicio.strftime('%H:%M')} - {horarios.hora_fin.strftime('%H:%M')}"
 
 class ProgramaConductor(models.Model):
     """Relación muchos a muchos entre programas y conductores"""

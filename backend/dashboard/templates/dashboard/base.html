@@ -266,47 +266,149 @@
             background-color: rgba(220, 38, 38, 0.05);
         }
 
-        /* Theme toggle button */
-        .theme-toggle-btn {
+        /* Navbar premium styles */
+        .navbar {
+            border: 1px solid var(--border-color) !important;
+            backdrop-filter: blur(20px) !important;
+        }
+
+        /* Notification Button - Modern Design */
+        .notification-btn-new {
+            position: relative;
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .notification-btn-new:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Theme Toggle Button - Premium Design */
+        .theme-toggle-btn-new {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            background: rgba(220, 38, 38, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1.5px solid rgba(220, 38, 38, 0.3);
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
             color: var(--text-primary);
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
+            padding: 0.625rem 1.125rem;
+            border-radius: 10px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 500;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
             font-size: 0.875rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .theme-toggle-btn:hover {
-            background: rgba(220, 38, 38, 0.15);
-            border-color: rgba(220, 38, 38, 0.4);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            white-space: nowrap;
         }
 
-        /* Notifications dropdown */
-        .notification-btn {
-            position: relative;
-            background: transparent;
-            border: none;
-            color: var(--text-primary);
-            font-size: 1.25rem;
-            padding: 0.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .notification-btn:hover {
-            transform: scale(1.1);
+        .theme-toggle-btn-new:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
             color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-toggle-btn-new i {
+            transition: transform 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .theme-toggle-btn-new:hover i {
+            transform: rotate(20deg);
+        }
+
+        /* User Dropdown Button - Professional Design */
+        .user-dropdown-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.625rem 1.125rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 0.875rem;
+            height: 42px;
+        }
+
+        .user-dropdown-btn:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #be4141 0%, #ef4444 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+        }
+
+        .user-name {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .user-chevron {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            transition: transform 0.2s ease;
+        }
+
+        .user-dropdown-btn[aria-expanded="true"] .user-chevron {
+            transform: rotate(180deg);
+        }
+
+        /* User Dropdown Menu */
+        .user-dropdown-menu {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            padding: 0.5rem;
+            min-width: 200px;
+            margin-top: 0.5rem;
+        }
+
+        .user-dropdown-menu .dropdown-item {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .user-dropdown-menu .dropdown-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--primary-color);
+        }
+
+        .user-dropdown-menu .dropdown-item i {
+            opacity: 0.7;
         }
 
         .notification-badge {
@@ -707,19 +809,46 @@
                 font-size: 0.9rem;
             }
             
-            .theme-toggle-btn {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.8rem;
+            /* Navbar responsive */
+            .notification-btn-new {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
             }
-            
+
+            .theme-toggle-btn-new {
+                padding: 0.5rem 0.875rem;
+                font-size: 0.8125rem;
+            }
+
+            .theme-toggle-text {
+                display: inline;
+            }
+
+            .user-dropdown-btn {
+                padding: 0.4rem 0.675rem;
+                font-size: 0.8125rem;
+                min-height: 28px;
+            }
+
+            .user-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 0.8125rem;
+            }
+
+            .user-name {
+                max-width: 120px;
+            }
+
             .stat-card .card-body {
                 padding: 1rem;
             }
-            
+
             .stat-card .h5 {
                 font-size: 1.25rem;
             }
-            
+
             .stat-card .text-xs {
                 font-size: 0.75rem;
             }
@@ -750,13 +879,43 @@
                 padding: 0.4rem 0.8rem;
                 font-size: 0.85rem;
             }
-            
-            .theme-toggle-btn {
-                padding: 0.35rem 0.7rem;
+
+            /* Navbar very small screens */
+            .notification-btn-new {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9375rem;
+                border-width: 1.5px;
+            }
+
+            .theme-toggle-btn-new {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.75rem;
+                border-width: 1.5px;
+            }
+
+            .theme-toggle-text {
+                display: none;
+            }
+
+            .user-dropdown-btn {
+                padding: 0.375rem 0.55rem;
+                font-size: 0.75rem;
+                min-height: 26px;
+                border-width: 1.5px;
+            }
+
+            .user-avatar {
+                width: 26px;
+                height: 26px;
                 font-size: 0.75rem;
             }
-            
-            .theme-toggle-text {
+
+            .user-name {
+                max-width: 80px;
+            }
+
+            .user-chevron {
                 display: none;
             }
             
@@ -892,18 +1051,18 @@
     <!-- Main Content -->
     <div class="main-content">
         <!-- Top Navigation -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4 rounded shadow-sm">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4 rounded shadow-sm" style="padding: 1rem 1.5rem;">
             <div class="container-fluid">
                 <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarCollapse">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                
-                <span class="navbar-brand mb-0 h1">{% block page_title %}Dashboard{% endblock %}</span>
-                
-                <div class="navbar-nav ms-auto d-flex align-items-center gap-3">
+
+                <span class="navbar-brand mb-0 h1" style="font-weight: 700; font-size: 1.25rem;">{% block page_title %}Dashboard{% endblock %}</span>
+
+                <div class="d-flex align-items-center gap-2 ms-auto">
                     <!-- Notifications -->
                     <div class="position-relative">
-                        <button class="notification-btn" id="notificationBtn" onclick="toggleNotifications()">
+                        <button class="notification-btn-new" id="notificationBtn" onclick="toggleNotifications()">
                             <i class="fas fa-bell"></i>
                             <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
                         </button>
@@ -928,18 +1087,24 @@
                     </div>
 
                     <!-- Theme Toggle Button -->
-                    <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggle">
+                    <button class="theme-toggle-btn-new" onclick="toggleTheme()" id="themeToggle">
                         <i class="fas fa-moon" id="themeIcon"></i>
-                        <span id="themeText">Oscuro</span>
+                        <span class="theme-toggle-text" id="themeText">Oscuro</span>
                     </button>
 
-                    <div class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle me-1"></i>
-                            {{ user.nombre|default:user.username }}
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'dashboard_logout' %}">Cerrar Sesión</a></li>
+                    <!-- User Dropdown -->
+                    <div class="dropdown">
+                        <button class="user-dropdown-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span class="user-name">{{ user.nombre|default:user.username }}</span>
+                            <i class="fas fa-chevron-down user-chevron"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end user-dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'dashboard_logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                            </a></li>
                         </ul>
                     </div>
                 </div>

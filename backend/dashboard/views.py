@@ -247,23 +247,32 @@ def eliminar_categoria(request, categoria_id):
 @login_required
 @user_passes_test(is_staff_user)
 def dashboard_radio(request):
-    """Gestión de radio y programas"""
-    programs = Programa.objects.all().order_by('nombre')
+    """Gestión de radio y programas con paginación"""
+    # Paginación para programas
+    programs_list = Programa.objects.all().order_by('nombre')
+    programs_paginator = Paginator(programs_list, 10)  # 10 programas por página
+    programs_page_number = request.GET.get('programs_page', 1)
+    programs = programs_paginator.get_page(programs_page_number)
+
     try:
         station = EstacionRadio.objects.first()
     except EstacionRadio.DoesNotExist:
         station = None
-    
+
     # Obtener los 3 artículos más recientes
     articulos_recientes = Articulo.objects.filter(
         publicado=True
     ).select_related('categoria', 'autor').order_by('-fecha_publicacion')[:3]
-    
+
     # Obtener el total de artículos
     total_articulos = Articulo.objects.count()
 
-    conductores = Conductor.objects.all().order_by('nombre')
-    
+    # Paginación para conductores
+    conductores_list = Conductor.objects.all().order_by('nombre')
+    conductores_paginator = Paginator(conductores_list, 10)  # 10 conductores por página
+    conductores_page_number = request.GET.get('conductores_page', 1)
+    conductores = conductores_paginator.get_page(conductores_page_number)
+
     context = {
         'programs': programs,
         'station': station,
@@ -977,36 +986,6 @@ def api_publicidad_activas(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({'success': False, 'message': f'Error al obtener campañas: {str(e)}'}, status=500)
-
-@login_required
-@user_passes_test(is_staff_user)
-def dashboard_radio(request):
-    """Gestión de radio y programas"""
-    programs = Programa.objects.all().order_by('nombre')
-    try:
-        station = EstacionRadio.objects.first()
-    except EstacionRadio.DoesNotExist:
-        station = None
-    
-    # Obtener los 3 artículos más recientes
-    articulos_recientes = Articulo.objects.filter(
-        publicado=True
-    ).select_related('categoria', 'autor').order_by('-fecha_publicacion')[:3]
-    
-    # Obtener el total de artículos
-    total_articulos = Articulo.objects.count()
-
-    conductores = Conductor.objects.all().order_by('nombre')
-    
-    context = {
-        'programs': programs,
-        'station': station,
-        'articulos_recientes': articulos_recientes,
-        'total_articulos': total_articulos,
-        'total_articulos_count': total_articulos,
-        'conductores': conductores
-    }
-    return render(request, 'dashboard/radio.html', context)
 
 @login_required
 @user_passes_test(is_staff_user)

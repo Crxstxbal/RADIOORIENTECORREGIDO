@@ -3,6 +3,659 @@
 {% block page_title %}Gestión de Radio{% endblock %}
 
 {% block content %}
+<style>
+    /* Variables CSS para Radio page - Tema Elegante y Profesional */
+    :root {
+        --radio-bg: #f5f7fa;
+        --radio-card-bg: #ffffff;
+        --radio-card-hover: #fafbfc;
+        --radio-border: #e1e4e8;
+        --radio-shadow: rgba(31, 35, 40, 0.08);
+        --radio-shadow-hover: rgba(31, 35, 40, 0.16);
+        --radio-shadow-strong: rgba(31, 35, 40, 0.24);
+        --radio-text-primary: #24292e;
+        --radio-text-secondary: #586069;
+        --radio-text-muted: #959da5;
+        --radio-gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        --radio-gradient-danger: linear-gradient(135deg, #ec4899 0%, #ef4444 100%);
+        --radio-gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --radio-gradient-info: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+        --radio-gradient-warning: linear-gradient(135deg, #f59e0b 0%, #eab308 100%);
+        --radio-accent: #6366f1;
+        --radio-accent-hover: #4f46e5;
+    }
+
+    html.dark {
+        --radio-bg: #0d1117;
+        --radio-card-bg: #161b22;
+        --radio-card-hover: #1c2128;
+        --radio-border: #30363d;
+        --radio-shadow: rgba(1, 4, 9, 0.4);
+        --radio-shadow-hover: rgba(1, 4, 9, 0.6);
+        --radio-shadow-strong: rgba(1, 4, 9, 0.8);
+        --radio-text-primary: #c9d1d9;
+        --radio-text-secondary: #8b949e;
+        --radio-text-muted: #6e7681;
+        --radio-accent: #7c3aed;
+        --radio-accent-hover: #6d28d9;
+    }
+
+    /* Layout y contenedor principal */
+    #radio-page {
+        background: transparent !important;
+    }
+
+    /* Header de página mejorado */
+    #radio-page > .d-flex:first-child {
+        padding: 1.5rem 0 !important;
+        border-bottom: 2px solid var(--radio-border) !important;
+        margin-bottom: 2rem !important;
+    }
+
+    #radio-page > .d-flex h2 {
+        font-size: 1.75rem !important;
+        font-weight: 700 !important;
+        color: var(--radio-text-primary) !important;
+        letter-spacing: -0.5px !important;
+    }
+
+    /* Tarjetas con diseño premium */
+    #radio-page .card {
+        background: var(--radio-card-bg) !important;
+        border: 1px solid var(--radio-border) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 1px 3px var(--radio-shadow), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        color: var(--radio-text-primary) !important;
+        overflow: hidden !important;
+    }
+
+    #radio-page .card:hover {
+        box-shadow: 0 4px 12px var(--radio-shadow-hover), 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+        transform: translateY(-2px) !important;
+        border-color: var(--radio-accent) !important;
+    }
+
+    #radio-page .card-header {
+        background: linear-gradient(to bottom, var(--radio-card-bg), transparent) !important;
+        border-bottom: 1px solid var(--radio-border) !important;
+        padding: 1.5rem 2rem !important;
+        backdrop-filter: blur(10px) !important;
+    }
+
+    #radio-page .card-header h5 {
+        color: var(--radio-text-primary) !important;
+        font-weight: 700 !important;
+        font-size: 1.125rem !important;
+        margin: 0 !important;
+        letter-spacing: -0.25px !important;
+    }
+
+    #radio-page .card-title {
+        color: var(--radio-text-primary) !important;
+        font-weight: 700 !important;
+        font-size: 1.125rem !important;
+        margin: 0 !important;
+        letter-spacing: -0.25px !important;
+    }
+
+    #radio-page .card-body {
+        padding: 2rem !important;
+        color: var(--radio-text-primary) !important;
+    }
+
+    #radio-page .card-footer {
+        background: linear-gradient(to top, var(--radio-card-bg), transparent) !important;
+        border-top: 1px solid var(--radio-border) !important;
+        padding: 1.25rem 2rem !important;
+    }
+
+    /* Tablas con diseño profesional */
+    #radio-page .table {
+        color: var(--radio-text-primary) !important;
+        margin-bottom: 0 !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+
+    #radio-page .table thead {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+    }
+
+    #radio-page .table thead th {
+        background: var(--radio-card-bg) !important;
+        color: var(--radio-text-secondary) !important;
+        font-weight: 700 !important;
+        font-size: 0.75rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        border-bottom: 2px solid var(--radio-border) !important;
+        padding: 1.25rem 1.5rem !important;
+        white-space: nowrap !important;
+    }
+
+    #radio-page .table tbody td {
+        padding: 1.25rem 1.5rem !important;
+        vertical-align: middle !important;
+        border-bottom: 1px solid var(--radio-border) !important;
+        color: var(--radio-text-primary) !important;
+        font-size: 0.9375rem !important;
+    }
+
+    #radio-page .table tbody td strong {
+        font-weight: 600 !important;
+        color: var(--radio-text-primary) !important;
+    }
+
+    #radio-page .table tbody tr {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    #radio-page .table tbody tr:hover {
+        background: var(--radio-card-hover) !important;
+        transform: scale(1.002) !important;
+    }
+
+    #radio-page .table tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    /* Table responsive wrapper */
+    #radio-page .table-responsive {
+        border-radius: 0 !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* Badges con diseño moderno */
+    #radio-page .badge {
+        padding: 0.5rem 1rem !important;
+        border-radius: 9999px !important;
+        font-weight: 600 !important;
+        font-size: 0.75rem !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.375rem !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    #radio-page .badge i {
+        font-size: 0.625rem !important;
+    }
+
+    /* Botones con diseño premium */
+    #radio-page .btn {
+        border-radius: 10px !important;
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 600 !important;
+        font-size: 0.9375rem !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: none !important;
+        letter-spacing: 0.25px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    #radio-page .btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    #radio-page .btn:active {
+        transform: translateY(0) !important;
+    }
+
+    #radio-page .btn i {
+        font-size: 0.875rem !important;
+    }
+
+    /* Paginación con diseño elegante */
+    #radio-page .pagination {
+        margin: 0 !important;
+        gap: 0.375rem !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
+
+    #radio-page .page-item {
+        margin: 0 !important;
+    }
+
+    #radio-page .page-link {
+        color: var(--radio-text-primary) !important;
+        background-color: var(--radio-card-bg) !important;
+        border: 1px solid var(--radio-border) !important;
+        border-radius: 10px !important;
+        padding: 0.625rem 1rem !important;
+        font-weight: 600 !important;
+        font-size: 0.875rem !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        min-width: 2.5rem !important;
+        text-align: center !important;
+    }
+
+    #radio-page .page-link:hover {
+        background-color: var(--radio-card-hover) !important;
+        border-color: var(--radio-accent) !important;
+        color: var(--radio-accent) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    #radio-page .page-item.active .page-link {
+        background: var(--radio-accent) !important;
+        border-color: var(--radio-accent) !important;
+        color: white !important;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3) !important;
+    }
+
+    #radio-page .page-item.disabled .page-link {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+    }
+
+    /* Text colors */
+    #radio-page .text-muted {
+        color: var(--radio-text-muted) !important;
+    }
+
+    #radio-page h2, #radio-page h5, #radio-page h6 {
+        color: var(--radio-text-primary) !important;
+    }
+
+    #radio-page small {
+        color: var(--radio-text-secondary) !important;
+    }
+
+    /* Header bg-white override */
+    #radio-page .card-header.bg-white,
+    #radio-page .card-header {
+        background: transparent !important;
+    }
+
+    #radio-page .table-light thead tr th {
+        background: transparent !important;
+    }
+
+    /* Botones de acciones por tamaño */
+    #radio-page .btn-sm {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.8125rem !important;
+        border-radius: 8px !important;
+    }
+
+    /* Colores de botones específicos con gradientes sutiles */
+    #radio-page .btn-primary {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+        color: white !important;
+    }
+
+    #radio-page .btn-primary:hover {
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
+    }
+
+    #radio-page .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        color: white !important;
+    }
+
+    #radio-page .btn-success:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    }
+
+    #radio-page .btn-info {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+        color: white !important;
+    }
+
+    #radio-page .btn-info:hover {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+    }
+
+    #radio-page .btn-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+        color: white !important;
+    }
+
+    #radio-page .btn-warning:hover {
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+    }
+
+    #radio-page .btn-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+        color: white !important;
+    }
+
+    #radio-page .btn-danger:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    }
+
+    /* Botones outline */
+    #radio-page .btn-outline-success,
+    #radio-page .btn-outline-danger {
+        background: transparent !important;
+        border: 2px solid currentColor !important;
+        font-weight: 600 !important;
+    }
+
+    #radio-page .btn-outline-success {
+        color: #10b981 !important;
+    }
+
+    #radio-page .btn-outline-success:hover {
+        background: #10b981 !important;
+        color: white !important;
+    }
+
+    #radio-page .btn-outline-danger {
+        color: #ef4444 !important;
+    }
+
+    #radio-page .btn-outline-danger:hover {
+        background: #ef4444 !important;
+        color: white !important;
+    }
+
+    /* Estadísticas con diseño profesional */
+    #radio-page .d-flex.justify-content-between {
+        padding: 1rem 0 !important;
+        border-bottom: 1px solid var(--radio-border) !important;
+        transition: all 0.2s ease !important;
+    }
+
+    #radio-page .d-flex.justify-content-between:hover {
+        padding-left: 0.5rem !important;
+        border-left: 3px solid var(--radio-accent) !important;
+    }
+
+    #radio-page .d-flex.justify-content-between:last-child {
+        border-bottom: none !important;
+    }
+
+    #radio-page .d-flex.justify-content-between span {
+        color: var(--radio-text-secondary) !important;
+        font-weight: 500 !important;
+        font-size: 0.9375rem !important;
+    }
+
+    #radio-page .d-flex.justify-content-between strong {
+        color: var(--radio-text-primary) !important;
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+    }
+
+    /* Artículos recientes con mejor diseño */
+    #radio-page .list-group-item {
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 1px solid var(--radio-border) !important;
+        padding: 1.25rem 0 !important;
+        color: var(--radio-text-primary) !important;
+        transition: all 0.2s ease !important;
+    }
+
+    #radio-page .list-group-item:hover {
+        padding-left: 0.75rem !important;
+        border-left: 3px solid var(--radio-accent) !important;
+    }
+
+    #radio-page .list-group-item:last-child {
+        border-bottom: none !important;
+    }
+
+    #radio-page .list-group-item strong {
+        color: var(--radio-text-primary) !important;
+        display: block !important;
+        margin-bottom: 0.375rem !important;
+        font-weight: 600 !important;
+        font-size: 0.9375rem !important;
+    }
+
+    #radio-page .list-group-item .text-muted,
+    #radio-page .list-group-item small {
+        color: var(--radio-text-secondary) !important;
+        font-size: 0.8125rem !important;
+        line-height: 1.5 !important;
+    }
+
+    /* Colores de texto */
+    #radio-page .text-success {
+        color: #10b981 !important;
+        font-weight: 600 !important;
+    }
+
+    #radio-page .text-danger {
+        color: #ef4444 !important;
+        font-weight: 600 !important;
+    }
+
+    #radio-page .text-info {
+        color: #0ea5e9 !important;
+        font-weight: 600 !important;
+    }
+
+    #radio-page .text-warning {
+        color: #f59e0b !important;
+        font-weight: 600 !important;
+    }
+
+    #radio-page .text-primary {
+        color: var(--radio-accent) !important;
+    }
+
+    /* Iconos con mejor visualización */
+    #radio-page .fa-broadcast-tower,
+    #radio-page .fa-microphone,
+    #radio-page .fa-calendar-alt,
+    #radio-page .fa-newspaper,
+    #radio-page .fa-radio {
+        opacity: 0.95 !important;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1)) !important;
+    }
+
+    /* Badges de estado con colores profesionales */
+    #radio-page .badge.bg-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25) !important;
+    }
+
+    #radio-page .badge.bg-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25) !important;
+    }
+
+    #radio-page .badge.bg-info {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+        box-shadow: 0 2px 8px rgba(14, 165, 233, 0.25) !important;
+    }
+
+    #radio-page .badge.bg-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25) !important;
+        color: white !important;
+    }
+
+    /* Badge especial para estado ONLINE/OFFLINE */
+    #radio-page .fs-6.badge {
+        padding: 0.75rem 1.25rem !important;
+        font-size: 0.875rem !important;
+        font-weight: 700 !important;
+    }
+
+    /* Code blocks */
+    #radio-page code {
+        background: var(--radio-card-hover) !important;
+        color: var(--radio-accent) !important;
+        padding: 0.25rem 0.5rem !important;
+        border-radius: 6px !important;
+        font-size: 0.875rem !important;
+        font-weight: 600 !important;
+        border: 1px solid var(--radio-border) !important;
+    }
+
+    /* Modales con diseño premium */
+    #radio-page .modal-content {
+        border-radius: 16px !important;
+        border: 1px solid var(--radio-border) !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    html.dark #radio-page .modal-content {
+        background: var(--radio-card-bg) !important;
+        color: var(--radio-text-primary) !important;
+    }
+
+    #radio-page .modal-header {
+        border-bottom: 1px solid var(--radio-border) !important;
+        padding: 1.5rem 2rem !important;
+        background: linear-gradient(to bottom, var(--radio-card-bg), transparent) !important;
+    }
+
+    #radio-page .modal-header h5,
+    #radio-page .modal-title {
+        font-weight: 700 !important;
+        color: var(--radio-text-primary) !important;
+        font-size: 1.25rem !important;
+    }
+
+    #radio-page .modal-body {
+        padding: 2rem !important;
+    }
+
+    #radio-page .modal-footer {
+        border-top: 1px solid var(--radio-border) !important;
+        padding: 1.5rem 2rem !important;
+        background: linear-gradient(to top, var(--radio-card-bg), transparent) !important;
+    }
+
+    /* Formularios mejorados */
+    #radio-page .form-label {
+        color: var(--radio-text-primary) !important;
+        font-weight: 600 !important;
+        font-size: 0.9375rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    #radio-page .form-control,
+    #radio-page .form-select {
+        background: var(--radio-card-bg) !important;
+        color: var(--radio-text-primary) !important;
+        border: 1px solid var(--radio-border) !important;
+        border-radius: 10px !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.9375rem !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    html.dark #radio-page .form-control,
+    html.dark #radio-page .form-select {
+        background: #0d1117 !important;
+    }
+
+    #radio-page .form-control:focus,
+    #radio-page .form-select:focus {
+        border-color: var(--radio-accent) !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+        background: var(--radio-card-bg) !important;
+    }
+
+    html.dark #radio-page .form-control:focus,
+    html.dark #radio-page .form-select:focus {
+        background: #0d1117 !important;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+    }
+
+    /* Empty state styling */
+    #radio-page .text-center.py-4 {
+        padding: 3rem 1.5rem !important;
+    }
+
+    #radio-page .text-center.py-4 i {
+        opacity: 0.5 !important;
+    }
+
+    /* Spacing mejorado */
+    #radio-page .mb-3 {
+        margin-bottom: 1.25rem !important;
+    }
+
+    #radio-page .mb-4 {
+        margin-bottom: 2rem !important;
+    }
+
+    /* Responsive design */
+    @media (max-width: 1200px) {
+        #radio-page .card-body {
+            padding: 1.5rem !important;
+        }
+
+        #radio-page .card-header {
+            padding: 1.25rem 1.5rem !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+        #radio-page > .d-flex:first-child {
+            flex-direction: column !important;
+            gap: 1rem !important;
+        }
+
+        #radio-page > .d-flex h2 {
+            font-size: 1.5rem !important;
+        }
+
+        #radio-page .card-body {
+            padding: 1.25rem !important;
+        }
+
+        #radio-page .card-header {
+            padding: 1rem 1.25rem !important;
+        }
+
+        #radio-page .btn {
+            padding: 0.625rem 1.25rem !important;
+            font-size: 0.875rem !important;
+            width: 100% !important;
+        }
+
+        #radio-page .btn-sm {
+            padding: 0.5rem 0.875rem !important;
+            font-size: 0.8125rem !important;
+        }
+
+        #radio-page .table {
+            font-size: 0.875rem !important;
+        }
+
+        #radio-page .table thead th {
+            padding: 1rem !important;
+            font-size: 0.6875rem !important;
+        }
+
+        #radio-page .table tbody td {
+            padding: 1rem !important;
+        }
+
+        #radio-page .badge {
+            font-size: 0.6875rem !important;
+            padding: 0.375rem 0.75rem !important;
+        }
+    }
+
+    @media (max-width: 576px) {
+        #radio-page .modal-body,
+        #radio-page .modal-header,
+        #radio-page .modal-footer {
+            padding: 1.25rem !important;
+        }
+    }
+
+</style>
+
+<div id="radio-page">
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>
         <i class="fas fa-broadcast-tower text-primary me-2"></i>
@@ -148,11 +801,10 @@
                                     </div>
                                 </td>
                                 <td>
-                                    {{ program.hora_inicio|time:"H:i" }} - {{ program.hora_fin|time:"H:i" }}
+                                    {{ program.get_horario_display }}
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary">{{ program.dias_semana|default:"Todos los días"
-                                        }}</span>
+                                    <span class="badge bg-info">{{ program.get_dias_display }}</span>
                                 </td>
                                 <td>
                                     {% if program.activo %}
@@ -197,6 +849,39 @@
                         </tbody>
                     </table>
                 </div>
+                {% if programs.has_other_pages %}
+                <div class="card-footer">
+                    <nav aria-label="Paginación de programas">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                            {% if programs.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?programs_page=1{% if conductores.number %}&conductores_page={{ conductores.number }}{% endif %}">Primera</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?programs_page={{ programs.previous_page_number }}{% if conductores.number %}&conductores_page={{ conductores.number }}{% endif %}">Anterior</a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in programs.paginator.page_range %}
+                                {% if programs.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > programs.number|add:'-3' and num < programs.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?programs_page={{ num }}{% if conductores.number %}&conductores_page={{ conductores.number }}{% endif %}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if programs.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?programs_page={{ programs.next_page_number }}{% if conductores.number %}&conductores_page={{ conductores.number }}{% endif %}">Siguiente</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?programs_page={{ programs.paginator.num_pages }}{% if conductores.number %}&conductores_page={{ conductores.number }}{% endif %}">Última</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -342,6 +1027,39 @@
                     </tbody>
                 </table>
             </div>
+            {% if conductores.has_other_pages %}
+            <div class="card-footer">
+                <nav aria-label="Paginación de conductores">
+                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                        {% if conductores.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?conductores_page=1{% if programs.number %}&programs_page={{ programs.number }}{% endif %}">Primera</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?conductores_page={{ conductores.previous_page_number }}{% if programs.number %}&programs_page={{ programs.number }}{% endif %}">Anterior</a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in conductores.paginator.page_range %}
+                            {% if conductores.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > conductores.number|add:'-3' and num < conductores.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?conductores_page={{ num }}{% if programs.number %}&programs_page={{ programs.number }}{% endif %}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if conductores.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?conductores_page={{ conductores.next_page_number }}{% if programs.number %}&programs_page={{ programs.number }}{% endif %}">Siguiente</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?conductores_page={{ conductores.paginator.num_pages }}{% if programs.number %}&programs_page={{ programs.number }}{% endif %}">Última</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -659,4 +1377,5 @@
             });
         });
     </script>
-    {% endblock %}
+</div> <!-- Cierre de #radio-page -->
+{% endblock %}
