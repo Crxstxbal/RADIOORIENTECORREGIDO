@@ -18,7 +18,11 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import F
+from django.db import transaction
 from django.views.decorators.http import require_POST
+from django.db.models import F
+from django.db import transaction
 from django.core import serializers
 from datetime import datetime, timedelta
 import json
@@ -35,7 +39,8 @@ from apps.contact.models import Contacto, Suscripcion, Estado, TipoAsunto
 from apps.emergente.models import BandaEmergente, BandaLink, Integrante, BandaIntegrante
 from apps.ubicacion.models import Pais, Ciudad, Comuna
 from apps.publicidad.models import Publicidad, SolicitudPublicidadWeb, UbicacionPublicidadWeb, TipoUbicacion, ItemSolicitudWeb, PublicidadWeb
-
+from apps.notifications.models import Notification as UserNotification
+from rest_framework.authtoken.models import Token
 
 def is_staff_user(user):
     return user.is_authenticated and user.is_staff
@@ -1667,112 +1672,8 @@ def api_publicidad_activas(request):
         traceback.print_exc()
         return JsonResponse({'success': False, 'message': f'Error al obtener campañas: {str(e)}'}, status=500)
 
-from django.utils import timezone as dj_tz
-from django.http import FileResponse, HttpResponseNotFound
-import mimetypes
-import os as _os
-
-def api_publicidad_media(request, campania_id: int):
-    """Proxy neutral para servir imágenes de campañas evitando bloqueadores.
-    Resuelve la misma lógica de media que api_publicidad_activas.
-    """
-    from apps.publicidad.models import Publicidad, ItemSolicitudWeb, ImagenPublicidadWeb
-    from django.conf import settings as _settings
-    from django.http import HttpResponseRedirect
-    from urllib.parse import urlparse
-    import re as _re
-    
-    try:
-        hoy = dj_tz.now().date()
-        pub = (Publicidad.objects
-               .filter(id=campania_id, tipo='WEB', activo=True,
-                      fecha_inicio__lte=hoy, fecha_fin__gte=hoy)
-               .select_related('web_config')
-               .first())
-        
-        if not pub:
-            return HttpResponseNotFound()
-
-        # Validar estado de solicitud (aprobada/activa) o sin solicitud
-        try:
-            sw = getattr(pub, 'solicitud_web', None)
-            if sw and getattr(sw, 'estado', None) not in ['aprobada', 'activa']:
-                return HttpResponseNotFound()
-        except Exception:
-            pass
-
-        wc = getattr(pub, 'web_config', None)
-        media_url = None
-        if wc:
-            mv = getattr(wc, 'archivo_media', None)
-            if mv:
-                media_url = getattr(mv, 'url', None) or str(mv)
-
-        # Fallback: imagen del item asociado
-        if not media_url:
-            try:
-                # Intento 1: Item #id en la descripción
-                desc = getattr(pub, 'descripcion', '') or ''
-                m = _re.search(r'Item\s*#(\d+)', desc)
-                item = None
-                if m:
-                    item = ItemSolicitudWeb.objects.filter(id=int(m.group(1))).first()
-                # Intento 2: primer item de su solicitud
-                if not item:
-                    sw = getattr(pub, 'solicitud_web', None)
-                    if sw:
-                        item = (ItemSolicitudWeb.objects
-                                .filter(solicitud_id=getattr(sw, 'id', None))
-                                .order_by('id').first())
-                if item:
-                    img = item.imagenes_web.order_by('orden', 'fecha_subida').first()
-                    if img and getattr(img, 'imagen', None):
-                        media_url = getattr(img.imagen, 'url', None) or str(img.imagen)
-            except Exception:
-                pass
-
-        if not media_url:
-            return HttpResponseNotFound()
-
-        # Resolver a path local si apunta al MEDIA_URL
-        if isinstance(media_url, str) and media_url.startswith('/'):  # relativo a raíz
-            # intentar construir path absoluto
-            # Si comienza con MEDIA_URL, mapear a MEDIA_ROOT
-            media_url_nohost = media_url
-        elif isinstance(media_url, str) and media_url.startswith(getattr(_settings, 'MEDIA_URL', '/media/')):
-            media_url_nohost = media_url
-        else:
-            # Podría ser absoluta completa http(s), devolver redirect temporal
-            return HttpResponseRedirect(media_url)
-
-        # Normalizar MEDIA_URL
-        media_prefix = getattr(_settings, 'MEDIA_URL', '/media/')
-        if media_url_nohost.startswith('http'):
-            # recortar host si corresponde
-            parsed = urlparse(media_url_nohost)
-            media_url_nohost = parsed.path
-            
-        if not media_prefix.endswith('/'):
-            media_prefix = media_prefix + '/'
-            
-        rel_path = media_url_nohost[len(media_prefix):] if media_url_nohost.startswith(media_prefix) else media_url_nohost.lstrip('/')
-        abs_path = _os.path.join(getattr(_settings, 'MEDIA_ROOT', ''), rel_path)
-        if not _os.path.isfile(abs_path):
-            return HttpResponseNotFound()
-
-        ctype, _ = mimetypes.guess_type(abs_path)
-        resp = FileResponse(open(abs_path, 'rb'), content_type=ctype or 'application/octet-stream')
-        resp['Cache-Control'] = 'public, max-age=86400'
-        return resp
-        
-    except Exception as e:
-        import traceback
-        print(f"Error en api_publicidad_media: {str(e)}\n{traceback.format_exc()}")
-        return HttpResponseNotFound()
-
 @login_required
 @user_passes_test(is_staff_user)
-@require_http_methods(["POST"])
 def api_aprobar_solicitud(request, solicitud_id: int):
     """Aprobar una SolicitudPublicidadWeb y generar la campaña Publicidad + PublicidadWeb."""
     from django.core.files import File
@@ -1888,12 +1789,25 @@ def api_aprobar_solicitud(request, solicitud_id: int):
             sol.fecha_aprobacion = timezone.now()
             sol.save()
 
-            # Notificar (ignorar errores)
+            # Notificar al usuario solicitante
             try:
-                notificar_aprobacion_solicitud(sol, request.user)
+                titulo = f"Solicitud de publicidad #{sol.id} aprobada"
+                mensaje = (
+                    f"Tu solicitud fue aprobada. Rango: {sol.fecha_inicio_solicitada} a {sol.fecha_fin_solicitada}. "
+                    f"Pronto verás tu campaña publicada."
+                )
+                UserNotification.objects.create(
+                    usuario=sol.usuario,
+                    tipo='publicidad',
+                    titulo=titulo,
+                    mensaje=mensaje,
+                    enlace=None,
+                    content_type='solicitud_publicidad',
+                    object_id=sol.id,
+                )
             except Exception:
                 pass
-
+                
             return JsonResponse({
                 'success': True,
                 'message': f'Solicitud aprobada: {len(created_campaign_ids)} campañas creadas',
@@ -1940,6 +1854,32 @@ def api_cambiar_estado_solicitud(request, solicitud_id: int):
     
     sol.estado = nuevo
     sol.save(update_fields=['estado', 'notas_admin', 'motivo_rechazo'])
+
+    # Notificar al usuario sobre el cambio de estado (en revisión / rechazado)
+    try:
+        if nuevo == 'en_revision':
+            titulo = f"Solicitud de publicidad #{sol.id} en revisión"
+            extra = f" Nota: {sol.notas_admin}" if sol.notas_admin else ""
+            mensaje = f"Tu solicitud está en revisión. Nos pondremos en contacto contigo pronto.{extra}"
+        elif nuevo == 'rechazada':
+            titulo = f"Solicitud de publicidad #{sol.id} rechazada"
+            extra = f" Motivo: {sol.motivo_rechazo}" if sol.motivo_rechazo else ""
+            mensaje = f"Tu solicitud ha sido rechazada.{extra}"
+        else:
+            titulo = f"Estado actualizado: {sol.get_estado_display()}"
+            mensaje = f"Tu solicitud cambió a estado: {sol.get_estado_display()}"
+
+        UserNotification.objects.create(
+            usuario=sol.usuario,
+            tipo='publicidad',
+            titulo=titulo,
+            mensaje=mensaje,
+            enlace=None,
+            content_type='solicitud_publicidad',
+            object_id=sol.id,
+        )
+    except Exception:
+        pass
     
     return JsonResponse({
         'success': True, 
@@ -1951,6 +1891,11 @@ def api_cambiar_estado_solicitud(request, solicitud_id: int):
 @require_http_methods(["PATCH"]) 
 def api_actualizar_campania_web(request, campania_id: int):
     """Actualizar datos web (url_destino, formato, archivo_media) de una campaña WEB."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'No autenticado'}, status=401)
+    if not is_staff_user(request.user):
+        return JsonResponse({'success': False, 'message': 'No autorizado'}, status=403)
+
     try:
         pub = Publicidad.objects.select_related('web_config').get(id=campania_id, tipo='WEB')
     except Publicidad.DoesNotExist:
@@ -1987,8 +1932,6 @@ def api_actualizar_campania_web(request, campania_id: int):
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'Error al actualizar: {str(e)}'}, status=500)
 
-@login_required
-@user_passes_test(is_staff_user)
 @require_http_methods(["GET"]) 
 def api_ver_campania(request, campania_id: int):
     """
@@ -2031,7 +1974,7 @@ def api_ver_campania(request, campania_id: int):
             'clics': getattr(wc, 'clics', 0) or 0,
         }
 
-    # Intentar obtener ubicacion (nombre, tipo, dimensiones) desde el item original
+    #Intenta obtener la ubicacion como el nombre, tipo, dimensiones desde el item original
     try:
         desc = getattr(pub, 'descripcion', '') or ''
         import re
@@ -2052,21 +1995,42 @@ def api_ver_campania(request, campania_id: int):
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_publicidad_solicitar(request):
-    """Crea una solicitud de publicidad web si el usuario está autenticado.
-    Si no, crea un contacto con los datos recibidos.
+    """Crea una solicitud de publicidad web. Requiere autenticación.
     Espera JSON con: nombre, email, telefono, preferencia_contacto, ubicacion_id, url_destino,
     fecha_inicio, fecha_fin, mensaje (opcional).
     """
+    # Resolver usuario autenticado (sesión o token)
+    auth_user = request.user if request.user.is_authenticated else None
+    if not auth_user:
+        try:
+            auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+            if isinstance(auth_header, str) and auth_header.startswith('Token '):
+                token_key = auth_header.split(' ', 1)[1].strip()
+                token_obj = Token.objects.select_related('user').get(key=token_key)
+                auth_user = token_obj.user
+        except Token.DoesNotExist:
+            auth_user = None
+        except Exception:
+            auth_user = None
+
+    # Verificar autenticación primero
+    if not auth_user:
+        # Para API, nunca redirigimos: devolvemos 401 consistente
+        return JsonResponse(
+            {'success': False, 'message': 'Debes iniciar sesión para enviar una solicitud de publicidad'}, 
+            status=401
+        )
+
     try:
         data = json.loads(request.body or '{}')
     except Exception:
         return JsonResponse({'success': False, 'message': 'JSON inválido'}, status=400)
 
-    # Compatibilidad de campos: aceptar tanto 'nombre'/'email' como 'nombre_contacto'/'email_contacto'
-    if not data.get('nombre') and data.get('nombre_contacto'):
-        data['nombre'] = data.get('nombre_contacto')
-    if not data.get('email') and data.get('email_contacto'):
-        data['email'] = data.get('email_contacto')
+    # Usar datos del usuario autenticado si no se proporcionan
+    if not data.get('email'):
+        data['email'] = auth_user.email
+    if not data.get('nombre'):
+        data['nombre'] = auth_user.get_full_name() or auth_user.username
 
     # Puede venir 'ubicacion_id' (uno), 'ubicacion_ids' (lista) o 'ubicaciones' (lista de IDs u objetos con id)
     required = ['nombre', 'email']
@@ -2102,64 +2066,9 @@ def api_publicidad_solicitar(request):
     fecha_fin = data.get('fecha_fin')
     mensaje = data.get('mensaje', '')
 
-    # Si está autenticado, crear Solicitud + Item
-    if request.user.is_authenticated:
-        try:
-            # Fechas opcionales
-            from datetime import date
-            def parse_date(s):
-                try:
-                    return date.fromisoformat(s) if s else None
-                except Exception:
-                    return None
-            fi = parse_date(fecha_inicio) or timezone.now().date()
-            ff = parse_date(fecha_fin) or fi
-
-            # Total estimado suma de ubicaciones seleccionadas
-            total_estimado = sum([u.precio_mensual for u in ubics])
-            solicitud = SolicitudPublicidadWeb.objects.create(
-                usuario=request.user,
-                nombre_contacto=nombre,
-                email_contacto=email,
-                telefono_contacto=telefono,
-                preferencia_contacto=preferencia,
-                estado='pendiente',
-                fecha_inicio_solicitada=fi,
-                fecha_fin_solicitada=ff,
-                mensaje_usuario=mensaje,
-                costo_total_estimado=total_estimado,
-            )
-            created_items = []
-            for ubic in ubics:
-                item = ItemSolicitudWeb.objects.create(
-                    solicitud=solicitud,
-                    ubicacion=ubic,
-                    url_destino=url_destino,
-                    formato=ubic.dimensiones,
-                    precio_acordado=ubic.precio_mensual,
-                    notas=f"Tipo: {ubic.tipo.nombre}"
-                )
-                created_items.append({'id': item.id, 'ubicacion_id': ubic.id})
-            return JsonResponse({
-                'success': True,
-                'message': 'Solicitud creada. Te contactaremos pronto.',
-                'solicitud_id': solicitud.id,
-                'items_web': created_items
-            })
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': f'Error al crear solicitud: {str(e)}'}, status=500)
-
-    # No autenticado: crear la solicitud con un usuario "guest" para revisión en el dashboard
+    # Crear Solicitud + Item (solo para usuarios autenticados)
     try:
-        guest = User.objects.filter(username='public_solicitudes').first()
-        if not guest:
-            guest = User.objects.create(username='public_solicitudes', email='solicitudes@radioorientefm.local')
-            try:
-                guest.set_unusable_password()
-                guest.save(update_fields=['password'])
-            except Exception:
-                pass
-
+        # Fechas opcionales
         from datetime import date
         def parse_date(s):
             try:
@@ -2169,12 +2078,15 @@ def api_publicidad_solicitar(request):
         fi = parse_date(fecha_inicio) or timezone.now().date()
         ff = parse_date(fecha_fin) or fi
 
+        # Total estimado suma de ubicaciones seleccionadas
         total_estimado = sum([u.precio_mensual for u in ubics])
+        
+        # Usar el usuario autenticado (sesión o token)
         solicitud = SolicitudPublicidadWeb.objects.create(
-            usuario=guest,
-            nombre_contacto=nombre,
-            email_contacto=email,
-            telefono_contacto=telefono,
+            usuario=auth_user,
+            nombre_contacto=nombre or auth_user.get_full_name() or auth_user.username,
+            email_contacto=email or auth_user.email,
+            telefono_contacto=telefono or '',
             preferencia_contacto=preferencia,
             estado='pendiente',
             fecha_inicio_solicitada=fi,
@@ -2182,6 +2094,7 @@ def api_publicidad_solicitar(request):
             mensaje_usuario=mensaje,
             costo_total_estimado=total_estimado,
         )
+        
         created_items = []
         for ubic in ubics:
             item = ItemSolicitudWeb.objects.create(
@@ -2193,14 +2106,21 @@ def api_publicidad_solicitar(request):
                 notas=f"Tipo: {ubic.tipo.nombre}"
             )
             created_items.append({'id': item.id, 'ubicacion_id': ubic.id})
+            
         return JsonResponse({
             'success': True,
-            'message': 'Solicitud registrada. Un administrador te contactará.',
+            'message': 'Solicitud creada. Te contactaremos pronto.',
             'solicitud_id': solicitud.id,
             'items_web': created_items
         })
+        
     except Exception as e:
-        return JsonResponse({'success': False, 'message': f'Error al crear solicitud (guest): {str(e)}'}, status=500)
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False, 
+            'message': f'Error al crear solicitud: {str(e)}'
+        }, status=500)
 
 
 def api_ver_solicitud(request, solicitud_id):
@@ -2228,7 +2148,8 @@ def api_ver_solicitud(request, solicitud_id):
         data = {
             'id': solicitud.id,
             'nombre_contacto': solicitud.nombre_contacto or '',
-            'email_contacto': solicitud.email_contacto or '',
+            'email_contacto': solicitud.email_contacto or (solicitud.usuario.email if solicitud.usuario else ''),
+            'usuario_username': solicitud.usuario.username if solicitud.usuario else 'Usuario no autenticado',
             'telefono_contacto': solicitud.telefono_contacto or '',
             'preferencia_contacto': solicitud.preferencia_contacto or 'email',
             'estado': solicitud.estado or 'pendiente',
@@ -3546,6 +3467,90 @@ def api_get_calendar_events(request):
         print("="*50)
         # -----------------------------------
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_track_impression(request, campania_id):
+    """Registra una impresión para una campaña de publicidad web"""
+    from apps.publicidad.models import PublicidadWeb
+    
+    try:
+        with transaction.atomic():
+            # Bloquea el registro para actualización
+            campania = PublicidadWeb.objects.select_for_update().get(
+                publicidad_id=campania_id,
+                publicidad__tipo='WEB',
+                publicidad__activo=True
+            )
+            campania.impresiones = F('impresiones') + 1
+            campania.save(update_fields=['impresiones'])
+            # Obtener el valor actualizado desde la BD
+            campania.refresh_from_db(fields=['impresiones'])
+            
+            # Registrar la impresión en el log
+            print(f"[PUBLICIDAD] Impresión registrada para campaña {campania_id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Impresión registrada correctamente',
+                'nuevo_total': int(campania.impresiones)
+            })
+            
+    except PublicidadWeb.DoesNotExist:
+        return JsonResponse(
+            {'success': False, 'message': 'Campaña no encontrada o inactiva'}, 
+            status=404
+        )
+    except Exception as e:
+        print(f"[ERROR] Error al registrar impresión: {str(e)}")
+        return JsonResponse(
+            {'success': False, 'message': 'Error al registrar la impresión'}, 
+            status=500
+        )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_track_click(request, campania_id):
+    """Registra un clic para una campaña de publicidad web"""
+    from apps.publicidad.models import PublicidadWeb
+    
+    try:
+        with transaction.atomic():
+            # Bloquea el registro para actualización
+            campania = PublicidadWeb.objects.select_for_update().get(
+                publicidad_id=campania_id,
+                publicidad__tipo='WEB',
+                publicidad__activo=True
+            )
+            campania.clics = F('clics') + 1
+            campania.save(update_fields=['clics'])
+            # Obtener el valor actualizado desde la BD
+            campania.refresh_from_db(fields=['clics'])
+            
+            # Registrar el clic en el log
+            print(f"[PUBLICIDAD] Clic registrado para campaña {campania_id}")
+            
+            # Devolver la URL de destino para redirección en el frontend
+            return JsonResponse({
+                'success': True,
+                'redirect_url': campania.url_destino,
+                'nuevo_total': int(campania.clics)
+            })
+            
+    except PublicidadWeb.DoesNotExist:
+        return JsonResponse(
+            {'success': False, 'message': 'Campaña no encontrada o inactiva'}, 
+            status=404
+        )
+    except Exception as e:
+        print(f"[ERROR] Error al registrar clic: {str(e)}")
+        return JsonResponse(
+            {'success': False, 'message': 'Error al registrar el clic'}, 
+            status=500
+        )
+
 
 # ========================
 # Suscripciones

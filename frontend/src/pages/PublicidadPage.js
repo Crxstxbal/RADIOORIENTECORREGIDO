@@ -119,7 +119,14 @@ const PublicidadPage = () => {
   });
   const [selectedIds, setSelectedIds] = useState([]);
 
-  const backendBase = useMemo(() => (window.location.port === '3000' ? 'http://127.0.0.1:8000' : window.location.origin), []);
+  const backendBase = useMemo(() => {
+    if (window.location.port === '3000') {
+      const host = window.location.hostname; // respeta localhost vs 127.0.0.1
+      const protocol = window.location.protocol || 'http:';
+      return `${protocol}//${host}:8000`;
+    }
+    return window.location.origin;
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -233,22 +240,62 @@ const PublicidadPage = () => {
 
       console.log('[Publicidad] Enviando solicitud:', payload);
 
-      const res = await fetch(`${backendBase}/dashboard/api/publicidad/solicitar/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-        credentials: 'include',
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        alert(`Error al crear la solicitud: ${data && data.message ? data.message : 'Error desconocido'}`);
-        return;
+      // Función auxiliar para obtener cookies
+      const getCookie = (name) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      };
+      
+      // Configurar headers con el token CSRF si está disponible
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      };
+      
+      const csrfToken = getCookie('csrftoken');
+      if (csrfToken) {
+        headers['X-CSRFToken'] = csrfToken;
       }
+      // Incluir token si el usuario inició sesión vía API
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          headers['Authorization'] = `Token ${token}`;
+        }
+      } catch (_) {}
 
-      console.log('[Publicidad] Solicitud creada:', data);
+      let data;
+      try {
+        const res = await fetch(`${backendBase}/dashboard/api/publicidad/solicitar/`, {
+          method: 'POST',
+          headers: headers,
+          credentials: 'include',  // Importante para enviar cookies de sesión
+          body: JSON.stringify(payload),
+        });
+        
+        // Si el usuario no está autenticado, redirigir al login del frontend
+        if (res.status === 401) {
+          alert('Debes iniciar sesión para enviar la solicitud.');
+          const next = encodeURIComponent(window.location.pathname);
+          window.location.href = `/login?next=${next}`;
+          return;
+        }
+        
+        data = await res.json();
+        
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Error al procesar la solicitud');
+        }
+
+        console.log('[Publicidad] Solicitud creada:', data);
+        
+      } catch (error) {
+        console.error('Error en la solicitud:', error);
+        alert(`Error: ${error.message || 'No se pudo completar la solicitud'}`);
+        return; // Detener flujo si hubo error
+      }
 
       // Subir imágenes si existen
       if (data.items_web && data.items_web.length > 0 && Object.keys(form.imagenes).length > 0) {

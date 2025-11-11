@@ -142,6 +142,33 @@ export default function PublicidadCarousel({
     };
   };
 
+  const impressedOnceRef = useRef(new Set());
+
+  const trackImpression = async (campaignId) => {
+    try {
+      await fetch(`/dashboard/api/publicidad/campanias/${campaignId}/impresion/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (debug) console.log('[PublicidadCarousel] Tracked impression', campaignId);
+    } catch (e) {
+      if (debug) console.warn('[PublicidadCarousel] Error tracking impression', e);
+    }
+  };
+
+  const trackClick = async (campaignId) => {
+    try {
+      const res = await fetch(`/dashboard/api/publicidad/campanias/${campaignId}/click/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      return await res.json().catch(() => ({}));
+    } catch (e) {
+      if (debug) console.warn('[PublicidadCarousel] Error tracking click', e);
+      return {};
+    }
+  };
+
   const lastScrollY = useRef(0);
   
   useEffect(() => {
@@ -216,6 +243,15 @@ export default function PublicidadCarousel({
       });
     }
   }, [index, items, debug]);
+
+  // Tracking de impresiones: cada vez que cambia el slide activo
+  useEffect(() => {
+    const item = items[index];
+    if (!item?.id) return;
+    if (impressedOnceRef.current.has(item.id)) return;
+    impressedOnceRef.current.add(item.id);
+    trackImpression(item.id);
+  }, [index, items]);
 
   //Calcular dimensiones responsivas manteniendo la proporción
   const calculateDimensions = (width, height, maxWidth = '100%') => {
@@ -471,6 +507,21 @@ export default function PublicidadCarousel({
 
   const currentItem = items[index];
 
+  const handleAdClick = async (e) => {
+    if (!currentItem?.url_destino) {
+      e.preventDefault();
+      return;
+    }
+    try {
+      e.preventDefault();
+      const data = await trackClick(currentItem?.id);
+      const dest = (data && data.redirect_url) ? data.redirect_url : currentItem?.url_destino;
+      window.open(dest, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      window.open(currentItem?.url_destino, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   // Función para manejar los colores extraídos
   const handleColors = (colors) => {
     if (colors && colors.length > 0) {
@@ -660,11 +711,7 @@ export default function PublicidadCarousel({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.6 }}
-              onClick={(e) => {
-                if (!currentItem?.url_destino) {
-                  e.preventDefault();
-                }
-              }}
+              onClick={handleAdClick}
             >
               {content}
             </motion.a>
@@ -698,11 +745,7 @@ export default function PublicidadCarousel({
               textDecoration: 'none',
               color: 'inherit'
             }}
-            onClick={(e) => {
-              if (!currentItem?.url_destino) {
-                e.preventDefault();
-              }
-            }}
+            onClick={handleAdClick}
           >
             {content}
           </a>
@@ -727,11 +770,7 @@ export default function PublicidadCarousel({
             textDecoration: 'none',
             color: 'inherit'
           }}
-          onClick={(e) => {
-            if (!currentItem?.url_destino) {
-              e.preventDefault();
-            }
-          }}
+          onClick={handleAdClick}
         >
           {content}
         </a>

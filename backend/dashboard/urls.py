@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import publicidad_views
 
 urlpatterns = [
     path('', views.dashboard_home, name='dashboard_home'),
@@ -24,12 +25,15 @@ urlpatterns = [
     # API pública para frontend
     path('api/publicidad/ubicaciones/', views.api_publicidad_ubicaciones, name='api_publicidad_ubicaciones'),
     path('api/publicidad/activas/', views.api_publicidad_activas, name='api_publicidad_activas'),
-    path('api/publicidad/media/<int:campania_id>/', views.api_publicidad_media, name='api_publicidad_media'),
+    path('api/publicidad/media/<int:campania_id>/', publicidad_views.api_publicidad_media, name='api_publicidad_media'),
     path('api/publicidad/solicitar/', views.api_publicidad_solicitar, name='api_publicidad_solicitar'),
     path('api/publicidad/solicitud/<int:solicitud_id>/', views.api_ver_solicitud, name='api_ver_solicitud'),
     path('api/publicidad/campanias/<int:campania_id>/', views.api_ver_campania, name='api_ver_campania'),
     # API de administración de publicidad web
     path('api/publicidad/solicitudes/<int:solicitud_id>/aprobar/', views.api_aprobar_solicitud, name='api_aprobar_solicitud'),
+    # API de seguimiento de publicidad
+    path('api/publicidad/campanias/<int:campania_id>/impresion/', views.api_track_impression, name='api_track_impression'),
+    path('api/publicidad/campanias/<int:campania_id>/click/', views.api_track_click, name='api_track_click'),
     path('api/publicidad/solicitudes/<int:solicitud_id>/estado/', views.api_cambiar_estado_solicitud, name='api_cambiar_estado_solicitud'),
     path('api/publicidad/campanias-web/<int:campania_id>/', views.eliminar_campania_web, name='api_eliminar_campania_web'),
     path('api/publicidad/campanias-web/<int:campania_id>/actualizar_web/', views.api_actualizar_campania_web, name='api_actualizar_campania_web'),

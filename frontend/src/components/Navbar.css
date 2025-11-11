@@ -180,9 +180,111 @@ html.dark .navbar {
 .nav-auth {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  margin-left: 0.5rem;
+  gap: 5px;
   position: relative;
+}
+
+.notification-toggle {
+  position: relative;
+  background: none;
+  border: none;
+  color: var(--color-white);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  margin-left: 10px;
+}
+
+.notification-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: var(--color-red);
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 2px solid var(--color-black);
+}
+
+.notif-wrapper {
+  position: relative;
+}
+
+.notifications-dropdown {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  width: 320px;
+  background: #111827;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.35);
+  overflow: hidden;
+  z-index: 1200;
+}
+
+.notifications-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.05);
+}
+
+.notifications-header .mark-all {
+  background: transparent;
+  color: var(--color-red);
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.notifications-body {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.notification-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.notification-message {
+  font-size: 0.9rem;
+  color: #d1d5db;
+}
+
+.notification-meta {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.notifications-empty {
+  padding: 16px;
+  text-align: center;
+  color: #9ca3af;
 }
 
 .user-menu {

@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { Menu, X, Radio, User, Sun, Moon, LayoutDashboard } from "lucide-react";
+import { Menu, X, Radio, User, Sun, Moon, LayoutDashboard, Bell } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import "./Navbar.css";
+import axios from "axios";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,6 +12,10 @@ const Navbar = () => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const dashboardUrl = import.meta.env.VITE_DASHBOARD_URL || 'http://localhost:8000/dashboard/';
+  const [notifCount, setNotifCount] = useState(0);
+  const [notifsOpen, setNotifsOpen] = useState(false);
+  const [notifs, setNotifs] = useState([]);
+  const [loadingNotifs, setLoadingNotifs] = useState(false);
 
   const navItems = [
     { name: "Inicio", path: "/" },
@@ -25,6 +30,63 @@ const Navbar = () => {
   const handleLogout = () => {
     logout();
     setIsOpen(false);
+  };
+
+  // Fetch notifications count (if logged in)
+  useEffect(() => {
+    let intervalId;
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setNotifCount(0);
+      return;
+    }
+    const fetchCount = async () => {
+      try {
+        const resp = await axios.get('/api/notifications/api/notificaciones/contador/', {
+          headers: { Authorization: `Token ${token}` }
+        });
+        setNotifCount(resp.data?.no_leidas ?? 0);
+      } catch (e) {
+        // Silently ignore
+      }
+    };
+    fetchCount();
+    intervalId = setInterval(fetchCount, 30000);
+    return () => intervalId && clearInterval(intervalId);
+  }, [isAuthenticated]);
+
+  const openNotifications = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    setLoadingNotifs(true);
+    try {
+      const resp = await axios.get('/api/notifications/api/notificaciones/no_leidas/', {
+        headers: { Authorization: `Token ${token}` }
+      });
+      setNotifs(Array.isArray(resp.data) ? resp.data : resp.data?.results || []);
+    } catch (e) {
+      setNotifs([]);
+    } finally {
+      setLoadingNotifs(false);
+    }
+  };
+
+  const toggleNotifications = async () => {
+    const next = !notifsOpen;
+    setNotifsOpen(next);
+    if (next) await openNotifications();
+  };
+
+  const markAllRead = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      await axios.post('/api/notifications/api/notificaciones/marcar_todas_leidas/', {}, {
+        headers: { Authorization: `Token ${token}` }
+      });
+      setNotifCount(0);
+      setNotifs([]);
+    } catch (e) {}
   };
 
   return (
@@ -82,6 +144,46 @@ const Navbar = () => {
                 Iniciar Sesión
               </Link>
             )}
+            {isAuthenticated && (
+              <div className="notif-wrapper">
+                <button
+                  className="notification-toggle"
+                  aria-label="Notificaciones"
+                  title="Notificaciones"
+                  onClick={toggleNotifications}
+                >
+                  <Bell size={18} />
+                  {notifCount > 0 && (
+                    <span className="notification-badge">{Math.min(notifCount, 99)}</span>
+                  )}
+                </button>
+                {notifsOpen && (
+                  <div className="notifications-dropdown">
+                    <div className="notifications-header">
+                      <span>Notificaciones</span>
+                      {notifCount > 0 && (
+                        <button className="mark-all" onClick={markAllRead}>Marcar todas como leídas</button>
+                      )}
+                    </div>
+                    <div className="notifications-body">
+                      {loadingNotifs ? (
+                        <div className="notifications-empty">Cargando...</div>
+                      ) : notifs.length === 0 ? (
+                        <div className="notifications-empty">Sin notificaciones</div>
+                      ) : (
+                        notifs.slice(0, 8).map(n => (
+                          <div key={n.id} className="notification-item">
+                            <div className="notification-title">{n.titulo}</div>
+                            <div className="notification-message">{n.mensaje}</div>
+                            <div className="notification-meta">{n.tipo_display} · {n.tiempo_transcurrido}</div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <button
               className="theme-toggle"
               onClick={toggleTheme}
@@ -128,15 +230,30 @@ const Navbar = () => {
                 Dashboard
               </a>
             )}
-            <button
-              className="theme-toggle mobile"
-              onClick={() => { toggleTheme(); setIsOpen(false); }}
-              aria-label="Cambiar tema"
-              title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
-            >
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-              <span className="theme-toggle-text">{theme === 'dark' ? 'Claro' : 'Oscuro'}</span>
-            </button>
+            <div className="mobile-theme-notification">
+              <button
+                className="notification-toggle mobile"
+                aria-label="Notificaciones"
+                title="Notificaciones"
+                onClick={() => {
+                  console.log('Abrir notificaciones móvil');
+                  setIsOpen(false);
+                }}
+              >
+                <Bell size={18} />
+                <span className="notification-badge">0</span>
+                <span>Notificaciones</span>
+              </button>
+              <button
+                className="theme-toggle mobile"
+                onClick={() => { toggleTheme(); setIsOpen(false); }}
+                aria-label="Cambiar tema"
+                title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+              >
+                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                <span className="theme-toggle-text">{theme === 'dark' ? 'Claro' : 'Oscuro'}</span>
+              </button>
+            </div>
             <div className="mobile-auth">
               {isAuthenticated ? (
                 <>

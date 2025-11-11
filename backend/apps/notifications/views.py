@@ -20,14 +20,9 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return NotificationSerializer
 
     def get_queryset(self):
-        """Solo notificaciones del usuario actual"""
+        """Solo notificaciones del usuario actual (staff y no-staff)"""
         user = self.request.user
-
-        # Staff puede ver todas sus notificaciones
-        if user.is_staff:
-            return self.queryset.filter(usuario=user)
-
-        return self.queryset.none()
+        return self.queryset.filter(usuario=user)
 
     @action(detail=False, methods=['get'])
     def no_leidas(self, request):

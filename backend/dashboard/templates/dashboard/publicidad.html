@@ -189,7 +189,11 @@ async function verDetallesSolicitud(solicitudId) {
                     <td>${data.nombre_contacto || 'No especificado'}</td>
                 </tr>
                 <tr>
-                    <th>Email:</th>
+                    <th>Usuario:</th>
+                    <td>${data.usuario_username || 'No autenticado'}</td>
+                </tr>
+                <tr>
+                    <th>Email de contacto:</th>
                     <td>${data.email_contacto || 'No especificado'}</td>
                 </tr>
                 <tr>
@@ -316,7 +320,11 @@ async function verDetallesSolicitud(solicitudId) {
 async function verDetallesCampania(campaniaId) {
   try {
     const response = await fetch(`/dashboard/api/publicidad/campanias/${campaniaId}/`);
-    if (!response.ok) throw new Error('Error al cargar los detalles de la campaña');
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Error response:', errorData);
+      throw new Error('Error al cargar los detalles de la campaña');
+    }
     
     const campania = await response.json();
     const detallesDiv = document.getElementById('detallesCampaniaBody');
@@ -685,7 +693,7 @@ if (!document.getElementById('toastExito')) {
             <thead style="position: sticky; top: 0; background: white; z-index: 10;">
               <tr>
                 <th style="position: sticky; top: 0; background: white;">ID</th>
-                <th style="position: sticky; top: 0; background: white;">Usuario</th>
+                <th style="position: sticky; top: 0; background: white; min-width: 200px;">Usuario</th>
                 <th style="position: sticky; top: 0; background: white;">Estado</th>
                 <th style="position: sticky; top: 0; background: white;">Inicio</th>
                 <th style="position: sticky; top: 0; background: white;">Fin</th>
@@ -697,7 +705,12 @@ if (!document.getElementById('toastExito')) {
               {% for s in solicitudes %}
                 <tr>
                   <td>#{{ s.id }}</td>
-                  <td>{{ s.usuario.email }}</td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-bold">{{ s.usuario.username|default:'Usuario' }}</span>
+                      <small class="text-muted">{{ s.usuario.email|default:'Sin email' }}</small>
+                    </div>
+                  </td>
                   <td>
                     <span class="badge {% if s.estado == 'aprobada' %}bg-success{% elif s.estado == 'rechazada' %}bg-danger{% elif s.estado == 'en_revision' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
                       {% if s.estado == 'en_revision' %}Contactado en breve{% else %}{{ s.estado|title }}{% endif %}
@@ -1023,7 +1036,11 @@ function formatDate(dateString) {
 async function verDetallesCampania(campaniaId) {
   try {
     const response = await fetch(`/dashboard/api/publicidad/campanias/${campaniaId}/`);
-    if (!response.ok) throw new Error('Error al cargar los detalles de la campaña');
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Error response:', errorData);
+      throw new Error('Error al cargar los detalles de la campaña');
+    }
     
     const campania = await response.json();
     const detallesDiv = document.getElementById('detallesCampaniaBody');
