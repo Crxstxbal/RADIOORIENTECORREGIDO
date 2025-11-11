@@ -6,14 +6,14 @@
   .user-card {
     border: none;
     border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    background: white;
-    transition: transform 0.2s ease;
+    box-shadow: var(--card-shadow);
+    background: var(--card-bg);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
   .user-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
   .user-header {
@@ -25,15 +25,25 @@
 
   .search-box {
     border-radius: 12px;
-    border: 2px solid #E5E7EB;
+    border: 2px solid var(--border-color);
     padding: 12px 20px;
     transition: all 0.3s ease;
+    background: var(--card-bg);
+    color: var(--text-primary);
   }
 
   .search-box:focus {
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     outline: none;
+    background: var(--card-bg);
+    color: var(--text-primary);
+  }
+
+  .input-group-text {
+    background: var(--card-bg) !important;
+    border: 2px solid var(--border-color) !important;
+    color: var(--text-secondary) !important;
   }
 
   .btn-add {
@@ -89,14 +99,31 @@
     color: white;
   }
 
+  .badge-status {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+
+  .badge-active {
+    background: #D1FAE5;
+    color: #065F46;
+  }
+
+  html.dark .badge-active {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6EE7B7;
+  }
+
   .table-modern {
     border-collapse: separate;
     border-spacing: 0 8px;
   }
 
   .table-modern thead th {
-    background: #F9FAFB;
-    color: #6B7280;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
     font-weight: 700;
     text-transform: uppercase;
     font-size: 0.75rem;
@@ -106,19 +133,20 @@
   }
 
   .table-modern tbody tr {
-    background: white;
+    background: var(--card-bg);
     transition: all 0.2s ease;
   }
 
   .table-modern tbody tr:hover {
     transform: scale(1.01);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
   .table-modern tbody td {
     border: none;
     padding: 16px;
     vertical-align: middle;
+    color: var(--text-primary);
   }
 
   .table-modern tbody tr td:first-child {
@@ -127,6 +155,16 @@
 
   .table-modern tbody tr td:last-child {
     border-radius: 0 12px 12px 0;
+  }
+
+  .user-name {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .user-email {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
   }
 
   .btn-action {
@@ -142,7 +180,7 @@
   }
 
   .btn-action-edit {
-    background: #EEF2FF;
+    background: rgba(99, 102, 241, 0.1);
     color: #6366F1;
   }
 
@@ -152,7 +190,7 @@
   }
 
   .btn-action-delete {
-    background: #FEE2E2;
+    background: rgba(239, 68, 68, 0.1);
     color: #EF4444;
   }
 
@@ -168,7 +206,8 @@
   .pagination .page-link {
     border: none;
     border-radius: 10px;
-    color: #6B7280;
+    background: var(--card-bg);
+    color: var(--text-secondary);
     font-weight: 600;
     padding: 10px 16px;
     transition: all 0.2s ease;
@@ -184,6 +223,11 @@
     color: white;
   }
 
+  .pagination .page-item.disabled .page-link {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+  }
+
   .stats-badge {
     display: inline-block;
     padding: 8px 16px;
@@ -193,8 +237,22 @@
   }
 
   .stats-badge-info {
-    background: #DBEAFE;
-    color: #1E40AF;
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+  }
+
+  html.dark .stats-badge-info {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93C5FD;
+  }
+
+  .page-title {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  .page-subtitle {
+    color: var(--text-secondary);
   }
 </style>
 
@@ -202,11 +260,11 @@
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <h2 class="mb-2" style="font-weight: 700; color: #1f2937;">
+      <h2 class="mb-2 page-title">
         <i class="fas fa-users me-2" style="color: #667eea;"></i>
         Gestión de Usuarios
       </h2>
-      <p class="text-muted mb-0">
+      <p class="page-subtitle mb-0">
         <span class="stats-badge stats-badge-info">
           <i class="fas fa-users me-2"></i>Total: {{ paginator.count }} usuarios
         </span>
@@ -223,8 +281,8 @@
       <form method="get" action="{% url 'dashboard_users' %}" class="row g-3">
         <div class="col-md-10">
           <div class="input-group">
-            <span class="input-group-text bg-white border-end-0" style="border-radius: 12px 0 0 12px; border: 2px solid #E5E7EB; border-right: none;">
-              <i class="fas fa-search text-muted"></i>
+            <span class="input-group-text border-end-0" style="border-radius: 12px 0 0 12px; border-right: none;">
+              <i class="fas fa-search"></i>
             </span>
             <input
               type="text"
@@ -270,7 +328,7 @@
                     {{ user.username|slice:":2" }}
                   </div>
                   <div>
-                    <strong style="color: #1F2937;">{{ user.username }}</strong>
+                    <strong class="user-name">{{ user.username }}</strong>
                     {% if user.is_superuser %}
                     <span class="badge bg-warning ms-2" style="font-size: 0.65rem;">
                       <i class="fas fa-crown"></i>
@@ -279,12 +337,12 @@
                   </div>
                 </div>
               </td>
-              <td style="color: #6B7280;">{{ user.email }}</td>
-              <td style="color: #374151; font-weight: 500;">
+              <td class="user-email">{{ user.email }}</td>
+              <td class="user-name">
                 {% if user.first_name or user.last_name %}
                   {{ user.first_name }} {{ user.last_name }}
                 {% else %}
-                  <span class="text-muted">Sin nombre</span>
+                  <span class="user-email">Sin nombre</span>
                 {% endif %}
               </td>
               <td>
@@ -302,12 +360,12 @@
                   </span>
                 {% endif %}
               </td>
-              <td style="color: #6B7280; font-size: 0.875rem;">
+              <td class="user-email">
                 {{ user.fecha_creacion|date:"d/m/Y H:i" }}
               </td>
               <td>
                 {% if user.is_active %}
-                  <span class="badge bg-success" style="padding: 6px 12px; border-radius: 8px;">
+                  <span class="badge-status badge-active">
                     <i class="fas fa-check-circle me-1"></i>Activo
                   </span>
                 {% else %}

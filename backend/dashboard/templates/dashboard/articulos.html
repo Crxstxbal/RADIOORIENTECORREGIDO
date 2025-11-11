@@ -6,14 +6,14 @@
   .article-card {
     border: none;
     border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    background: white;
+    box-shadow: var(--card-shadow);
+    background: var(--card-bg);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
   .article-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
   .stat-card-modern {
@@ -44,12 +44,12 @@
     font-size: 2rem;
     font-weight: 700;
     margin: 0;
-    color: #1F2937;
+    color: var(--text-primary);
   }
 
   .stat-card-modern p {
     margin: 0;
-    color: #6B7280;
+    color: var(--text-secondary);
     font-weight: 600;
     font-size: 0.875rem;
     text-transform: uppercase;
@@ -94,15 +94,19 @@
 
   .search-box-modern {
     border-radius: 12px;
-    border: 2px solid #E5E7EB;
+    border: 2px solid var(--border-color);
     padding: 12px 20px;
     transition: all 0.3s ease;
+    background: var(--card-bg);
+    color: var(--text-primary);
   }
 
   .search-box-modern:focus {
     border-color: #6366F1;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     outline: none;
+    background: var(--card-bg);
+    color: var(--text-primary);
   }
 
   .btn-add-modern {
@@ -127,8 +131,8 @@
   }
 
   .table-articles thead th {
-    background: #F9FAFB;
-    color: #6B7280;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
     font-weight: 700;
     text-transform: uppercase;
     font-size: 0.75rem;
@@ -138,7 +142,7 @@
   }
 
   .table-articles tbody tr {
-    background: white;
+    background: var(--card-bg);
     transition: all 0.2s ease;
   }
 
@@ -151,6 +155,7 @@
     border: none;
     padding: 16px;
     vertical-align: middle;
+    color: var(--text-primary);
   }
 
   .table-articles tbody tr td:first-child {
@@ -159,6 +164,29 @@
 
   .table-articles tbody tr td:last-child {
     border-radius: 0 12px 12px 0;
+  }
+
+  .article-title {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .article-resumen {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+  }
+
+  .article-author {
+    color: var(--text-secondary);
+  }
+
+  .article-date {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+  }
+
+  .article-views {
+    color: var(--text-secondary);
   }
 
   .badge-status {
@@ -173,9 +201,19 @@
     color: #065F46;
   }
 
+  html.dark .badge-published {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6EE7B7;
+  }
+
   .badge-draft {
     background: #FEF3C7;
     color: #92400E;
+  }
+
+  html.dark .badge-draft {
+    background: rgba(245, 158, 11, 0.2);
+    color: #FCD34D;
   }
 
   .badge-category {
@@ -185,6 +223,11 @@
     border-radius: 6px;
     font-size: 0.75rem;
     font-weight: 600;
+  }
+
+  html.dark .badge-category {
+    background: rgba(99, 102, 241, 0.2);
+    color: #A5B4FC;
   }
 
   .btn-action-modern {
@@ -200,7 +243,7 @@
   }
 
   .btn-action-edit {
-    background: #EEF2FF;
+    background: rgba(99, 102, 241, 0.1);
     color: #6366F1;
   }
 
@@ -210,7 +253,7 @@
   }
 
   .btn-action-delete {
-    background: #FEE2E2;
+    background: rgba(239, 68, 68, 0.1);
     color: #EF4444;
   }
 
@@ -226,7 +269,8 @@
   .pagination .page-link {
     border: none;
     border-radius: 10px;
-    color: #6B7280;
+    background: var(--card-bg);
+    color: var(--text-secondary);
     font-weight: 600;
     padding: 10px 16px;
     transition: all 0.2s ease;
@@ -242,16 +286,36 @@
     color: white;
   }
 
+  .pagination .page-item.disabled .page-link {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+  }
+
   .collapse-header {
-    background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+    background: var(--bg-tertiary);
     border-radius: 12px;
     padding: 16px 20px;
     cursor: pointer;
     transition: all 0.2s ease;
+    color: var(--text-primary);
   }
 
   .collapse-header:hover {
-    background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+    background: rgba(99, 102, 241, 0.1);
+  }
+
+  .form-label {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .page-title {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  .page-subtitle {
+    color: var(--text-secondary);
   }
 </style>
 
@@ -259,11 +323,11 @@
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <h2 class="mb-2" style="font-weight: 700; color: #1f2937;">
+      <h2 class="mb-2 page-title">
         <i class="fas fa-newspaper me-2" style="color: #6366F1;"></i>
         Gestión de Artículos
       </h2>
-      <p class="text-muted mb-0">Administra el contenido de tu radio</p>
+      <p class="page-subtitle mb-0">Administra el contenido de tu radio</p>
     </div>
     <button class="btn btn-add-modern" data-bs-toggle="modal" data-bs-target="#addArticuloModal">
       <i class="fas fa-plus me-2"></i>Nuevo Artículo
@@ -315,11 +379,11 @@
     <div class="card-body p-0">
       <div class="collapse-header" data-bs-toggle="collapse" data-bs-target="#categoriasCollapse">
         <div class="d-flex justify-content-between align-items-center">
-          <h5 class="mb-0" style="color: #374151; font-weight: 600;">
+          <h5 class="mb-0" style="font-weight: 600;">
             <i class="fas fa-tags me-2" style="color: #6366F1;"></i>
             Gestión de Categorías
           </h5>
-          <i class="fas fa-chevron-down" style="color: #9CA3AF;"></i>
+          <i class="fas fa-chevron-down" style="color: var(--text-tertiary);"></i>
         </div>
       </div>
 
@@ -328,13 +392,13 @@
           <form method="post" action="{% url 'agregar_categoria' %}" class="row g-3 mb-4">
             {% csrf_token %}
             <div class="col-md-5">
-              <label class="form-label fw-bold" style="color: #374151;">
+              <label class="form-label">
                 <i class="fas fa-tag me-2"></i>Nombre de la Categoría
               </label>
               <input type="text" class="form-control search-box-modern" name="nombre" placeholder="Ej: Noticias, Eventos..." required>
             </div>
             <div class="col-md-5">
-              <label class="form-label fw-bold" style="color: #374151;">
+              <label class="form-label">
                 <i class="fas fa-info-circle me-2"></i>Descripción
               </label>
               <input type="text" class="form-control search-box-modern" name="descripcion" placeholder="Breve descripción...">
@@ -348,19 +412,19 @@
 
           <div class="table-responsive">
             <table class="table">
-              <thead style="background: #F9FAFB;">
+              <thead style="background: var(--bg-tertiary);">
                 <tr>
-                  <th style="border: none; color: #6B7280; font-weight: 600;">Nombre</th>
-                  <th style="border: none; color: #6B7280; font-weight: 600;">Descripción</th>
-                  <th style="border: none; color: #6B7280; font-weight: 600;">Artículos</th>
-                  <th style="border: none; color: #6B7280; font-weight: 600;">Acciones</th>
+                  <th style="border: none; color: var(--text-secondary); font-weight: 600;">Nombre</th>
+                  <th style="border: none; color: var(--text-secondary); font-weight: 600;">Descripción</th>
+                  <th style="border: none; color: var(--text-secondary); font-weight: 600;">Artículos</th>
+                  <th style="border: none; color: var(--text-secondary); font-weight: 600;">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {% for categoria in categorias %}
                 <tr>
-                  <td style="border: none;"><strong>{{ categoria.nombre }}</strong></td>
-                  <td style="border: none; color: #6B7280;">{{ categoria.descripcion|default:"Sin descripción" }}</td>
+                  <td style="border: none;"><strong style="color: var(--text-primary);">{{ categoria.nombre }}</strong></td>
+                  <td style="border: none; color: var(--text-secondary);">{{ categoria.descripcion|default:"Sin descripción" }}</td>
                   <td style="border: none;">
                     <span class="badge-category">{{ categoria.articulos.count }}</span>
                   </td>
@@ -377,8 +441,8 @@
                 {% empty %}
                 <tr>
                   <td colspan="4" class="text-center py-4" style="border: none;">
-                    <i class="fas fa-tags fa-3x text-muted mb-2"></i>
-                    <p class="text-muted mb-0">No hay categorías registradas</p>
+                    <i class="fas fa-tags fa-3x mb-2" style="color: var(--text-tertiary); opacity: 0.5;"></i>
+                    <p class="mb-0" style="color: var(--text-tertiary);">No hay categorías registradas</p>
                   </td>
                 </tr>
                 {% endfor %}
@@ -395,7 +459,7 @@
     <div class="card-body p-4">
       <form method="get" action="{% url 'dashboard_articulos' %}" class="row g-3">
         <div class="col-md-4">
-          <label class="form-label fw-bold" style="color: #374151;">
+          <label class="form-label">
             <i class="fas fa-filter me-2"></i>Estado
           </label>
           <select class="form-select search-box-modern" name="status">
@@ -405,7 +469,7 @@
           </select>
         </div>
         <div class="col-md-6">
-          <label class="form-label fw-bold" style="color: #374151;">
+          <label class="form-label">
             <i class="fas fa-search me-2"></i>Buscar
           </label>
           <input type="text" class="form-control search-box-modern" name="search"
@@ -441,13 +505,13 @@
             <tr>
               <td>
                 <div>
-                  <strong style="color: #1F2937;">{{ articulo.titulo|truncatechars:40 }}</strong>
+                  <strong class="article-title">{{ articulo.titulo|truncatechars:40 }}</strong>
                   {% if articulo.resumen %}
-                    <br><small class="text-muted">{{ articulo.resumen|truncatechars:60 }}</small>
+                    <br><small class="article-resumen">{{ articulo.resumen|truncatechars:60 }}</small>
                   {% endif %}
                 </div>
               </td>
-              <td style="color: #6B7280;">
+              <td class="article-author">
                 {% if articulo.autor.first_name or articulo.autor.last_name %}
                   {{ articulo.autor.first_name }} {{ articulo.autor.last_name }}
                 {% else %}
@@ -458,7 +522,7 @@
                 {% if articulo.categoria %}
                   <span class="badge-category">{{ articulo.categoria.nombre }}</span>
                 {% else %}
-                  <span class="text-muted">Sin categoría</span>
+                  <span class="article-author">Sin categoría</span>
                 {% endif %}
               </td>
               <td>
@@ -472,10 +536,10 @@
                   </span>
                 {% endif %}
               </td>
-              <td style="color: #6B7280; font-size: 0.875rem;">
+              <td class="article-date">
                 {{ articulo.fecha_creacion|date:"d/m/Y" }}
               </td>
-              <td style="color: #6B7280;">
+              <td class="article-views">
                 <i class="fas fa-eye me-1"></i>{{ articulo.vistas|default:0 }}
               </td>
               <td class="text-center">
@@ -501,8 +565,8 @@
             {% empty %}
             <tr>
               <td colspan="7" class="text-center py-5">
-                <i class="fas fa-newspaper fa-4x text-muted mb-3 d-block"></i>
-                <p class="text-muted mb-3">
+                <i class="fas fa-newspaper fa-4x mb-3 d-block" style="color: var(--text-tertiary); opacity: 0.5;"></i>
+                <p class="mb-3" style="color: var(--text-tertiary);">
                   {% if search_query or status_filter %}
                     No se encontraron artículos que coincidan con los filtros
                   {% else %}
@@ -523,9 +587,9 @@
 
       <!-- Paginación -->
       {% if articulos.paginator.num_pages > 1 %}
-      <div class="card-footer bg-white border-top-0">
+      <div class="card-footer border-top-0" style="background: var(--card-bg);">
         <div class="d-flex justify-content-between align-items-center">
-          <div class="text-muted">
+          <div style="color: var(--text-tertiary);">
             Mostrando {{ articulos.start_index }} - {{ articulos.end_index }} de {{ paginator.count }} artículos
           </div>
           <nav>
@@ -590,14 +654,14 @@
         {% csrf_token %}
         <div class="modal-body p-4">
           <div class="mb-3">
-            <label class="form-label fw-bold">
+            <label class="form-label">
               <i class="fas fa-heading me-2"></i>Título *
             </label>
             <input type="text" class="form-control search-box-modern" name="titulo" required placeholder="Ingrese el título del artículo">
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-bold">
+            <label class="form-label">
               <i class="fas fa-folder me-2"></i>Categoría *
             </label>
             <select class="form-select search-box-modern" name="categoria" required>
@@ -609,14 +673,14 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-bold">
+            <label class="form-label">
               <i class="fas fa-align-left me-2"></i>Resumen
             </label>
             <textarea class="form-control search-box-modern" name="resumen" rows="2" placeholder="Breve resumen del artículo"></textarea>
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-bold">
+            <label class="form-label">
               <i class="fas fa-file-alt me-2"></i>Contenido *
             </label>
             <textarea class="form-control search-box-modern" name="contenido" rows="8" required placeholder="Escriba el contenido del artículo..."></textarea>
@@ -628,21 +692,21 @@
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label fw-bold">Subir Imagen</label>
+                <label class="form-label">Subir Imagen</label>
                 <input type="file" class="form-control search-box-modern" name="imagen_portada" accept="image/*">
               </div>
             </div>
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label fw-bold">O URL de Imagen</label>
+                <label class="form-label">O URL de Imagen</label>
                 <input type="url" class="form-control search-box-modern" name="imagen_url" placeholder="https://ejemplo.com/imagen.jpg">
               </div>
             </div>
           </div>
 
-          <div class="form-check p-3" style="background: #F3F4F6; border-radius: 12px;">
+          <div class="form-check p-3" style="background: var(--bg-tertiary); border-radius: 12px;">
             <input class="form-check-input" type="checkbox" name="publicado" id="publicado" checked>
-            <label class="form-check-label fw-bold" for="publicado">
+            <label class="form-check-label" for="publicado" style="color: var(--text-primary); font-weight: 600;">
               <i class="fas fa-eye me-2"></i>Publicar inmediatamente
             </label>
           </div>
@@ -674,14 +738,14 @@
         {% csrf_token %}
         <div class="modal-body p-4">
           <div class="mb-3">
-            <label class="form-label fw-bold">
+            <label class="form-label">
               <i class="fas fa-heading me-2"></i>Título *
             </label>
             <input type="text" class="form-control search-box-modern" name="titulo" id="edit-titulo" required>
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-bold">
+            <label class="form-label">
               <i class="fas fa-folder me-2"></i>Categoría *
             </label>
             <select class="form-select search-box-modern" name="categoria" id="edit-categoria" required>
@@ -693,14 +757,14 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-bold">
+            <label class="form-label">
               <i class="fas fa-align-left me-2"></i>Resumen
             </label>
             <textarea class="form-control search-box-modern" name="resumen" id="edit-resumen" rows="2"></textarea>
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-bold">
+            <label class="form-label">
               <i class="fas fa-file-alt me-2"></i>Contenido *
             </label>
             <textarea class="form-control search-box-modern" name="contenido" id="edit-contenido" rows="8" required></textarea>
@@ -712,21 +776,21 @@
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label fw-bold">Cambiar Imagen</label>
+                <label class="form-label">Cambiar Imagen</label>
                 <input type="file" class="form-control search-box-modern" name="imagen_portada" accept="image/*">
               </div>
             </div>
             <div class="col-md-6">
               <div class="mb-3">
-                <label class="form-label fw-bold">O URL de Imagen</label>
+                <label class="form-label">O URL de Imagen</label>
                 <input type="url" class="form-control search-box-modern" name="imagen_url" id="edit-imagen_url" placeholder="https://ejemplo.com/imagen.jpg">
               </div>
             </div>
           </div>
 
-          <div class="form-check p-3" style="background: #F3F4F6; border-radius: 12px;">
+          <div class="form-check p-3" style="background: var(--bg-tertiary); border-radius: 12px;">
             <input class="form-check-input" type="checkbox" name="publicado" id="edit-publicado">
-            <label class="form-check-label fw-bold" for="edit-publicado">
+            <label class="form-check-label" for="edit-publicado" style="color: var(--text-primary); font-weight: 600;">
               <i class="fas fa-eye me-2"></i>Artículo publicado
             </label>
           </div>
