@@ -3013,18 +3013,23 @@ def dashboard_emergentes(request):
     stats_estados = BandaEmergente.objects.values('estado__nombre').annotate(
         total=Count('id')
     ).order_by('estado__nombre')
-    
+
     # Convertir a diccionario para el template
     stats_estados = {item['estado__nombre']: item['total'] for item in stats_estados}
-    
+
+    # Obtener top géneros musicales (top 5)
+    top_generos = BandaEmergente.objects.values('genero__nombre').annotate(
+        total=Count('id')
+    ).order_by('-total')[:5]
+
     # Paginación
-    paginator = Paginator(bandas, 20)  # 20 bandas por página
+    paginator = Paginator(bandas, 10)  # 10 bandas por página
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     # Obtener todos los géneros para el filtro y la gestión
     generos = GeneroMusical.objects.all().order_by('nombre')
-    
+
     context = {
         'bandas': page_obj,
         'total_bandas': paginator.count,
@@ -3034,6 +3039,7 @@ def dashboard_emergentes(request):
         'genero_actual': int(genero) if genero and genero.isdigit() else None,
         'busqueda': busqueda or '',
         'stats_estados': stats_estados,
+        'top_generos': top_generos,
     }
     
     return render(request, 'dashboard/emergente.html', context)
