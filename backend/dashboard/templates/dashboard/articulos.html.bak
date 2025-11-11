@@ -1,0 +1,721 @@
+{% extends 'dashboard/base.html' %}
+
+{% block page_title %}Gestión de Artículos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-newspaper text-primary me-2"></i>
+        Gestión de Artículos
+    </h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addArticuloModal">
+        <i class="fas fa-plus me-2"></i>
+        Nuevo Artículo
+    </button>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-newspaper fa-2x text-primary mb-2"></i>
+                <h5>{{ total_articles }}</h5>
+                <small class="text-muted">Total Artículos</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-eye fa-2x text-success mb-2"></i>
+                <h5>{{ published_count }}</h5>
+                <small class="text-muted">Publicados</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-edit fa-2x text-warning mb-2"></i>
+                <h5>{{ draft_count }}</h5>
+                <small class="text-muted">Borradores</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-folder fa-2x text-info mb-2"></i>
+                <h5 id="categorias-count">{{ categorias|length }}</h5>
+                <small class="text-muted">Categorías</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gestión de Categorías -->
+<div class="card mb-4 bg-light bg-opacity-10">
+    <div class="card-header bg-light bg-opacity-10 d-flex justify-content-between align-items-center border-0">
+        <h5 class="mb-0 text-body">
+            <i class="fas fa-tags text-primary me-2"></i>
+            Gestión de Categorías
+        </h5>
+        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#categoriasCollapse" aria-expanded="false" aria-controls="categoriasCollapse">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
+    <div class="collapse" id="categoriasCollapse">
+        <div class="card-body">
+            <form id="form-agregar-categoria" method="post" action="{% url 'agregar_categoria' %}" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-5">
+                    <label for="nuevaCategoria" class="form-label">Nombre de la Categoría</label>
+                    <input type="text" class="form-control" id="nuevaCategoria" name="nombre" placeholder="Ej: Noticias, Eventos, Música..." required>
+                </div>
+                <div class="col-md-5">
+                    <label for="descripcionCategoria" class="form-label">Descripción</label>
+                    <input type="text" class="form-control" id="descripcionCategoria" name="descripcion" placeholder="Breve descripción de la categoría...">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-plus me-1"></i>
+                        Agregar
+                    </button>
+                </div>
+            </form>
+            
+            <div class="mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">Todas las categorías</h6>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#listaCategorias" aria-expanded="true" aria-controls="listaCategorias">
+                        <i class="fas fa-list me-1"></i> Ver todas
+                    </button>
+                </div>
+                
+                <div class="collapse show" id="listaCategorias">
+                    <div class="card card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Descripción</th>
+                                        <th>Artículos</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lista-categorias-body">
+                                    {% for categoria in categorias %}
+                                    <tr id="categoria-row-{{ categoria.id }}">
+                                        <td><strong>{{ categoria.nombre }}</strong></td>
+                                        <td>{{ categoria.descripcion|default:"Sin descripción" }}</td>
+                                        <td>{{ categoria.articulos.count }}</td>
+                                        <td>
+                                            <form method="post" action="{% url 'eliminar_categoria' categoria.id %}" class="d-inline form-eliminar-categoria">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" {% if categoria.articulos.exists %}disabled title="No se puede eliminar una categoría con artículos"{% endif %}>
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr id="no-categorias-row">
+                                        <td colspan="4" class="text-center py-3 text-muted">
+                                            <i class="fas fa-tags fa-2x mb-2"></i>
+                                            <p class="mb-0">No hay categorías registradas</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="mb-0">Artículos</h5>
+            </div>
+            <div class="col-auto">
+                <div class="input-group">
+                    <select class="form-select">
+                        <option>Todos los estados</option>
+                        <option>Publicados</option>
+                        <option>Borradores</option>
+                    </select>
+                    <input type="text" class="form-control" placeholder="Buscar artículos...">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Título</th>
+                        <th>Autor</th>
+                        <th>Categoría</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for articulo in articulos %}
+                    <tr>
+                        <td>
+                            <div>
+                                <strong>{{ articulo.titulo|truncatechars:50 }}</strong>
+                                {% if articulo.resumen %}
+                                    <br><small class="text-muted">{{ articulo.resumen|truncatechars:80 }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>{{ articulo.autor.nombre|default:articulo.autor.usuario }}</td>
+                        <td>
+                            {% if articulo.categoria %}
+                                <span class="badge bg-secondary">{{ articulo.categoria.nombre }}</span>
+                            {% else %}
+                                <span class="text-muted">Sin categoría</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if articulo.publicado %}
+                                <span class="badge bg-success">Publicado</span>
+                            {% else %}
+                                <span class="badge bg-warning">Borrador</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ articulo.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                        data-bs-toggle="modal" data-bs-target="#editArticuloModal"
+                                        data-articulo-id="{{ articulo.id }}"
+                                        data-articulo-titulo="{{ articulo.titulo }}"
+                                        data-articulo-contenido="{{ articulo.contenido }}"
+                                        data-articulo-resumen="{{ articulo.resumen }}"
+                                        data-articulo-categoria="{{ articulo.categoria.id }}"
+                                        data-articulo-imagen="{{ articulo.imagen_url }}"
+                                        data-articulo-publicado="{{ articulo.publicado }}"
+                                        title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="deleteItem('{% url 'delete_articulo' articulo.id %}', '{{ articulo.titulo|escapejs }}')"
+                                        title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No hay artículos publicados</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addArticuloModal">
+                                Crear Primer Artículo
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar artículo -->
+<div class="modal fade" id="addArticuloModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Nuevo Artículo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'create_articulo' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-heading me-1"></i>
+                            Título *
+                        </label>
+                        <input type="text" class="form-control" name="titulo" required placeholder="Ingrese el título del artículo">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-folder me-1"></i>
+                            Categoría *
+                        </label>
+                        <select class="form-select" name="categoria" required>
+                            <option value="">Seleccione una categoría</option>
+                            {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Seleccione la categoría del artículo</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-align-left me-1"></i>
+                            Resumen
+                        </label>
+                        <textarea class="form-control" name="resumen" rows="2" placeholder="Breve resumen del artículo"></textarea>
+                        <small class="text-muted">Un breve resumen que aparecerá en las vistas previas</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-file-alt me-1"></i>
+                            Contenido *
+                        </label>
+                        <textarea class="form-control" name="contenido" rows="8" required placeholder="Escriba el contenido del artículo..."></textarea>
+                        <small class="text-muted">Contenido completo del artículo</small>
+                    </div>
+                    
+                    <hr class="my-4">
+                    <h6 class="mb-3"><i class="fas fa-photo-video me-2 text-primary"></i>Contenido Multimedia (Opcional)</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-image me-1"></i>
+                                    Imagen Banner (Horizontal)
+                                </label>
+                                <input type="file" class="form-control" name="imagen_portada" accept="image/*">
+                                <small class="text-muted">Para modal/detalle (1200x400px recomendado)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-image me-1"></i>
+                                    Imagen Miniatura (Cuadrada)
+                                </label>
+                                <input type="file" class="form-control" name="imagen_thumbnail" accept="image/*">
+                                <small class="text-muted">Para tarjetas de lista (600x600px recomendado)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-link me-1"></i>
+                                    O URL de Imagen Externa
+                                </label>
+                                <input type="url" class="form-control" name="imagen_url" placeholder="https://ejemplo.com/imagen.jpg">
+                                <small class="text-muted">Alternativa si no subes imágenes</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-video me-1"></i>
+                                    URL de Video
+                                </label>
+                                <input type="url" class="form-control" name="video_url" placeholder="https://youtube.com/watch?v=...">
+                                <small class="text-muted">YouTube, Vimeo, etc.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-paperclip me-1"></i>
+                                    Archivo Adjunto
+                                </label>
+                                <input type="file" class="form-control" name="archivo_adjunto">
+                                <small class="text-muted">PDF, Word, Excel (máx. 10MB)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="publicado" id="publicado" checked>
+                        <label class="form-check-label" for="publicado">
+                            <i class="fas fa-eye me-1"></i>
+                            Publicar inmediatamente
+                        </label>
+                        <br>
+                        <small class="text-muted">Si no está marcado, el artículo se guardará como borrador</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>
+                        Crear Artículo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar artículo -->
+<div class="modal fade" id="editArticuloModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>
+                    Editar Artículo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="editArticuloForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-heading me-1"></i>
+                            Título *
+                        </label>
+                        <input type="text" class="form-control" name="titulo" id="edit-titulo" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-folder me-1"></i>
+                            Categoría *
+                        </label>
+                        <select class="form-select" name="categoria" id="edit-categoria" required>
+                            <option value="">Seleccione una categoría</option>
+                            {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-align-left me-1"></i>
+                            Resumen
+                        </label>
+                        <textarea class="form-control" name="resumen" id="edit-resumen" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-file-alt me-1"></i>
+                            Contenido *
+                        </label>
+                        <textarea class="form-control" name="contenido" id="edit-contenido" rows="8" required></textarea>
+                    </div>
+                    
+                    <hr class="my-4">
+                    <h6 class="mb-3"><i class="fas fa-photo-video me-2 text-primary"></i>Actualizar Multimedia (Opcional)</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-image me-1"></i>
+                                    Cambiar Imagen de Portada
+                                </label>
+                                <input type="file" class="form-control" name="imagen_portada" accept="image/*">
+                                <small class="text-muted">Dejar vacío para mantener la actual</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-link me-1"></i>
+                                    O URL de Imagen Externa
+                                </label>
+                                <input type="url" class="form-control" name="imagen_url" id="edit-imagen_url" placeholder="https://ejemplo.com/imagen.jpg">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-video me-1"></i>
+                                    URL de Video
+                                </label>
+                                <input type="url" class="form-control" name="video_url" id="edit-video_url" placeholder="https://youtube.com/watch?v=...">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-paperclip me-1"></i>
+                                    Cambiar Archivo Adjunto
+                                </label>
+                                <input type="file" class="form-control" name="archivo_adjunto">
+                                <small class="text-muted">Dejar vacío para mantener el actual</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="publicado" id="edit-publicado">
+                        <label class="form-check-label" for="edit-publicado">
+                            <i class="fas fa-eye me-1"></i>
+                            Artículo publicado
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>
+                        Actualizar Artículo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar click en botones de editar
+    document.querySelectorAll('[data-bs-target="#editArticuloModal"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const articuloId = this.getAttribute('data-articulo-id');
+            const titulo = this.getAttribute('data-articulo-titulo');
+            const contenido = this.getAttribute('data-articulo-contenido');
+            const resumen = this.getAttribute('data-articulo-resumen');
+            const categoria = this.getAttribute('data-articulo-categoria');
+            const imagenUrl = this.getAttribute('data-articulo-imagen');
+            const publicado = this.getAttribute('data-articulo-publicado') === 'True';
+            
+            // Llenar el formulario
+            document.getElementById('edit-titulo').value = titulo || '';
+            document.getElementById('edit-contenido').value = contenido || '';
+            document.getElementById('edit-resumen').value = resumen || '';
+            document.getElementById('edit-categoria').value = categoria || '';
+            document.getElementById('edit-imagen_url').value = imagenUrl || '';
+            document.getElementById('edit-publicado').checked = publicado;
+            
+            // Actualizar la acción del formulario
+            document.getElementById('editArticuloForm').action = `/dashboard/articulos/edit/${articuloId}/`;
+        });
+    });
+
+    // Función para actualizar el contador de categorías
+    function updateCategoriasCount() {
+        const count = document.querySelectorAll('#lista-categorias-body tr:not(#no-categorias-row)').length;
+        const countElement = document.getElementById('categorias-count');
+        if (countElement) {
+            countElement.textContent = count;
+        }
+    }
+
+    // Función para mostrar notificaciones
+    function showNotification(message, type = 'success') {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const notification = document.createElement('div');
+        notification.className = `alert ${alertClass} alert-dismissible fade show notification`;
+        notification.role = 'alert';
+        notification.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
+                <div>${message}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        
+        const container = document.querySelector('.notification-container');
+        container.appendChild(notification);
+        
+        // Forzar el reflow para activar la animación
+        void notification.offsetWidth;
+        notification.classList.add('show');
+        
+        // Auto cerrar después de 5 segundos
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 5000);
+        
+        // Cerrar al hacer clic en el botón
+        notification.querySelector('.btn-close').addEventListener('click', () => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        });
+    }
+
+    // Manejar envío del formulario de agregar categoría
+    const formAgregarCategoria = document.getElementById('form-agregar-categoria');
+    if (formAgregarCategoria) {
+        formAgregarCategoria.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const url = this.action;
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFTTOKEN': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Agregar la nueva categoría a la tabla
+                    const tbody = document.getElementById('lista-categorias-body');
+                    const noCategoriasRow = document.getElementById('no-categorias-row');
+                    
+                    if (noCategoriasRow) {
+                        tbody.innerHTML = ''; // Eliminar el mensaje de "No hay categorías"
+                    }
+                    
+                    const newRow = document.createElement('tr');
+                    newRow.id = `categoria-row-${data.categoria.id}`;
+                    newRow.innerHTML = `
+                        <td><strong>${data.categoria.nombre}</strong></td>
+                        <td>${data.categoria.descripcion || 'Sin descripción'}</td>
+                        <td>0</td>
+                        <td>
+                            <form method="post" action="/dashboard/articulos/categorias/eliminar/${data.categoria.id}/" class="d-inline form-eliminar-categoria">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="${formData.get('csrfmiddlewaretoken')}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    `;
+                    
+                    tbody.insertBefore(newRow, tbody.firstChild);
+                    
+                    // Actualizar el contador de categorías
+                    updateCategoriasCount();
+                    
+                    // Agregar la categoría al select del formulario de artículos
+                    const selectCategoria = document.querySelector('select[name="categoria"]');
+                    if (selectCategoria) {
+                        const option = document.createElement('option');
+                        option.value = data.categoria.id;
+                        option.textContent = data.categoria.nombre;
+                        selectCategoria.appendChild(option);
+                    }
+                    
+                    // Mostrar notificación y limpiar el formulario
+                    showNotification(data.message);
+                    this.reset();
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al procesar la solicitud', 'error');
+            });
+        });
+    }
+
+    // Manejar eliminación de categorías
+    document.addEventListener('submit', function(e) {
+        if (e.target && e.target.classList.contains('form-eliminar-categoria')) {
+            e.preventDefault();
+            
+            if (!confirm('¿Está seguro de que desea eliminar esta categoría?')) {
+                return false;
+            }
+            
+            const form = e.target;
+            const url = form.action;
+            const categoriaId = url.split('/').filter(Boolean).pop();
+            const formData = new FormData(form);
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFTTOKEN': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Eliminar la fila de la tabla
+                    const row = document.getElementById(`categoria-row-${categoriaId}`);
+                    if (row) {
+                        row.remove();
+                        // Actualizar el contador de categorías
+                        updateCategoriasCount();
+                    }
+                    
+                    // Verificar si no hay más categorías
+                    const tbody = document.getElementById('lista-categorias-body');
+                    if (tbody.children.length === 0) {
+                        tbody.innerHTML = `
+                            <tr id="no-categorias-row">
+                                <td colspan="4" class="text-center py-3 text-muted">
+                                    <i class="fas fa-tags fa-2x mb-2"></i>
+                                    <p class="mb-0">No hay categorías registradas</p>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    
+                    // Eliminar la opción del select de categorías
+                    const selectCategoria = document.querySelector('select[name="categoria"]');
+                    if (selectCategoria) {
+                        const option = selectCategoria.querySelector(`option[value="${categoriaId}"]`);
+                        if (option) {
+                            option.remove();
+                        }
+                    }
+                    
+                    showNotification(data.message);
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al procesar la solicitud', 'error');
+            });
+            
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -83,28 +83,80 @@ def dashboard_calendario(request):
 @login_required
 @user_passes_test(is_staff_user)
 def dashboard_users(request):
-    """Gestión de usuarios"""
-    users = User.objects.all().order_by('-fecha_creacion')
-    return render(request, 'dashboard/users.html', {'users': users})
+    """Gestión de usuarios con paginación y búsqueda"""
+    # Obtener parámetro de búsqueda
+    search_query = request.GET.get('search', '').strip()
+
+    # Filtrar usuarios
+    users = User.objects.all()
+    if search_query:
+        users = users.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+
+    users = users.order_by('-fecha_creacion')
+
+    # Paginación - 10 usuarios por página
+    paginator = Paginator(users, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'dashboard/users.html', {
+        'users': page_obj,
+        'search_query': search_query,
+        'paginator': paginator,
+    })
 
 @login_required
 @user_passes_test(is_staff_user)
 def dashboard_articulos(request):
-    """Gestión de artículos"""
-    articulos = Articulo.objects.select_related('autor', 'categoria').all().order_by('-fecha_creacion')
+    """Gestión de artículos con paginación y búsqueda"""
+    # Obtener parámetros de búsqueda y filtro
+    search_query = request.GET.get('search', '').strip()
+    status_filter = request.GET.get('status', '')
+
+    # Filtrar artículos
+    articulos = Articulo.objects.select_related('autor', 'categoria').all()
+
+    if search_query:
+        articulos = articulos.filter(
+            Q(titulo__icontains=search_query) |
+            Q(resumen__icontains=search_query) |
+            Q(contenido__icontains=search_query)
+        )
+
+    if status_filter == 'publicado':
+        articulos = articulos.filter(publicado=True)
+    elif status_filter == 'borrador':
+        articulos = articulos.filter(publicado=False)
+
+    articulos = articulos.order_by('-fecha_creacion')
+
+    # Paginación - 10 artículos por página
+    paginator = Paginator(articulos, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Obtener categorías
     categorias = Categoria.objects.all().order_by('nombre')
 
     # Contadores para tarjetas: total, publicados y borradores
-    total_articles = articulos.count()
+    total_articles = Articulo.objects.count()
     published_count = Articulo.objects.filter(publicado=True).count()
     draft_count = Articulo.objects.filter(publicado=False).count()
 
     return render(request, 'dashboard/articulos.html', {
-        'articulos': articulos,
+        'articulos': page_obj,
         'categorias': categorias,
         'total_articles': total_articles,
         'published_count': published_count,
         'draft_count': draft_count,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'paginator': paginator,
     })
 
 @login_required
