@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+import ColorThief from 'colorthief';
 
 function parseDims(dimStr) {
   if (!dimStr) return null;
@@ -43,6 +44,8 @@ export default function PublicidadCarousel({
   const [index, setIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [dominantColor, setDominantColor] = useState('#4f46e5');
+  const colorThief = useRef(new ColorThief());
   const timerRef = useRef(null);
   const dims = useMemo(() => parseDims(dimensiones), [dimensiones]);
 
@@ -244,8 +247,9 @@ export default function PublicidadCarousel({
     padding: 0,
     margin: '5px auto',
     maxWidth: '100%',
-    width: '100%',
-    boxSizing: 'border-box'
+    width: 'fit-content',
+    boxSizing: 'content-box',
+    height: 'auto'
   };
 
   //No renderizar paneles fijos en móvil
@@ -258,25 +262,28 @@ export default function PublicidadCarousel({
     'top': {
       ...baseContainerStyle,
       display: 'flex',
-      margin: '0 auto',
-      padding: '8px 0',
-      maxWidth: '100%',
-      width: '100%',
+      margin: '20px auto',
+      padding: '0',
+      maxWidth: '850px',
+      width: '92%',
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '#fff',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-      borderBottom: '1px solid #f0f0f0',
+      backgroundColor: 'transparent',
+      boxShadow: 'none',
+      borderRadius: '0',
+      border: 'none',
       height: 'auto',
-      maxHeight: '110px',
-      overflow: 'hidden',
+      aspectRatio: '16/9',
+      overflow: 'visible',
       '@media (max-width: 768px)': {
-        maxHeight: '70px',
-        padding: '4px 0',
+        width: '96%',
+        padding: '0',
+        maxWidth: '100%',
       },
       '@media (min-width: 1200px)': {
-        maxHeight: '130px',
-        padding: '10px 0',
+        width: '85%',
+        maxWidth: '1000px',
+        padding: '0',
       }
     },
     'left-fixed': {
@@ -322,46 +329,101 @@ export default function PublicidadCarousel({
     ...positionStyles[position] || positionStyles.inline,
     ...(position.includes('fixed') && {
       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
-    })
+    }),
+    // Asegurar que el contenedor mantenga su relación de aspecto
+    aspectRatio: dims ? `${dims.w}/${dims.h}` : '16/9',
+    minHeight: position === 'top' ? '200px' : '300px',
+    overflow: 'visible', // Cambiado a visible para que el efecto de neón no se recorte
+    position: 'relative',
+    backgroundColor: 'transparent', // Fondo transparente para el contenedor externo
+    borderRadius: '12px',
+    padding: '0', // Eliminamos el padding del contenedor externo
+    zIndex: 1 // Aseguramos que esté por encima de otros elementos
+  };
+
+  // Contenedor con estilo de tarjeta moderna
+  const neonWrapperStyle = {
+    display: 'block',
+    borderRadius: '8px',
+    padding: '0',
+    width: '100%',
+    height: '100%',
+    boxSizing: 'border-box',
+    transition: 'all 0.2s ease',
+    background: '#ffffff',
+    position: 'relative',
+    overflow: 'hidden',
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)'
   };
 
   const imageStyle = {
-    maxWidth: position === 'top' ? 'min(100%, 1200px)' : '100%',
-    maxHeight: position === 'top' ? '90px' : '450px',
-    height: 'auto',
-    width: position === 'top' ? 'auto' : '100%',
     display: 'block',
-    padding: 0,
-    margin: '0 auto',
-    borderRadius: position === 'top' ? '4px' : '4px',
-    objectFit: position === 'top' ? 'contain' : 'cover',
-    transition: 'all 0.3s ease',
-    '@media (max-width: 768px)': {
-      maxHeight: position === 'top' ? '60px' : '300px',
-      borderRadius: position === 'top' ? '3px' : '4px',
-    },
-    '@media (min-width: 1200px)': {
-      maxHeight: position === 'top' ? '110px' : '450px',
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    objectPosition: 'center',
+    padding: '0',
+    margin: '0',
+    borderRadius: '8px',
+    backgroundColor: '#f9fafb',
+    boxSizing: 'border-box',
+    transition: 'transform 0.2s ease',
+    ':hover': {
+      transform: 'scale(1.02)'
     }
   };
 
-  //Mientras carga
+  // Estilo para el skeleton loader
+  const skeletonStyle = {
+    width: '100%',
+    height: '100%',
+    minHeight: dims ? `${dims.h}px` : '300px',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: '8px',
+    position: 'relative',
+    overflow: 'hidden',
+    ...containerStyle
+  };
+
+  // Mientras carga
   if (isLoading) {
     return (
-      <div style={containerStyle}>
+      <div style={skeletonStyle}>
         <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          width: '100%',
-          height: '100%',
-          padding: '20px',
-          color: '#666'
+          background: 'linear-gradient(90deg, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.03) 100%)',
+          backgroundSize: '200% 100%',
+          animation: 'shimmer 1.5s infinite linear',
         }}>
-          <Loader2 className="animate-spin" style={{ marginBottom: '10px' }} />
-          <div>Cargando publicidad...</div>
+          <Loader2 className="animate-spin" style={{ 
+            marginBottom: '10px',
+            color: '#e53e3e',
+            opacity: 0.7
+          }} />
+          <div style={{ 
+            color: '#666',
+            fontSize: '0.9rem',
+            textAlign: 'center',
+            padding: '0 1rem'
+          }}>
+            Cargando publicidad...
+          </div>
         </div>
+        <style jsx global>{`
+          @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+          }
+        `}</style>
       </div>
     );
   }
@@ -409,86 +471,195 @@ export default function PublicidadCarousel({
 
   const currentItem = items[index];
 
-  //Contenido para el carousel
+  // Función para manejar los colores extraídos
+  const handleColors = (colors) => {
+    if (colors && colors.length > 0) {
+      setDominantColor(colors[0]);
+    }
+  };
+
+  // Manejador para cargar el color dominante con efecto neón mejorado
+  const handleImageLoad = (e) => {
+    try {
+      const img = e.target;
+      
+      if (img.complete) {
+        // Extraer el color dominante de la imagen
+        const color = colorThief.current.getColor(img);
+        
+        // Función para ajustar el brillo del color
+        const adjustBrightness = (r, g, b, percent) => {
+          const adjust = (value) => Math.min(255, Math.floor(value + (255 - value) * (percent / 100)));
+          return {
+            r: adjust(r),
+            g: adjust(g),
+            b: adjust(b)
+          };
+        };
+        
+        // Ajustar el color para el efecto neón
+        const neonColor = adjustBrightness(color[0], color[1], color[2], 40);
+        const colorHex = `#${neonColor.r.toString(16).padStart(2, '0')}${neonColor.g.toString(16).padStart(2, '0')}${neonColor.b.toString(16).padStart(2, '0')}`;
+        
+        // Actualizar el estado con el nuevo color dominante
+        setDominantColor(colorHex);
+        
+        const wrapper = img.closest('.publicidad-wrapper');
+        if (wrapper) {
+          // Crear y aplicar la animación de neón mejorada
+          const style = document.createElement('style');
+          style.id = 'neonGlowStyle';
+          style.textContent = `
+            @keyframes neonGlow {
+              from {
+                box-shadow: 
+                  0 0 1px #fff,
+                  0 0 2px #fff,
+                  0 0 3px #fff,
+                  0 0 4px ${colorHex},
+                  0 0 7px ${colorHex},
+                  0 0 8px ${colorHex},
+                  0 0 10px ${colorHex},
+                  0 0 15px ${colorHex};
+                border-color: ${colorHex}99;
+              }
+              to {
+                box-shadow: 
+                  0 0 1px #fff,
+                  0 0 3px #fff,
+                  0 0 5px #fff,
+                  0 0 10px ${colorHex},
+                  0 0 15px ${colorHex},
+                  0 0 20px ${colorHex},
+                  0 0 25px ${colorHex};
+                border-color: ${colorHex}cc;
+              }
+            }
+          `;
+          
+          // Limpiar estilos anteriores
+          const existingStyle = document.getElementById('neonGlowStyle');
+          if (existingStyle) {
+            document.head.removeChild(existingStyle);
+          }
+          
+          document.head.appendChild(style);
+          
+          // Aplicar estilos directamente al wrapper
+          wrapper.style.border = '1px solid #e5e7eb';
+          wrapper.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)';
+          wrapper.style.borderRadius = '8px';
+          
+          // Forzar el repintado para asegurar que la animación se aplique
+          wrapper.style.animation = 'none';
+          wrapper.offsetHeight; // Trigger reflow
+          wrapper.style.animation = 'neonGlow 2s ease-in-out infinite alternate';
+        }
+      }
+    } catch (error) {
+      console.error('Error al extraer el color:', error);
+      // Usar un color azul neón por defecto que combine mejor con el diseño
+      setDominantColor('#00f7ff');
+    }
+  };
+
+  //Contenido para el carrusel
   const content = (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <img
-        src={currentItem?.media_url}
-        alt={currentItem?.nombre || 'Publicidad'}
-        style={imageStyle}
-      />
-      {items.length > 1 && (
-        <div style={{
-          position: 'absolute',
-          bottom: '10px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          gap: '5px',
-          zIndex: 10
-        }}>
-          {items.map((_, i) => (
-            <button
-              key={i}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIndex(i);
-              }}
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                border: 'none',
-                padding: 0,
-                backgroundColor: i === index ? '#007bff' : 'rgba(0,0,0,0.2)',
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                transform: i === index ? 'scale(1.3)' : 'scale(1)'
-              }}
-              aria-label={`Ir al slide ${i + 1}`}
-            />
-          ))}
-        </div>
-      )}
+      <div className="publicidad-wrapper" style={neonWrapperStyle}>
+        <img
+          src={currentItem?.media_url}
+          alt={currentItem?.nombre || 'Publicidad'}
+          style={imageStyle}
+          crossOrigin="anonymous"
+          onLoad={handleImageLoad}
+        />
+        {items.length > 1 && (
+          <div style={{
+            position: 'absolute',
+            bottom: '10px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            gap: '5px',
+            zIndex: 10
+          }}>
+            {items.map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIndex(i);
+                }}
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  padding: 0,
+                  backgroundColor: i === index ? '#007bff' : 'rgba(0,0,0,0.2)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  transform: i === index ? 'scale(1.3)' : 'scale(1)'
+                }}
+                aria-label={`Ir al slide ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 
   //Para paneles fijos (izquierda y derecha)
   if (position === 'left-fixed' || position === 'right-fixed') {
     const isArticlesPage = location.pathname.includes('/articulos');
-    const shouldAnimate = isHomePage && !isArticlesPage; // Solo animar en la página de inicio
+    const isProgramacionPage = location.pathname.includes('/programacion');
+    const isStaticContentPage = isArticlesPage || isProgramacionPage; // Páginas donde debe mostrarse igual que en artículos
+    const shouldAnimate = isHomePage && !isStaticContentPage; // Solo animar en la página de inicio
     
     //Estilo del panel
     const panelStyle = {
       position: 'fixed',
       [position === 'left-fixed' ? 'left' : 'right']: '8px',
-      top: isArticlesPage ? '50%' : '30%', // Centrado vertical en artículos, 30% en home
-      transform: 'translateY(-50%)',
+      top: '30%', // Misma posición que en el home (30% desde arriba)
       zIndex: 1000,
     };
 
-    //En articulos sin animacion
-    if (isArticlesPage) {
+    // En artículos y programación con animación de entrada
+    if (isStaticContentPage) {
       return (
-        <div style={panelStyle}>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          style={panelStyle}
+        >
           <div 
             className={`pub-carousel pos-${position}`} 
-            style={containerStyle}
+            style={{
+              ...containerStyle,
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+            }}
             title={currentItem?.ubicacion?.nombre || 'Publicidad'}
           >
-            <a 
+            <motion.a 
               href={currentItem?.url_destino || '#'} 
               target="_blank" 
               rel="noopener noreferrer"
               style={{ 
                 display: 'block', 
                 width: '100%',
-                top: '0%',
                 height: '100%',
                 textDecoration: 'none',
                 color: 'inherit'
               }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
               onClick={(e) => {
                 if (!currentItem?.url_destino) {
                   e.preventDefault();
@@ -496,9 +667,9 @@ export default function PublicidadCarousel({
               }}
             >
               {content}
-            </a>
+            </motion.a>
           </div>
-        </div>
+        </motion.div>
       );
     }
     
