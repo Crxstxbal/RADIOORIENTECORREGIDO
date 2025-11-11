@@ -5,6 +5,341 @@
 {% block page_title %}Publicidad Web{% endblock %}
 
 {% block content %}
+<style>
+    /* Variables CSS para tema claro y oscuro */
+    :root {
+        --pub-card-bg: #ffffff;
+        --pub-card-hover: #f8f9fa;
+        --pub-border: #e0e0e0;
+        --pub-shadow: rgba(0, 0, 0, 0.05);
+        --pub-shadow-hover: rgba(0, 0, 0, 0.1);
+        --pub-text: #2c3e50;
+        --pub-text-muted: #6c757d;
+    }
+
+    html.dark {
+        --pub-card-bg: #2d2d3a;
+        --pub-card-hover: #363647;
+        --pub-border: #404052;
+        --pub-shadow: rgba(0, 0, 0, 0.3);
+        --pub-shadow-hover: rgba(0, 0, 0, 0.5);
+        --pub-text: #e8eaed;
+        --pub-text-muted: #9ca3af;
+    }
+
+    /* Cards con diseño elegante */
+    #publicidad-page .card {
+        background: var(--pub-card-bg) !important;
+        border: 1px solid var(--pub-border) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 8px var(--pub-shadow) !important;
+        transition: all 0.3s ease !important;
+    }
+
+    #publicidad-page .card:hover {
+        box-shadow: 0 4px 16px var(--pub-shadow-hover) !important;
+    }
+
+    #publicidad-page .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border-bottom: none !important;
+        border-radius: 12px 12px 0 0 !important;
+        padding: 1rem 1.5rem !important;
+    }
+
+    #publicidad-page .card-header h5,
+    #publicidad-page .card-header h6 {
+        color: white !important;
+        font-weight: 600 !important;
+        margin: 0 !important;
+    }
+
+    #publicidad-page .card-body {
+        padding: 1.5rem !important;
+    }
+
+    /* Tablas elegantes */
+    #publicidad-page .table {
+        color: var(--pub-text) !important;
+        margin-bottom: 0 !important;
+    }
+
+    #publicidad-page .table thead th {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+        color: #495057 !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        font-size: 0.85rem !important;
+        letter-spacing: 0.5px !important;
+        padding: 1rem !important;
+        border: none !important;
+    }
+
+    html.dark #publicidad-page .table thead th {
+        background: linear-gradient(135deg, #363647 0%, #2d2d3a 100%) !important;
+        color: #e8eaed !important;
+    }
+
+    #publicidad-page .table tbody tr {
+        transition: all 0.2s ease !important;
+        border-bottom: 1px solid var(--pub-border) !important;
+    }
+
+    #publicidad-page .table tbody tr:hover {
+        background: var(--pub-card-hover) !important;
+        transform: scale(1.01) !important;
+    }
+
+    #publicidad-page .table tbody td {
+        padding: 1rem !important;
+        vertical-align: middle !important;
+        color: var(--pub-text) !important;
+    }
+
+    /* Botones principales */
+    #publicidad-page .btn-primary,
+    #publicidad-page button.btn-primary {
+        background: #667eea !important;
+        border-color: #667eea !important;
+        color: white !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1.2rem !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+    }
+
+    #publicidad-page .btn-primary:hover,
+    #publicidad-page button.btn-primary:hover {
+        background: #5568d3 !important;
+        border-color: #5568d3 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+    }
+
+    #publicidad-page .btn-secondary {
+        background: #6c757d !important;
+        border-color: #6c757d !important;
+        color: white !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1.2rem !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+    }
+
+    #publicidad-page .btn-secondary:hover {
+        background: #5a6268 !important;
+        border-color: #5a6268 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3) !important;
+    }
+
+    /* Botones de acción en tabla */
+    #publicidad-page .btn-sm {
+        padding: 0.4rem 0.8rem !important;
+        border-radius: 6px !important;
+        font-size: 0.875rem !important;
+        transition: all 0.2s ease !important;
+    }
+
+    #publicidad-page .btn-success {
+        background: #10b981 !important;
+        border-color: #10b981 !important;
+        color: white !important;
+    }
+
+    #publicidad-page .btn-success:hover {
+        background: #059669 !important;
+        border-color: #059669 !important;
+        transform: translateY(-2px) !important;
+    }
+
+    #publicidad-page .btn-danger {
+        background: #ef4444 !important;
+        border-color: #ef4444 !important;
+        color: white !important;
+    }
+
+    #publicidad-page .btn-danger:hover {
+        background: #dc2626 !important;
+        border-color: #dc2626 !important;
+        transform: translateY(-2px) !important;
+    }
+
+    #publicidad-page .btn-info {
+        background: #3b82f6 !important;
+        border-color: #3b82f6 !important;
+        color: white !important;
+    }
+
+    #publicidad-page .btn-info:hover {
+        background: #2563eb !important;
+        border-color: #2563eb !important;
+        transform: translateY(-2px) !important;
+    }
+
+    #publicidad-page .btn-warning {
+        background: #f59e0b !important;
+        border-color: #f59e0b !important;
+        color: white !important;
+    }
+
+    #publicidad-page .btn-warning:hover {
+        background: #d97706 !important;
+        border-color: #d97706 !important;
+        transform: translateY(-2px) !important;
+    }
+
+    /* Badges */
+    #publicidad-page .badge {
+        padding: 0.4rem 0.8rem !important;
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+        font-size: 0.85rem !important;
+    }
+
+    #publicidad-page .badge.bg-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    }
+
+    #publicidad-page .badge.bg-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    }
+
+    #publicidad-page .badge.bg-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    }
+
+    #publicidad-page .badge.bg-info {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    }
+
+    #publicidad-page .badge.bg-secondary {
+        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%) !important;
+    }
+
+    /* Nav tabs elegantes */
+    #publicidad-page .nav-tabs {
+        border-bottom: 2px solid var(--pub-border) !important;
+        margin-bottom: 1.5rem !important;
+    }
+
+    #publicidad-page .nav-tabs .nav-link {
+        color: var(--pub-text-muted) !important;
+        border: none !important;
+        padding: 0.75rem 1.5rem !important;
+        border-radius: 8px 8px 0 0 !important;
+        transition: all 0.3s ease !important;
+        font-weight: 500 !important;
+    }
+
+    #publicidad-page .nav-tabs .nav-link:hover {
+        color: #667eea !important;
+        background: var(--pub-card-hover) !important;
+    }
+
+    #publicidad-page .nav-tabs .nav-link.active {
+        color: #667eea !important;
+        background: var(--pub-card-bg) !important;
+        border-bottom: 3px solid #667eea !important;
+        font-weight: 600 !important;
+    }
+
+    /* Modales */
+    #publicidad-page .modal-content {
+        background: var(--pub-card-bg) !important;
+        border: 1px solid var(--pub-border) !important;
+        border-radius: 12px !important;
+    }
+
+    #publicidad-page .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border-bottom: none !important;
+        border-radius: 12px 12px 0 0 !important;
+    }
+
+    #publicidad-page .modal-header h5 {
+        color: white !important;
+    }
+
+    #publicidad-page .modal-footer {
+        border-top: 1px solid var(--pub-border) !important;
+        background: var(--pub-card-bg) !important;
+    }
+
+    html.dark #publicidad-page .btn-close {
+        filter: invert(1) !important;
+    }
+
+    /* Paginación elegante */
+    #publicidad-page .pagination {
+        margin: 0 !important;
+    }
+
+    #publicidad-page .page-link {
+        color: #667eea !important;
+        border: 1px solid var(--pub-border) !important;
+        background: var(--pub-card-bg) !important;
+        padding: 0.5rem 0.75rem !important;
+        margin: 0 0.25rem !important;
+        border-radius: 6px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    #publicidad-page .page-link:hover {
+        background: #667eea !important;
+        color: white !important;
+        border-color: #667eea !important;
+        transform: translateY(-2px) !important;
+    }
+
+    #publicidad-page .page-item.active .page-link {
+        background: #667eea !important;
+        border-color: #667eea !important;
+        color: white !important;
+        font-weight: 600 !important;
+    }
+
+    #publicidad-page .page-item.disabled .page-link {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+    }
+
+    /* Card footer para paginación */
+    #publicidad-page .card-footer {
+        background: var(--pub-card-bg) !important;
+        border-top: 1px solid var(--pub-border) !important;
+        border-radius: 0 0 12px 12px !important;
+        padding: 1rem 1.5rem !important;
+    }
+
+    /* Texto muted */
+    #publicidad-page .text-muted {
+        color: var(--pub-text-muted) !important;
+    }
+
+    /* Forms en modales */
+    #publicidad-page .form-control,
+    #publicidad-page .form-select {
+        background: var(--pub-card-bg) !important;
+        border: 1px solid var(--pub-border) !important;
+        color: var(--pub-text) !important;
+        border-radius: 8px !important;
+    }
+
+    #publicidad-page .form-control:focus,
+    #publicidad-page .form-select:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+    }
+
+    #publicidad-page .form-label {
+        color: var(--pub-text) !important;
+        font-weight: 500 !important;
+    }
+</style>
+
 <!-- Mover las funciones JavaScript al principio del contenido -->
 <script>
 // Helper CSRF: define si no existe
@@ -679,6 +1014,7 @@ if (!document.getElementById('toastExito')) {
 }
 </script>
 
+<div id="publicidad-page">
 <div class="container-fluid h-100 d-flex flex-column" style="min-height: calc(100vh - 2rem);">
   <!-- Sección de Solicitudes Web -->
   <div class="card flex-grow-1 mb-4" style="min-height: 40vh; max-height: 50vh;">
@@ -753,6 +1089,33 @@ if (!document.getElementById('toastExito')) {
             </tbody>
           </table>
         </div>
+
+        <!-- Paginación Solicitudes -->
+        {% if solicitudes.has_other_pages %}
+        <div class="card-footer">
+          <nav>
+            <ul class="pagination justify-content-center mb-0">
+              {% if solicitudes.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?solicitudes_page={{ solicitudes.previous_page_number }}">Anterior</a>
+                </li>
+              {% endif %}
+              {% for num in solicitudes.paginator.page_range %}
+                {% if solicitudes.number == num %}
+                  <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > solicitudes.number|add:'-3' and num < solicitudes.number|add:'3' %}
+                  <li class="page-item"><a class="page-link" href="?solicitudes_page={{ num }}">{{ num }}</a></li>
+                {% endif %}
+              {% endfor %}
+              {% if solicitudes.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?solicitudes_page={{ solicitudes.next_page_number }}">Siguiente</a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+        {% endif %}
       {% else %}
         <div class="alert alert-info m-3">No hay solicitudes de publicidad web pendientes.</div>
       {% endif %}
@@ -830,6 +1193,33 @@ if (!document.getElementById('toastExito')) {
             </tbody>
           </table>
         </div>
+
+        <!-- Paginación Campañas -->
+        {% if campanias.has_other_pages %}
+        <div class="card-footer">
+          <nav>
+            <ul class="pagination justify-content-center mb-0">
+              {% if campanias.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?campanias_page={{ campanias.previous_page_number }}">Anterior</a>
+                </li>
+              {% endif %}
+              {% for num in campanias.paginator.page_range %}
+                {% if campanias.number == num %}
+                  <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > campanias.number|add:'-3' and num < campanias.number|add:'3' %}
+                  <li class="page-item"><a class="page-link" href="?campanias_page={{ num }}">{{ num }}</a></li>
+                {% endif %}
+              {% endfor %}
+              {% if campanias.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?campanias_page={{ campanias.next_page_number }}">Siguiente</a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+        {% endif %}
       {% else %}
         <div class="alert alert-info m-3">No hay campañas publicadas actualmente.</div>
       {% endif %}
@@ -1511,7 +1901,8 @@ document.getElementById('detallesSolicitudModal').addEventListener('hidden.bs.mo
     document.getElementById('detallesSolicitudBody').innerHTML = '';
 });
 </script>
-    
+
   </div>
+</div>
 </div>
 {% endblock %}

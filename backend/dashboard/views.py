@@ -398,8 +398,18 @@ def dashboard_analytics(request):
 @user_passes_test(is_staff_user)
 def dashboard_publicidad(request):
     """Gestión de Publicidad Web: solicitudes y campañas publicadas"""
-    solicitudes = SolicitudPublicidadWeb.objects.select_related('usuario').order_by('-fecha_solicitud')[:100]
-    campanias = Publicidad.objects.filter(tipo='WEB').select_related('web_config').order_by('-fecha_creacion')[:100]
+    # Solicitudes con paginación
+    solicitudes_list = SolicitudPublicidadWeb.objects.select_related('usuario').order_by('-fecha_solicitud')
+    solicitudes_paginator = Paginator(solicitudes_list, 10)
+    solicitudes_page = request.GET.get('solicitudes_page')
+    solicitudes = solicitudes_paginator.get_page(solicitudes_page)
+
+    # Campañas con paginación
+    campanias_list = Publicidad.objects.filter(tipo='WEB').select_related('web_config').order_by('-fecha_creacion')
+    campanias_paginator = Paginator(campanias_list, 10)
+    campanias_page = request.GET.get('campanias_page')
+    campanias = campanias_paginator.get_page(campanias_page)
+
     return render(request, 'dashboard/publicidad.html', {
         'solicitudes': solicitudes,
         'campanias': campanias,
@@ -528,10 +538,20 @@ def ubicaciones_publicidad(request):
             except Exception as e:
                 messages.error(request, f'Error al guardar la ubicación: {str(e)}')
     
+    # Paginación para ubicaciones
+    ubicaciones_paginator = Paginator(ubicaciones, 10)
+    ubicaciones_page = request.GET.get('ubicaciones_page')
+    ubicaciones_paginadas = ubicaciones_paginator.get_page(ubicaciones_page)
+
+    # Paginación para tipos de ubicación
+    tipos_paginator = Paginator(tipos_ubicacion_all, 10)
+    tipos_page = request.GET.get('tipos_page')
+    tipos_paginados = tipos_paginator.get_page(tipos_page)
+
     return render(request, 'dashboard/ubicaciones_publicidad.html', {
-        'ubicaciones': ubicaciones,
+        'ubicaciones': ubicaciones_paginadas,
         'tipos_ubicacion': tipos_ubicacion_select,
-        'tipos_ubicacion_all': tipos_ubicacion_all,
+        'tipos_ubicacion_all': tipos_paginados,
     })
 
 def dashboard_login(request):
@@ -1112,8 +1132,18 @@ def dashboard_analytics(request):
 @user_passes_test(is_staff_user)
 def dashboard_publicidad(request):
     """Gestión de Publicidad Web: solicitudes y campañas publicadas"""
-    solicitudes = SolicitudPublicidadWeb.objects.select_related('usuario').order_by('-fecha_solicitud')[:100]
-    campanias = Publicidad.objects.filter(tipo='WEB').select_related('web_config').order_by('-fecha_creacion')[:100]
+    # Solicitudes con paginación
+    solicitudes_list = SolicitudPublicidadWeb.objects.select_related('usuario').order_by('-fecha_solicitud')
+    solicitudes_paginator = Paginator(solicitudes_list, 10)
+    solicitudes_page = request.GET.get('solicitudes_page')
+    solicitudes = solicitudes_paginator.get_page(solicitudes_page)
+
+    # Campañas con paginación
+    campanias_list = Publicidad.objects.filter(tipo='WEB').select_related('web_config').order_by('-fecha_creacion')
+    campanias_paginator = Paginator(campanias_list, 10)
+    campanias_page = request.GET.get('campanias_page')
+    campanias = campanias_paginator.get_page(campanias_page)
+
     return render(request, 'dashboard/publicidad.html', {
         'solicitudes': solicitudes,
         'campanias': campanias,
@@ -1242,10 +1272,20 @@ def ubicaciones_publicidad(request):
             except Exception as e:
                 messages.error(request, f'Error al guardar la ubicación: {str(e)}')
     
+    # Paginación para ubicaciones
+    ubicaciones_paginator = Paginator(ubicaciones, 10)
+    ubicaciones_page = request.GET.get('ubicaciones_page')
+    ubicaciones_paginadas = ubicaciones_paginator.get_page(ubicaciones_page)
+
+    # Paginación para tipos de ubicación
+    tipos_paginator = Paginator(tipos_ubicacion_all, 10)
+    tipos_page = request.GET.get('tipos_page')
+    tipos_paginados = tipos_paginator.get_page(tipos_page)
+
     return render(request, 'dashboard/ubicaciones_publicidad.html', {
-        'ubicaciones': ubicaciones,
+        'ubicaciones': ubicaciones_paginadas,
         'tipos_ubicacion': tipos_ubicacion_select,
-        'tipos_ubicacion_all': tipos_ubicacion_all,
+        'tipos_ubicacion_all': tipos_paginados,
     })
 
 def dashboard_login(request):
@@ -3148,12 +3188,18 @@ def dashboard_contactos(request):
     last_week = timezone.now() - timedelta(days=7)
     contactos_semana = Contacto.objects.filter(fecha_envio__gte=last_week).count()
 
+    # Paginación
+    paginator = Paginator(contactos, 10)  # 10 contactos por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     # Obtener estados y tipos de asunto disponibles
     estados_disponibles = Estado.objects.filter(tipo_entidad='contacto').order_by('nombre')
     tipos_asunto = TipoAsunto.objects.all().order_by('nombre')
 
     context = {
-        'contactos': contactos,
+        'contactos': page_obj,
+        'page_obj': page_obj,
         'total_contactos': total_contactos,
         'contactos_pendientes': contactos_pendientes,
         'contactos_respondidos': contactos_respondidos,

@@ -5,6 +5,254 @@
 {% block page_title %}Ubicaciones de Publicidad{% endblock %}
 
 {% block content %}
+<style>
+    /* Variables CSS para tema claro y oscuro */
+    :root {
+        --ubic-card-bg: #ffffff;
+        --ubic-card-hover: #f8f9fa;
+        --ubic-border: #e0e0e0;
+        --ubic-shadow: rgba(0, 0, 0, 0.05);
+        --ubic-shadow-hover: rgba(0, 0, 0, 0.1);
+        --ubic-text: #2c3e50;
+        --ubic-text-muted: #6c757d;
+    }
+
+    html.dark {
+        --ubic-card-bg: #2d2d3a;
+        --ubic-card-hover: #363647;
+        --ubic-border: #404052;
+        --ubic-shadow: rgba(0, 0, 0, 0.3);
+        --ubic-shadow-hover: rgba(0, 0, 0, 0.5);
+        --ubic-text: #e8eaed;
+        --ubic-text-muted: #9ca3af;
+    }
+
+    /* Cards y tablas con diseño elegante */
+    #ubicaciones-page .card {
+        background: var(--ubic-card-bg) !important;
+        border: 1px solid var(--ubic-border) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 8px var(--ubic-shadow) !important;
+        transition: all 0.3s ease !important;
+    }
+
+    #ubicaciones-page .card:hover {
+        box-shadow: 0 4px 16px var(--ubic-shadow-hover) !important;
+    }
+
+    #ubicaciones-page .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border-bottom: none !important;
+        border-radius: 12px 12px 0 0 !important;
+        padding: 1rem 1.5rem !important;
+    }
+
+    #ubicaciones-page .card-header h5 {
+        color: white !important;
+        font-weight: 600 !important;
+        margin: 0 !important;
+    }
+
+    #ubicaciones-page .card-body {
+        padding: 1.5rem !important;
+    }
+
+    /* Botones principales */
+    #ubicaciones-page .btn-primary,
+    #ubicaciones-page button.btn-primary {
+        background: #667eea !important;
+        border-color: #667eea !important;
+        color: white !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1.2rem !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+    }
+
+    #ubicaciones-page .btn-primary:hover,
+    #ubicaciones-page button.btn-primary:hover {
+        background: #5568d3 !important;
+        border-color: #5568d3 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+    }
+
+    #ubicaciones-page .btn-secondary {
+        background: #6c757d !important;
+        border-color: #6c757d !important;
+        color: white !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1.2rem !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+    }
+
+    #ubicaciones-page .btn-secondary:hover {
+        background: #5a6268 !important;
+        border-color: #5a6268 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3) !important;
+    }
+
+    /* Tablas */
+    #ubicaciones-page .table {
+        color: var(--ubic-text) !important;
+        margin-bottom: 0 !important;
+    }
+
+    #ubicaciones-page .table thead th {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+        color: #495057 !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        font-size: 0.85rem !important;
+        letter-spacing: 0.5px !important;
+        padding: 1rem !important;
+        border: none !important;
+    }
+
+    html.dark #ubicaciones-page .table thead th {
+        background: linear-gradient(135deg, #363647 0%, #2d2d3a 100%) !important;
+        color: #e8eaed !important;
+    }
+
+    #ubicaciones-page .table tbody tr {
+        transition: all 0.2s ease !important;
+        border-bottom: 1px solid var(--ubic-border) !important;
+    }
+
+    #ubicaciones-page .table tbody tr:hover {
+        background: var(--ubic-card-hover) !important;
+        transform: scale(1.01) !important;
+    }
+
+    #ubicaciones-page .table tbody td {
+        padding: 1rem !important;
+        vertical-align: middle !important;
+        color: var(--ubic-text) !important;
+    }
+
+    /* Badges */
+    #ubicaciones-page .badge {
+        padding: 0.4rem 0.8rem !important;
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+        font-size: 0.85rem !important;
+    }
+
+    #ubicaciones-page .badge.bg-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    }
+
+    #ubicaciones-page .badge.bg-secondary {
+        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%) !important;
+    }
+
+    /* Botones de acción en tabla */
+    #ubicaciones-page .btn-sm {
+        padding: 0.4rem 0.8rem !important;
+        border-radius: 6px !important;
+        font-size: 0.875rem !important;
+        transition: all 0.2s ease !important;
+    }
+
+    #ubicaciones-page .btn-outline-primary {
+        color: #667eea !important;
+        border-color: #667eea !important;
+    }
+
+    #ubicaciones-page .btn-outline-primary:hover {
+        background: #667eea !important;
+        color: white !important;
+        transform: translateY(-2px) !important;
+    }
+
+    #ubicaciones-page .btn-outline-secondary {
+        color: #6c757d !important;
+        border-color: #6c757d !important;
+    }
+
+    #ubicaciones-page .btn-outline-secondary:hover {
+        background: #6c757d !important;
+        color: white !important;
+        transform: translateY(-2px) !important;
+    }
+
+    #ubicaciones-page .btn-outline-danger {
+        color: #ef4444 !important;
+        border-color: #ef4444 !important;
+    }
+
+    #ubicaciones-page .btn-outline-danger:hover {
+        background: #ef4444 !important;
+        color: white !important;
+        transform: translateY(-2px) !important;
+    }
+
+    /* Paginación */
+    #ubicaciones-page .pagination {
+        margin: 0 !important;
+    }
+
+    #ubicaciones-page .page-link {
+        color: #667eea !important;
+        border: 1px solid var(--ubic-border) !important;
+        background: var(--ubic-card-bg) !important;
+        padding: 0.5rem 0.75rem !important;
+        margin: 0 0.25rem !important;
+        border-radius: 6px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    #ubicaciones-page .page-link:hover {
+        background: #667eea !important;
+        color: white !important;
+        border-color: #667eea !important;
+        transform: translateY(-2px) !important;
+    }
+
+    #ubicaciones-page .page-item.active .page-link {
+        background: #667eea !important;
+        border-color: #667eea !important;
+        color: white !important;
+        font-weight: 600 !important;
+    }
+
+    #ubicaciones-page .page-item.disabled .page-link {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+    }
+
+    /* Card footer para paginación */
+    #ubicaciones-page .card-footer {
+        background: var(--ubic-card-bg) !important;
+        border-top: 1px solid var(--ubic-border) !important;
+        border-radius: 0 0 12px 12px !important;
+        padding: 1rem 1.5rem !important;
+    }
+
+    /* Texto muted */
+    #ubicaciones-page .text-muted {
+        color: var(--ubic-text-muted) !important;
+    }
+
+    /* Code elements */
+    #ubicaciones-page code {
+        background: #f1f5f9 !important;
+        color: #667eea !important;
+        padding: 0.2rem 0.5rem !important;
+        border-radius: 4px !important;
+        font-size: 0.9rem !important;
+    }
+
+    html.dark #ubicaciones-page code {
+        background: #1e1e2e !important;
+        color: #a5b4fc !important;
+    }
+</style>
+
+<div id="ubicaciones-page">
 <div class="container-fluid">
     <div class="row g-4">
         <div class="col-12">
@@ -73,6 +321,35 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Paginación Ubicaciones -->
+                {% if ubicaciones.has_other_pages %}
+                <div class="card-footer">
+                    <nav>
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if ubicaciones.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?ubicaciones_page={{ ubicaciones.previous_page_number }}{% if request.GET.tipos_page %}&tipos_page={{ request.GET.tipos_page }}{% endif %}">Anterior</a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in ubicaciones.paginator.page_range %}
+                                {% if ubicaciones.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > ubicaciones.number|add:'-3' and num < ubicaciones.number|add:'3' %}
+                                    <li class="page-item"><a class="page-link" href="?ubicaciones_page={{ num }}{% if request.GET.tipos_page %}&tipos_page={{ request.GET.tipos_page }}{% endif %}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if ubicaciones.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?ubicaciones_page={{ ubicaciones.next_page_number }}{% if request.GET.tipos_page %}&tipos_page={{ request.GET.tipos_page }}{% endif %}">Siguiente</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -135,6 +412,35 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Paginación Tipos de Ubicación -->
+                {% if tipos_ubicacion_all.has_other_pages %}
+                <div class="card-footer">
+                    <nav>
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if tipos_ubicacion_all.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?tipos_page={{ tipos_ubicacion_all.previous_page_number }}{% if request.GET.ubicaciones_page %}&ubicaciones_page={{ request.GET.ubicaciones_page }}{% endif %}">Anterior</a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in tipos_ubicacion_all.paginator.page_range %}
+                                {% if tipos_ubicacion_all.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > tipos_ubicacion_all.number|add:'-3' and num < tipos_ubicacion_all.number|add:'3' %}
+                                    <li class="page-item"><a class="page-link" href="?tipos_page={{ num }}{% if request.GET.ubicaciones_page %}&ubicaciones_page={{ request.GET.ubicaciones_page }}{% endif %}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if tipos_ubicacion_all.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?tipos_page={{ tipos_ubicacion_all.next_page_number }}{% if request.GET.ubicaciones_page %}&ubicaciones_page={{ request.GET.ubicaciones_page }}{% endif %}">Siguiente</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -244,6 +550,7 @@
         </div>
     </div>
 </div>
+</div><!-- Close ubicaciones-page wrapper -->
 
 {% endblock %}
 
