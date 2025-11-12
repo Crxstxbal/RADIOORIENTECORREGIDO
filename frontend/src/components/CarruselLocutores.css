@@ -96,31 +96,55 @@ html:not(.dark) .locutores-carrusel-container h2 {
   filter: none;
 }
 
-/* Avatar circular con anillo degradado */
+/* Avatar circular con anillo degradado multicolor */
 .avatar-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  margin-bottom: 20px;
 }
 
 .avatar-ring {
-  padding: 3px;
+  padding: 4px;
   border-radius: 9999px;
-  /* Degradado marca: rojo -> negro */
-  background: conic-gradient(from 0deg, #dc2626, #7f1d1d 25%, #0b0b0b 60%, #111111 85%, #dc2626 100%);
-  box-shadow: 0 8px 24px rgba(220,38,38,0.25), 0 4px 12px rgba(0,0,0,0.25);
+  /* Degradado vibrante: cyan → magenta → azul → cyan */
+  background: conic-gradient(
+    from 0deg,
+    #06b6d4 0%,
+    #3b82f6 25%,
+    #8b5cf6 50%,
+    #ec4899 75%,
+    #06b6d4 100%
+  );
+  box-shadow:
+    0 0 30px rgba(6, 182, 212, 0.4),
+    0 0 60px rgba(139, 92, 246, 0.3),
+    0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.avatar-ring:hover {
+  transform: scale(1.05);
+  box-shadow:
+    0 0 40px rgba(6, 182, 212, 0.6),
+    0 0 80px rgba(139, 92, 246, 0.4),
+    0 12px 40px rgba(0, 0, 0, 0.3);
 }
 
 .avatar-inner {
-  width: 220px;
-  height: 220px;
+  width: 240px;
+  height: 240px;
   border-radius: 9999px;
   overflow: hidden;
-  /* Fondo del avatar: rojo a negro */
-  background: radial-gradient(120% 120% at 10% 10%, #ef4444 0%, #0b0b0b 70%);
+  /* Fondo del avatar: gradiente suave */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  border: 3px solid white;
 }
 
 .avatar-inner img {
@@ -128,7 +152,93 @@ html:not(.dark) .locutores-carrusel-container h2 {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.4s ease;
 }
+
+.avatar-ring:hover .avatar-inner img {
+  transform: scale(1.08);
+}
+
+/* Iconos de redes sociales flotantes */
+.social-icons {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.social-icon {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+  cursor: pointer;
+  color: #1e293b;
+}
+
+.social-icon:hover {
+  transform: scale(1.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Posicionamiento de cada icono alrededor del avatar */
+.social-icon-1 {
+  top: 10%;
+  right: 8%;
+  background: linear-gradient(135deg, #4267B2 0%, #1877F2 100%);
+  color: white;
+}
+
+.social-icon-2 {
+  top: 35%;
+  right: -2%;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.social-icon-3 {
+  bottom: 35%;
+  right: -2%;
+  background: linear-gradient(135deg, #000000 0%, #14171A 100%);
+  color: white;
+}
+
+.social-icon-4 {
+  bottom: 10%;
+  right: 8%;
+  background: linear-gradient(135deg, #00f2ea 0%, #ff0050 100%);
+  color: white;
+}
+
+/* Animación de entrada para los iconos */
+@keyframes fadeInIcon {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.social-icon {
+  animation: fadeInIcon 0.4s ease backwards;
+}
+
+.social-icon-1 { animation-delay: 0.1s; }
+.social-icon-2 { animation-delay: 0.2s; }
+.social-icon-3 { animation-delay: 0.3s; }
+.social-icon-4 { animation-delay: 0.4s; }
 
 .placeholder-avatar {
   width: 100%;
@@ -188,24 +298,26 @@ html:not(.dark) .locutores-carrusel-container h2 {
 /* Contenedor de navegación */
 .locutores-carrusel-container .swiper {
   position: relative;
-  padding: 0 40px; /* Espacio para los botones */
+  padding: 0 60px; /* Más espacio para los botones */
 }
 
-/* Botones de navegación - Estilo moderno */
-.swiper-button-next,
-.swiper-button-prev {
-  --swiper-navigation-size: 20px;
-  --btn-size: 48px;
+/* Botones de navegación - Diseño minimalista y elegante */
+.locutores-carrusel-container .swiper-button-next,
+.locutores-carrusel-container .swiper-button-prev {
+  --swiper-navigation-size: 24px;
+  --btn-size: 40px;
   width: var(--btn-size);
   height: var(--btn-size);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50px; /* Bordes redondeados suaves, no círculo */
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #dc2626;
+  border: none;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.12),
+    0 2px 4px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: #1e293b;
   z-index: 10;
   margin: 0;
   top: 50%;
@@ -213,53 +325,58 @@ html:not(.dark) .locutores-carrusel-container h2 {
 }
 
 /* Posicionamiento específico para cada botón */
-.swiper-button-prev {
-  left: -10px;
+.locutores-carrusel-container .swiper-button-prev {
+  left: 0;
 }
 
-.swiper-button-next {
-  right: -10px;
+.locutores-carrusel-container .swiper-button-next {
+  right: 0;
 }
 
-/* Efecto hover moderno */
-.swiper-button-next:hover,
-.swiper-button-prev:hover {
-  background: rgba(220, 38, 38, 0.9);
-  color: white;
-  transform: translateY(-50%) scale(1.05);
-  box-shadow: 0 6px 25px rgba(220, 38, 38, 0.4);
+/* Efecto hover elegante con rebote */
+.locutores-carrusel-container .swiper-button-next:hover,
+.locutores-carrusel-container .swiper-button-prev:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-50%) scale(1.08);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.18),
+    0 4px 8px rgba(0, 0, 0, 0.12);
+  color: #dc2626; /* Rojo de la marca */
 }
 
-/* Efecto al hacer clic */
-.swiper-button-next:active,
-.swiper-button-prev:active {
-  transform: translateY(calc(-50% + 1px)) scale(0.98);
-  background: rgba(185, 28, 28, 0.95);
+/* Efecto al hacer clic con rebote hacia adentro */
+.locutores-carrusel-container .swiper-button-next:active,
+.locutores-carrusel-container .swiper-button-prev:active {
+  transform: translateY(-50%) scale(0.95);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.12),
+    0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
-/* Flechas personalizadas */
-.swiper-button-next::after,
-.swiper-button-prev::after {
+/* Flechas personalizadas - Limpias y modernas */
+.locutores-carrusel-container .swiper-button-next::after,
+.locutores-carrusel-container .swiper-button-prev::after {
   font-size: var(--swiper-navigation-size);
-  font-weight: 800;
-  transition: all 0.3s ease;
+  font-weight: 700;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Efecto hover en las flechas */
-.swiper-button-next:hover::after {
+/* Efecto hover en las flechas con desplazamiento suave */
+.locutores-carrusel-container .swiper-button-next:hover::after {
   transform: translateX(2px);
 }
 
-.swiper-button-prev:hover::after {
+.locutores-carrusel-container .swiper-button-prev:hover::after {
   transform: translateX(-2px);
 }
 
-/* Estado deshabilitado */
-.swiper-button-disabled {
+/* Estado deshabilitado sutil */
+.locutores-carrusel-container .swiper-button-disabled {
   opacity: 0.3 !important;
   transform: translateY(-50%) scale(0.9);
   cursor: not-allowed;
-  pointer-events: auto; /* Permite mostrar tooltips */
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 /* Paginación mejorada */
@@ -286,21 +403,26 @@ html:not(.dark) .locutores-carrusel-container h2 {
   transform: scale(1);
 }
 
-/* Modo oscuro */
+/* Modo oscuro para navegación */
 @media (prefers-color-scheme: dark) {
-  .swiper-button-next,
-  .swiper-button-prev {
-    background: rgba(30, 30, 30, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    color: #f87171;
+  .locutores-carrusel-container .swiper-button-next,
+  .locutores-carrusel-container .swiper-button-prev {
+    background: rgba(30, 30, 30, 0.85);
+    color: #f3f4f6;
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.4),
+      0 2px 4px rgba(0, 0, 0, 0.2);
   }
-  
-  .swiper-button-next:hover,
-  .swiper-button-prev:hover {
-    background: rgba(220, 38, 38, 0.9);
-    color: white;
+
+  .locutores-carrusel-container .swiper-button-next:hover,
+  .locutores-carrusel-container .swiper-button-prev:hover {
+    background: rgba(40, 40, 40, 0.95);
+    color: #f87171; /* Rojo más claro para modo oscuro */
+    box-shadow:
+      0 8px 24px rgba(0, 0, 0, 0.5),
+      0 4px 8px rgba(0, 0, 0, 0.3);
   }
-  
+
   .swiper-pagination-bullet {
     background: rgba(255, 255, 255, 0.2);
   }

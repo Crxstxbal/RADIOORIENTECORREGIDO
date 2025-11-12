@@ -1,10 +1,87 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Radio, Users, Music, Newspaper, Calendar, User, Tag, ArrowRight } from "lucide-react";
 import axios from "axios";
 import "./Home.css";
 import PublicidadCarousel from "../components/PublicidadCarousel";
 import CarruselLocutores from '../components/CarruselLocutores';
+
+// Componente para contador animado
+const CounterCard = ({ icon, endValue, suffix = "", label, duration = 2000 }) => {
+  const [count, setCount] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const counterRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+
+          const startTime = Date.now();
+          const startValue = 0;
+
+          const animate = () => {
+            const now = Date.now();
+            const progress = Math.min((now - startTime) / duration, 1);
+
+            // Easing function para una animación más suave
+            const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+            const currentValue = Math.floor(startValue + (endValue - startValue) * easeOutQuart);
+
+            setCount(currentValue);
+
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              setCount(endValue);
+            }
+          };
+
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (counterRef.current) {
+      observer.observe(counterRef.current);
+    }
+
+    return () => {
+      if (counterRef.current) {
+        observer.unobserve(counterRef.current);
+      }
+    };
+  }, [endValue, duration, hasAnimated]);
+
+  return (
+    <div className="stat-item" ref={counterRef}>
+      {icon}
+      <div className="stat-number">
+        {count.toLocaleString()}{suffix}
+      </div>
+      <div className="stat-label">{label}</div>
+    </div>
+  );
+};
+
+// Función para calcular años desde una fecha
+const calculateYearsSince = (startDate) => {
+  const now = new Date();
+  const start = new Date(startDate);
+
+  let years = now.getFullYear() - start.getFullYear();
+  const monthDiff = now.getMonth() - start.getMonth();
+  const dayDiff = now.getDate() - start.getDate();
+
+  // Si aún no ha llegado el mes y día del aniversario, restar un año
+  if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+    years--;
+  }
+
+  return years;
+};
 
 const Home = () => {
   const navigate = useNavigate();
@@ -139,6 +216,39 @@ const Home = () => {
       <div className="home-page">
       {/* Hero Section */}
       <section className="hero">
+        {/* Partículas animadas */}
+        <div className="floating-particles">
+          {[...Array(15)].map((_, i) => {
+            const randomX = Math.random() * 100;
+            const randomY = Math.random() * 100;
+            const randomDelay = Math.random() * 8;
+            const randomDuration = 35 + Math.random() * 15;
+            const randomSize = 2 + Math.random() * 2;
+            const colors = [
+              'rgba(239, 68, 68, 0.5)',
+              'rgba(248, 113, 113, 0.4)',
+              'rgba(220, 38, 38, 0.6)',
+              'rgba(239, 68, 68, 0.35)'
+            ];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+            return (
+              <div
+                key={i}
+                className="particle"
+                style={{
+                  left: `${randomX}%`,
+                  top: `${randomY}%`,
+                  width: `${randomSize}px`,
+                  height: `${randomSize}px`,
+                  background: randomColor,
+                  animationDelay: `${randomDelay}s`,
+                  animationDuration: `${randomDuration}s`
+                }}
+              />
+            );
+          })}
+        </div>
         <div className="container">
           <div className="hero-content">
             <div className="hero-text">
@@ -206,13 +316,13 @@ const Home = () => {
       <section className="stats">
         <div className="container">
           <div className="stats-grid">
-            <div className="stat-item">
-              <Users className="stat-icon" />
-              <div className="stat-number">
-                {radioStation?.listeners_count || "1,000"}+
-              </div>
-              <div className="stat-label">Oyentes Activos</div>
-            </div>
+            <CounterCard
+              icon={<Users className="stat-icon" />}
+              endValue={parseInt((radioStation?.listeners_count || "1000").toString().replace(/,/g, '').replace(/\+/g, ''))}
+              suffix="+"
+              label="Oyentes Activos"
+              duration={2000}
+            />
             <div className="stat-item">
               <Music className="stat-icon" />
               <div className="stat-number">24/7</div>
@@ -223,14 +333,12 @@ const Home = () => {
               <div className="stat-number">Noticias</div>
               <div className="stat-label">Diarias</div>
             </div>
-            
-            <div className="stat-item">
-              <Radio className="stat-icon" />
-              <div className="stat-number">
-                {new Date().getFullYear() - 2011 - (new Date().getMonth() < 8 || (new Date().getMonth() === 8 && new Date().getDate() < 20) ? 1 : 0)}
-              </div>
-              <div className="stat-label">Años al Aire</div>
-            </div>
+            <CounterCard
+              icon={<Radio className="stat-icon" />}
+              endValue={calculateYearsSince(new Date(2011, 8, 21))}
+              label="Años al Aire"
+              duration={2000}
+            />
           </div>
         </div>
       </section>
@@ -323,7 +431,7 @@ const Home = () => {
       </div>
 
       <section className="cards-section">
-        <div className="card">
+        <div className="card card-bandas">
           <div>
             <div className="icon mb-4">
               <Music className="icon-white" size={48} />
@@ -340,7 +448,7 @@ const Home = () => {
           </Link>
         </div>
 
-        <div className="card">
+        <div className="card card-noticias">
           <div>
             <div className="icon mb-4">
               <Newspaper className="icon-white" size={48} />
@@ -357,7 +465,7 @@ const Home = () => {
           </Link>
         </div>
 
-        <div className="card">
+        <div className="card card-publicidad">
           <div>
             <div className="icon mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon-white">

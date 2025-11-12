@@ -168,12 +168,19 @@ code {
 }
 
 .btn-primary {
-  background-color: var(--color-red);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: var(--color-white);
+  box-shadow:
+    0 4px 15px rgba(220, 38, 38, 0.3),
+    0 0 20px rgba(239, 68, 68, 0.2);
 }
 
 .btn-primary:hover {
-  background-color: var(--color-red-dark);
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px rgba(220, 38, 38, 0.4),
+    0 0 30px rgba(239, 68, 68, 0.3);
 }
 
 .btn-secondary {
@@ -187,13 +194,21 @@ code {
 
 .btn-outline {
   background-color: transparent;
-  color: var(--color-red);
-  border: 2px solid var(--color-red);
+  color: #ef4444;
+  border: 2px solid #ef4444;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .btn-outline:hover {
-  background-color: var(--color-red);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: var(--color-white);
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 20px rgba(220, 38, 38, 0.4),
+    0 0 25px rgba(239, 68, 68, 0.3);
 }
 
 .container {

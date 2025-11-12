@@ -4,12 +4,134 @@
 
 /* Hero Section */
 .home-page .hero {
-  background: linear-gradient(135deg, var(--color-black) 0%, var(--color-gray-900) 100%);
+  position: relative;
   color: var(--color-white);
   padding: 2.5rem 0;
   min-height: 70vh;
   display: flex;
   align-items: center;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+}
+
+/* Animated gradient mesh background */
+.home-page .hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(220, 38, 38, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(239, 68, 68, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 40% 90%, rgba(185, 28, 28, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 90% 20%, rgba(248, 113, 113, 0.08) 0%, transparent 50%);
+  animation: gradient-shift 15s ease infinite;
+  z-index: 0;
+}
+
+/* Subtle overlay for depth */
+.home-page .hero::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.4) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Shimmer effect overlay - removed to avoid rectangular marks */
+
+/* Gradient animation */
+@keyframes gradient-shift {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+  }
+  25% {
+    opacity: 0.8;
+    transform: scale(1.1) translate(5%, -5%);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translate(-3%, 3%);
+  }
+  75% {
+    opacity: 0.9;
+    transform: scale(1.08) translate(3%, 5%);
+  }
+}
+
+/* Contenedor de partículas flotantes */
+.floating-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Cada partícula individual */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: float-particle 40s infinite ease-in-out;
+  box-shadow: 0 0 8px currentColor;
+  will-change: transform, opacity;
+}
+
+/* Animación de flotación con movimiento suave y lento */
+@keyframes float-particle {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.25;
+  }
+  12.5% {
+    transform: translate(15px, -25px) scale(1.05);
+    opacity: 0.4;
+  }
+  25% {
+    transform: translate(-10px, -45px) scale(0.95);
+    opacity: 0.3;
+  }
+  37.5% {
+    transform: translate(25px, -35px) scale(1.08);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate(-18px, -60px) scale(1);
+    opacity: 0.35;
+  }
+  62.5% {
+    transform: translate(20px, -50px) scale(1.06);
+    opacity: 0.4;
+  }
+  75% {
+    transform: translate(-15px, -40px) scale(0.98);
+    opacity: 0.3;
+  }
+  87.5% {
+    transform: translate(12px, -30px) scale(1.03);
+    opacity: 0.38;
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.25;
+  }
+}
+
+/* Ensure hero content is above background and particles */
+.home-page .hero .container {
+  position: relative;
+  z-index: 2;
 }
 
 .home-page .hero-content {
@@ -17,6 +139,14 @@
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
   align-items: center;
+  position: relative;
+}
+
+/* Ensure hero text and image are above background */
+.home-page .hero-text,
+.home-page .hero-image {
+  position: relative;
+  z-index: 3;
 }
 
 .home-page .hero-title {
@@ -24,6 +154,14 @@
   font-weight: 700;
   margin-bottom: 1rem;
   line-height: 1.2;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+}
+
+.home-page .hero-title .text-red {
+  text-shadow:
+    0 0 30px rgba(239, 68, 68, 0.4),
+    0 0 60px rgba(220, 38, 38, 0.2),
+    0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 .home-page .typewriter-text {
@@ -58,6 +196,7 @@
   align-items: center;
   width: 300px;
   height: 300px;
+  z-index: 3;
 }
 
 .home-page .hero-logo {
@@ -69,6 +208,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 20px rgba(220, 38, 38, 0.4));
 }
 
 .home-page .radio-waves {
@@ -86,21 +226,27 @@
   width: 120px !important;
   height: 120px !important;
   margin: -60px 0 0 -60px !important;
-  border: 3px solid #dc2626 !important;
+  border: 3px solid #ef4444 !important;
   border-radius: 50% !important;
   will-change: transform, opacity !important;
+  box-shadow:
+    0 0 20px rgba(239, 68, 68, 0.3),
+    inset 0 0 20px rgba(239, 68, 68, 0.1) !important;
 }
 
 .home-page .wave-1 {
   animation: radio-pulse 3s ease-out 0s infinite !important;
+  border-color: #ef4444 !important;
 }
 
 .home-page .wave-2 {
   animation: radio-pulse 3s ease-out 1s infinite !important;
+  border-color: #f87171 !important;
 }
 
 .home-page .wave-3 {
   animation: radio-pulse 3s ease-out 2s infinite !important;
+  border-color: #dc2626 !important;
 }
 
 @keyframes radio-pulse {
@@ -437,12 +583,150 @@
   justify-content: space-between;
   align-items: center;
   text-align: center;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 12px 25px rgba(0,0,0,0.15);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  background-color: #8c1616 !important;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    0 1px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   color: #fff !important;
+  position: relative;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transform: translateY(0);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Hover effect - Elevación elegante */
+.home-page .card:hover {
+  transform: translateY(-12px) scale(1.02);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.4),
+    0 5px 15px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Efecto de brillo en hover */
+.home-page .card:hover::after {
+  opacity: 0.15;
+}
+
+.home-page .card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Capa de overlay con blur para cada card */
+.home-page .card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0.45) 100%
+  );
+  backdrop-filter: blur(3px);
+  z-index: 0;
+  transition: backdrop-filter 0.4s ease;
+}
+
+/* Aumentar blur en hover */
+.home-page .card:hover::before {
+  backdrop-filter: blur(4px);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+}
+
+/* Contenido de la card debe estar por encima del overlay */
+.home-page .card > * {
+  position: relative;
+  z-index: 3;
+}
+
+/* Card de Bandas Emergentes */
+.home-page .card-bandas {
+  background-image: url('/images/bandas.jpg') !important;
+}
+
+/* Card de Noticias/Suscripción */
+.home-page .card-noticias {
+  background-image: url('/images/noticias.webp') !important;
+}
+
+/* Card de Publicidad */
+.home-page .card-publicidad {
+  background-image: url('/images/publicidad.jpg') !important;
+}
+
+/* Forzar que las imágenes se mantengan en modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .home-page .card-bandas {
+    background-image: url('/images/bandas.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+  }
+
+  .home-page .card-noticias {
+    background-image: url('/images/noticias.webp') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+  }
+
+  .home-page .card-publicidad {
+    background-image: url('/images/publicidad.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+  }
+}
+
+/* Compatibilidad con clase .dark en html */
+html.dark .home-page .card-bandas {
+  background-image: url('/images/bandas.jpg') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+html.dark .home-page .card-noticias {
+  background-image: url('/images/noticias.webp') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+html.dark .home-page .card-publicidad {
+  background-image: url('/images/publicidad.jpg') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }
 
 .home-page .card .title,

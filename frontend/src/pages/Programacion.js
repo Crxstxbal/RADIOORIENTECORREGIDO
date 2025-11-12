@@ -8,15 +8,16 @@ const Programming = () => {
   const [horarios, setHorarios] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const daysOfWeek = {
-    0: 'Domingo',
-    1: 'Lunes',
-    2: 'Martes',
-    3: 'Miércoles',
-    4: 'Jueves',
-    5: 'Viernes',
-    6: 'Sábado'
-  };
+  // Orden correcto: Lunes a Domingo
+  const daysOfWeek = [
+    { key: 1, name: 'Lunes' },
+    { key: 2, name: 'Martes' },
+    { key: 3, name: 'Miércoles' },
+    { key: 4, name: 'Jueves' },
+    { key: 5, name: 'Viernes' },
+    { key: 6, name: 'Sábado' },
+    { key: 0, name: 'Domingo' }
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,15 +57,15 @@ const Programming = () => {
     console.log('Agrupando programas por día...');
     console.log('Programas disponibles:', programs);
     console.log('Horarios disponibles:', horarios);
-    
-    Object.keys(daysOfWeek).forEach(dayNum => {
-      const dayNumber = parseInt(dayNum);
-      const horariosDelDia = horarios.filter(horario => 
+
+    daysOfWeek.forEach(day => {
+      const dayNumber = day.key;
+      const horariosDelDia = horarios.filter(horario =>
         horario.dia_semana === dayNumber && (horario.activo !== false)
       );
-      
-      console.log(`Día ${dayNumber} (${daysOfWeek[dayNumber]}):`, horariosDelDia);
-      
+
+      console.log(`Día ${dayNumber} (${day.name}):`, horariosDelDia);
+
       grouped[dayNumber] = horariosDelDia.map(horario => {
         const programa = programs.find(p => p.id === horario.programa);
         console.log(`Horario ${horario.id} busca programa ${horario.programa}:`, programa);
@@ -74,7 +75,7 @@ const Programming = () => {
         };
       }).sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio));
     });
-    
+
     console.log('Programas agrupados:', grouped);
     return grouped;
   };
@@ -108,11 +109,11 @@ const Programming = () => {
           </div>
         ) : (
           <div className="programming-grid">
-            {Object.entries(daysOfWeek).map(([dayKey, dayName]) => {
-              const dayNumber = parseInt(dayKey);
+            {daysOfWeek.map((day) => {
+              const dayNumber = day.key;
               return (
-                <div key={dayKey} className="day-schedule">
-                  <h2 className="day-title">{dayName}</h2>
+                <div key={day.key} className="day-schedule">
+                  <h2 className="day-title">{day.name}</h2>
                   <div className="programs-list">
                     {groupedPrograms[dayNumber]?.length > 0 ? (
                       groupedPrograms[dayNumber].map((horario) => (
