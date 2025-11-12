@@ -34,7 +34,8 @@ export default function PublicidadCarousel({
   query, 
   position = 'inline', 
   autoPlayMs = 5000,
-  debug = true
+  debug = true,
+  reopenHours = 0.1667 //10 minutos cerrado, luego de eso vuelve a aparecer
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const location = useLocation();
@@ -45,9 +46,37 @@ export default function PublicidadCarousel({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dominantColor, setDominantColor] = useState('#4f46e5');
+  const [dismissed, setDismissed] = useState(false);
   const colorThief = useRef(new ColorThief());
   const timerRef = useRef(null);
   const dims = useMemo(() => parseDims(dimensiones), [dimensiones]);
+  const handleDismiss = () => {
+    try {
+      if (position === 'left-fixed' || position === 'right-fixed') {
+        const key = `adPanelDismissed:${position}`;
+        localStorage.setItem(key, String(Date.now()));
+      }
+    } catch (_) {}
+    setDismissed(true);
+  };
+
+  // Persistencia de cierre con reapertura automática
+  useEffect(() => {
+    if (position !== 'left-fixed' && position !== 'right-fixed') return;
+    try {
+      const key = `adPanelDismissed:${position}`;
+      const ts = Number(localStorage.getItem(key) || 0);
+      const ttl = Math.max(1, Number(reopenHours)) * 60 * 60 * 1000; // horas -> ms
+      if (ts && Date.now() - ts < ttl) {
+        setDismissed(true);
+      } else if (ts) {
+        // TTL vencido: limpiar para permitir mostrar de nuevo
+        localStorage.removeItem(key);
+        setDismissed(false);
+      }
+    } catch (_) {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [position]);
 
   //Log de debug cuando se monta el componente
   useEffect(() => {
@@ -288,8 +317,18 @@ export default function PublicidadCarousel({
     height: 'auto'
   };
 
-  //No renderizar paneles fijos en móvil
-  if ((position === 'left-fixed' || position === 'right-fixed') && window.innerWidth < 1024) {
+  // No mostrar en rutas de autenticación
+  const authRoutes = ['/login', '/register', '/auth', '/iniciar-sesion', '/registro'];
+  const isAuthRoute = authRoutes.some(route => location.pathname.startsWith(route));
+  
+  // No renderizar en móvil, si fue cerrado o en rutas de autenticación
+  if ((position === 'left-fixed' || position === 'right-fixed') && 
+      (window.innerWidth < 1024 || dismissed || isAuthRoute)) {
+    return null;
+  }
+  
+  // No mostrar banner inferior en móvil o en rutas de autenticación
+  if (position === 'bottom' && (window.innerWidth < 768 || isAuthRoute)) {
     return null;
   }
 
@@ -358,6 +397,31 @@ export default function PublicidadCarousel({
       margin: '5px auto',
       justifyContent: 'center',
       alignItems: 'center'
+    },
+    'bottom': {
+      ...baseContainerStyle,
+      display: 'flex',
+      margin: '20px auto 0',
+      padding: '0',
+      width: '100%',
+      maxWidth: '1200px',
+      height: '200px',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'transparent',
+      boxShadow: 'none',
+      borderRadius: '0',
+      border: 'none',
+      overflow: 'hidden',
+      '@media (max-width: 1240px)': {
+        width: '95%',
+        height: 'auto',
+        aspectRatio: '1200/200',
+        maxHeight: '200px'
+      },
+      '@media (max-width: 768px)': {
+        display: 'none' // Ocultar en móviles
+      }
     }
   };
 
@@ -368,7 +432,7 @@ export default function PublicidadCarousel({
     }),
     // Asegurar que el contenedor mantenga su relación de aspecto
     aspectRatio: dims ? `${dims.w}/${dims.h}` : '16/9',
-    minHeight: position === 'top' ? '200px' : '300px',
+    minHeight: position === 'bottom' ? '200px' : (position === 'top' ? '200px' : '300px'),
     overflow: 'visible', // Cambiado a visible para que el efecto de neón no se recorte
     position: 'relative',
     backgroundColor: 'transparent', // Fondo transparente para el contenedor externo
@@ -480,33 +544,15 @@ export default function PublicidadCarousel({
     );
   }
 
-  //Sin items
-  if (items.length === 0) {
-    return (
-      <div style={containerStyle}>
-        <div style={{
-          padding: '20px',
-          color: '#999',
-          textAlign: 'center',
-          fontStyle: 'italic'
-        }}>
-          {debug ? (
-            <div>
-              <div>No hay publicidad disponible</div>
-              <div style={{ fontSize: '0.8em', marginTop: '8px' }}>
-                Posición: {position}, Dimensiones: {dimensiones || 'ninguna'}, Query: {query || 'ninguna'}
-              </div>
-            </div>
-          ) : (
-            <div>Publicidad no disponible</div>
-          )}
-        </div>
-      </div>
-    );
+  // No renderizar si no hay items o si hay un error
+  if (isLoading || error || items.length === 0) {
+    return null;
   }
 
+  // Item actual para construir enlaces y handlers
   const currentItem = items[index];
 
+  // Click handler (debe estar antes de usarlo en el bloque bottom)
   const handleAdClick = async (e) => {
     if (!currentItem?.url_destino) {
       e.preventDefault();
@@ -521,6 +567,11 @@ export default function PublicidadCarousel({
       window.open(currentItem?.url_destino, '_blank', 'noopener,noreferrer');
     }
   };
+
+  
+
+
+  
 
   // Función para manejar los colores extraídos
   const handleColors = (colors) => {
@@ -697,6 +748,29 @@ export default function PublicidadCarousel({
             }}
             title={currentItem?.ubicacion?.nombre || 'Publicidad'}
           >
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDismiss(); }}
+              aria-label="Cerrar publicidad"
+              title="Cerrar"
+              style={{
+                position: 'absolute',
+                top: '-10px',
+                right: '-10px',
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                border: 'none',
+                background: 'rgba(0,0,0,0.6)',
+                color: '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 20
+              }}
+            >
+              ×
+            </button>
             <motion.a 
               href={currentItem?.url_destino || '#'} 
               target="_blank" 
@@ -734,6 +808,29 @@ export default function PublicidadCarousel({
           style={containerStyle}
           title={currentItem?.ubicacion?.nombre || 'Publicidad'}
         >
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDismiss(); }}
+            aria-label="Cerrar publicidad"
+            title="Cerrar"
+            style={{
+              position: 'absolute',
+              top: '-10px',
+              right: '-10px',
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              border: 'none',
+              background: 'rgba(0,0,0,0.6)',
+              color: '#fff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 20
+            }}
+          >
+            ×
+          </button>
           <a 
             href={currentItem?.url_destino || '#'} 
             target="_blank" 

@@ -1736,14 +1736,18 @@ def api_aprobar_solicitud(request, solicitud_id: int):
             # Crear una campaña por cada item de la solicitud
             created_campaign_ids = []
             nombre_cliente = sol.nombre_contacto or sol.usuario.get_full_name() or sol.usuario.username
+            # Definir rango de publicación a partir de la aprobación
+            from datetime import timedelta
+            start_date = timezone.now().date()
+            end_date = start_date + timedelta(days=30)
 
             for item_solicitud in sol.items_web.all():
                 pub = Publicidad.objects.create(
                     nombre_cliente=nombre_cliente,
                     descripcion=f"Solicitud #{sol.id} - Item #{item_solicitud.id}",
                     tipo='WEB',
-                    fecha_inicio=sol.fecha_inicio_solicitada,
-                    fecha_fin=sol.fecha_fin_solicitada,
+                    fecha_inicio=start_date,
+                    fecha_fin=end_date,
                     costo_total=getattr(item_solicitud, 'precio_acordado', None) or sol.costo_total_estimado,
                     activo=True,
                 )
@@ -1806,13 +1810,19 @@ def api_aprobar_solicitud(request, solicitud_id: int):
                     pass
             sol.estado = 'aprobada'
             sol.fecha_aprobacion = timezone.now()
-            sol.save()
+            # Actualizar también las fechas solicitadas para reflejar el rango real de publicación
+            try:
+                sol.fecha_inicio_solicitada = start_date
+                sol.fecha_fin_solicitada = end_date
+                sol.save(update_fields=['estado', 'fecha_aprobacion', 'fecha_inicio_solicitada', 'fecha_fin_solicitada', 'publicacion_id'])
+            except Exception:
+                sol.save(update_fields=['estado', 'fecha_aprobacion'])
 
             # Notificar al usuario solicitante
             try:
                 titulo = f"Solicitud de publicidad #{sol.id} aprobada"
                 mensaje = (
-                    f"Tu solicitud fue aprobada. Rango: {sol.fecha_inicio_solicitada} a {sol.fecha_fin_solicitada}. "
+                    f"Tu solicitud fue aprobada. Rango: {start_date} a {end_date}. "
                     f"Pronto verás tu campaña publicada."
                 )
                 UserNotification.objects.create(
@@ -1925,6 +1935,14 @@ def api_actualizar_campania_web(request, campania_id: int):
         data = {}
     web = getattr(pub, 'web_config', None)
     try:
+        # Permitir activar/desactivar la campaña
+        if 'activo' in data:
+            try:
+                pub.activo = bool(data.get('activo'))
+                pub.save(update_fields=['activo'])
+            except Exception:
+                pass
+
         if web is None:
             web = PublicidadWeb.objects.create(
                 publicidad=pub,
@@ -1947,7 +1965,7 @@ def api_actualizar_campania_web(request, campania_id: int):
                 changed = True
             if changed:
                 web.save()
-        return JsonResponse({'success': True})
+        return JsonResponse({'success': True, 'activo': pub.activo})
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'Error al actualizar: {str(e)}'}, status=500)
 

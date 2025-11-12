@@ -4,22 +4,6 @@ const CLP = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP',
 
 const cardsData = [
   {
-    id: 1,
-    badge: 'PREMIUM',
-    dim: '728 x 90 px',
-    title: 'Banner Superior Premium',
-    desc:
-      'Posición privilegiada en la cabecera del sitio. Máxima visibilidad en todas las páginas.',
-    stats: [
-      { label: 'Impresiones/mes', value: '150,000+' },
-      { label: 'Ubicación', value: 'Header' },
-      { label: 'Formato', value: 'Banner' },
-      { label: 'Clics estimados', value: '4,500+' },
-    ],
-    price: 299,
-    category: 'Banners',
-  },
-  {
     id: 2,
     dim: '300 x 600 px',
     title: 'Panel Lateral Derecho',
@@ -48,22 +32,6 @@ const cardsData = [
     ],
     price: 179,
     category: 'Banners',
-  },
-  {
-    id: 4,
-    badge: 'POPULAR',
-    dim: '970 x 250 px',
-    title: 'Billboard Destacado',
-    desc:
-      'Gran formato impactante debajo del header. Perfecto para campañas de alto impacto.',
-    stats: [
-      { label: 'Impresiones/mes', value: '180,000+' },
-      { label: 'Ubicación', value: 'Top Page' },
-      { label: 'Formato', value: 'Billboard' },
-      { label: 'Clics estimados', value: '5,400+' },
-    ],
-    price: 349,
-    category: 'Destacados',
   },
   {
     id: 5,
@@ -354,7 +322,7 @@ const PublicidadPage = () => {
     <div className={styles.page}>
       <div className={styles.container}>
         <div className={styles.header}>
-          <h1>Publicidad en Radio Oriente</h1>
+          <h1>Publicidad Web en Radio Oriente FM</h1>
           <p>Alcanza a miles de oyentes con nuestros espacios publicitarios digitales</p>
         </div>
 
@@ -393,11 +361,11 @@ const PublicidadPage = () => {
                   ))}
                 </div>
                 <div className={styles.cardPrice}>
-                  <div className={styles.priceTag}>
-                    {CLP.format(card.price)}
-                    <span className={styles.pricePeriod}>/mes</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div className={styles.priceContainer}>
+                    <div className={styles.priceTag}>
+                      {CLP.format(card.price)}
+                      <span className={styles.pricePeriod}>/mes</span>
+                    </div>
                     <button className={styles.ctaButton} onClick={() => toggleSelect(card)}>
                       {selectedIds.includes(card.id) ? 'Quitar' : 'Agregar'}
                     </button>
@@ -427,32 +395,27 @@ const PublicidadPage = () => {
             </div>
           </div>
         )}
-
         <div className={styles.locationMap}>
           <h2>Mapa de Ubicaciones Publicitarias</h2>
           <div className={styles.websitePreview}>
-            <div className={styles.locationHeader}>Radio Oriente FM - Header</div>
-            <div className={styles.locationSpot}>Banner Superior Premium (728x90) - $299/mes</div>
-            <div className={styles.locationSpot}>Billboard Destacado (970x250) - $349/mes</div>
+            <div className={styles.locationHeader}>Radio Oriente FM - Navbar</div>
             <div className={styles.locationSidebar}>
               <div className={`${styles.locationSpot} ${styles.sidebarSpot}`}>
-                Panel<br />Lateral<br />Izquierdo<br />(160x600)<br /><br />$199/mes
+                Panel<br />Lateral<br />Izquierdo<br />(300x600)<br /><br />$25.000/mes
               </div>
               <div className={`${styles.locationSpot} ${styles.sidebarSpot}`}>
-                <strong>CONTENIDO PRINCIPAL</strong>
+                <br />Contenido de artículos en home<br />
                 <br />
+                Publicidad en home
+                <br />(1920x1080)
                 <br />
-                Banner Medio Rectangular
-                <br />(300x250)
-                <br />
-                <br />
-                $179/mes
+                <br />$15.000/mes
               </div>
               <div className={`${styles.locationSpot} ${styles.sidebarSpot}`}>
-                Panel<br />Lateral<br />Derecho<br />(300x600)<br /><br />$249/mes
+                Panel<br />Lateral<br />Derecho<br />(300x600)<br /><br />$20.000/mes
               </div>
             </div>
-            <div className={styles.locationSpot}>Banner Footer (728x90) - $129/mes</div>
+            <div className={styles.locationSpot}>Banner Footer (1200x200) - $20.000/mes</div>
           </div>
         </div>
         {/* Modal de solicitud */}
@@ -476,9 +439,9 @@ function ModalSolicitud({ open, onClose, onSubmit, selectedCards, selectedSingle
   if (!open) return null;
   const list = selectedSingle ? [selectedSingle] : selectedCards;
   const total = list.reduce((acc, c) => acc + (Number(c.price) || 0), 0);
-  const backdrop = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', overflowY: 'auto', padding: '20px 0' };
-  const modal = { width: 'min(720px, 95vw)', background: '#1f1f1f', color: '#fff', border: '1px solid #333', borderRadius: 12, padding: 24, maxHeight: '90vh', overflowY: 'auto' };
-  const input = { width: '100%', padding: 12, borderRadius: 8, border: '1px solid #444', background: '#111', color: '#fff', fontSize: '0.9em' };
+  const backdrop = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', overflowY: 'auto', padding: '24px 0', backdropFilter: 'blur(2px)' };
+  const modal = { width: 'min(920px, 96vw)', background: '#1f1f1f', color: '#fff', border: '1px solid #3d3d3d', borderRadius: 14, padding: 28, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.5)', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' };
+  const input = { width: '100%', padding: 14, borderRadius: 8, border: '1px solid #555', background: '#0f0f0f', color: '#fff', fontSize: '1em' };
   const row = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 };
   
   const handleImageChange = (ubicacionId, event) => {
@@ -599,7 +562,7 @@ function ModalSolicitud({ open, onClose, onSubmit, selectedCards, selectedSingle
   return (
     <div style={backdrop} onClick={onClose}>
       <div style={modal} onClick={e => e.stopPropagation()}>
-        <h3 style={{ marginTop: 0, color: '#fff', borderBottom: '1px solid #444', paddingBottom: 12, marginBottom: 20 }}>Solicitud de Publicidad</h3>
+        <h3 style={{ marginTop: 0, color: '#fff', borderBottom: '1px solid #3d3d3d', paddingBottom: 14, marginBottom: 24, fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif', fontWeight: 700, fontSize: '1.8em', letterSpacing: '0.5px', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>Solicitud de Publicidad</h3>
         
         <div style={{ marginBottom: 24 }}>
           <h4 style={{ marginTop: 0, marginBottom: 12, color: '#ddd' }}>Espacios seleccionados:</h4>
@@ -674,26 +637,7 @@ function ModalSolicitud({ open, onClose, onSubmit, selectedCards, selectedSingle
               />
             </div>
             
-            <div style={row}>
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, color: '#bbb' }}>Fecha de inicio</label>
-                <input 
-                  style={input} 
-                  type="date" 
-                  value={form.fecha_inicio} 
-                  onChange={e => setForm({ ...form, fecha_inicio: e.target.value })} 
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: 6, color: '#bbb' }}>Fecha de término</label>
-                <input 
-                  style={input} 
-                  type="date" 
-                  value={form.fecha_fin} 
-                  onChange={e => setForm({ ...form, fecha_fin: e.target.value })} 
-                />
-              </div>
-            </div>
+            {/* Campos de fecha ocultos: el período se determina al aprobar en el dashboard */}
             
             <div>
               <label style={{ display: 'block', marginBottom: 6, color: '#bbb' }}>Mensaje adicional (opcional)</label>

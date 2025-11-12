@@ -101,13 +101,18 @@ class SolicitudPublicidadViewSet(viewsets.ModelViewSet):
         # Calcular costo total desde los ítems
         costo_total = sum([i.precio_acordado for i in items])
 
+        # Definir rango a partir de la aprobación
+        from datetime import timedelta
+        start_date = timezone.now().date()
+        end_date = start_date + timedelta(days=30)
+
         # Crear Publicidad base
         pub = Publicidad.objects.create(
             nombre_cliente=solicitud.nombre_contacto or solicitud.usuario.email,
             descripcion=solicitud.mensaje_usuario,
             tipo='WEB',
-            fecha_inicio=solicitud.fecha_inicio_solicitada,
-            fecha_fin=solicitud.fecha_fin_solicitada,
+            fecha_inicio=start_date,
+            fecha_fin=end_date,
             activo=True,
             costo_total=costo_total,
         )
@@ -128,7 +133,13 @@ class SolicitudPublicidadViewSet(viewsets.ModelViewSet):
         solicitud.aprobado_por = request.user
         solicitud.fecha_aprobacion = timezone.now()
         solicitud.publicacion = pub
-        solicitud.save(update_fields=['estado', 'aprobado_por', 'fecha_aprobacion', 'publicacion'])
+        # Actualizar fechas solicitadas para reflejar el rango real
+        try:
+            solicitud.fecha_inicio_solicitada = start_date
+            solicitud.fecha_fin_solicitada = end_date
+            solicitud.save(update_fields=['estado', 'aprobado_por', 'fecha_aprobacion', 'publicacion', 'fecha_inicio_solicitada', 'fecha_fin_solicitada'])
+        except Exception:
+            solicitud.save(update_fields=['estado', 'aprobado_por', 'fecha_aprobacion', 'publicacion'])
 
         return Response(SolicitudPublicidadWebSerializer(solicitud).data, status=status.HTTP_200_OK)
     

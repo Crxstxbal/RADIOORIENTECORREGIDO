@@ -48,23 +48,25 @@ def api_publicidad_media(request, campania_id):
 
         if not archivo_media:
             logger.error(f"[PUBLICIDAD MEDIA] No se encontró imagen para campaña {campania_id}")
-            return HttpResponse('No se encontró imagen', status=404)
+            return HttpResponse('No se encontró archivo de medios', status=404)
 
-        # Obtener la ruta del archivo
+        # Obtener la ruta completa del archivo
         try:
-            file_path = archivo_media.path
-            logger.info(f"[PUBLICIDAD MEDIA] Ruta del archivo: {file_path}")
+            if hasattr(archivo_media, 'path'):
+                file_path = archivo_media.path
+            elif hasattr(archivo_media, 'url'):
+                from django.conf import settings
+                file_path = os.path.join(settings.MEDIA_ROOT, str(archivo_media.url).replace(settings.MEDIA_URL, '', 1))
+            else:
+                # Si es una ruta relativa, construir la ruta completa
+                from django.conf import settings
+                file_path = os.path.join(settings.MEDIA_ROOT, str(archivo_media))
 
             # Verificar que el archivo existe
             if not os.path.exists(file_path):
-                logger.error(f"[PUBLICIDAD MEDIA] Archivo no encontrado en: {file_path}")
+                logger.error(f"[PUBLICIDAD MEDIA] Archivo no encontrado: {file_path}")
                 return HttpResponse('Archivo no encontrado', status=404)
-
-            # Detectar el tipo MIME
-            content_type, _ = mimetypes.guess_type(file_path)
-            if not content_type:
-                content_type = 'image/jpeg'  # Fallback a JPEG
-
+                
             # Abrir y devolver el archivo
             response = FileResponse(open(file_path, 'rb'), content_type=content_type)
 

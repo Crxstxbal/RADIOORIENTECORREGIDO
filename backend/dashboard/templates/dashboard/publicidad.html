@@ -1,4 +1,26 @@
 {% extends 'dashboard/base.html' %}
+
+// Activar/Desactivar campaña
+async function toggleEstadoCampania(campaniaId, activo) {
+  try {
+    const resp = await fetch(`/dashboard/api/publicidad/campanias/${campaniaId}/actualizar/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ activo })
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.message || 'No se pudo actualizar el estado');
+    }
+    // Refrescar los detalles para reflejar el nuevo estado
+    verDetallesCampania(campaniaId);
+  } catch (e) {
+    alert(e.message || 'Error al cambiar estado de campaña');
+  }
+}
 {% load static %}
 
 {% block title %}Publicidad Web - Dashboard{% endblock %}
@@ -700,6 +722,16 @@ async function verDetallesCampania(campaniaId) {
               <div><strong>Resolución:</strong> ${resolucionUbic || 'No disponible'}</div>
             </li>`;
     
+    // Calcular días restantes y estado visual
+    const hoy = new Date();
+    const fin = campania.fecha_fin ? new Date(campania.fecha_fin) : null;
+    const inicio = campania.fecha_inicio ? new Date(campania.fecha_inicio) : null;
+    const diasRestantes = fin ? Math.ceil((fin - hoy) / (1000 * 60 * 60 * 24)) : null;
+    const nearExpire = typeof diasRestantes === 'number' && diasRestantes <= 5;
+    const diasBadge = diasRestantes !== null
+      ? `<span class="badge ${nearExpire ? 'bg-danger' : 'bg-info'}">${diasRestantes} día${diasRestantes === 1 ? '' : 's'} restantes</span>`
+      : '<span class="badge bg-secondary">Sin fecha fin</span>';
+
     // Construir el HTML con los detalles de la campaña
     let html = `
       <div class="row">
@@ -722,7 +754,10 @@ async function verDetallesCampania(campaniaId) {
             </li>
             <li class="list-group-item">
               <div class="fw-bold mb-1">Período:</div>
-              <div>${formatDate(campania.fecha_inicio)} hasta ${formatDate(campania.fecha_fin)}</div>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span>${formatDate(campania.fecha_inicio)} hasta ${formatDate(campania.fecha_fin)}</span>
+                ${diasBadge}
+              </div>
             </li>
           </ul>
           
@@ -788,6 +823,13 @@ async function verDetallesCampania(campaniaId) {
                   Tasa de clics: ${((campania.web_config.clics / campania.web_config.impresiones) * 100).toFixed(2)}%
                 </small>
               </div>` : ''}
+          </div>
+          <div class="mt-4">
+            <h5 class="mb-3">Acciones</h5>
+            <button class="btn ${campania.activo ? 'btn-danger' : 'btn-success'}" onclick="toggleEstadoCampania(${campania.id}, ${campania.activo ? 'false' : 'true'})">
+              <i class="fas ${campania.activo ? 'fa-pause-circle' : 'fa-play-circle'} me-1"></i>
+              ${campania.activo ? 'Desactivar campaña' : 'Activar campaña'}
+            </button>
           </div>
         </div>
       </div>

@@ -24,6 +24,8 @@ export default function LayoutPrincipal() {
       <Outlet />
       <RadioPlayer />
       <LiveChat />
+      {/* Banner inferior sobre el footer */}
+      <PublicidadCarousel dimensiones="1200x200" position="bottom" autoPlayMs={7000} />
       <Footer />
     </>
   );
