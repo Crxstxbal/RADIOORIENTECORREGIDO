@@ -1,9 +1,9 @@
-// API Endpoints
+// Endpoints de la API
 export const API_ENDPOINTS = {
-  // Base
+  // Configuración Base
   BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8000',
   
-  // Authentication
+  // Autenticación
   AUTH: {
     LOGIN: '/api/auth/login/',
     REGISTER: '/api/auth/register/',
@@ -12,7 +12,7 @@ export const API_ENDPOINTS = {
     UPDATE_PROFILE: '/api/auth/profile/update/',
   },
   
-  // Contact
+  // Contacto
   CONTACT: {
     TIPOS_ASUNTO: '/api/contact/tipos-asunto/',
     CONTACTOS: '/api/contact/contactos/',
@@ -26,23 +26,23 @@ export const API_ENDPOINTS = {
     PROGRAMAS: '/api/radio/api/programas/',
     HORARIOS: '/api/radio/api/horarios/',
     CONDUCTORES: '/api/radio/api/conductores/',
-    // Compatibility endpoints
+    // Endpoints de compatibilidad
     STATION: '/api/radio/station/',
     PROGRAMS: '/api/radio/programs/',
   },
   
-  // Blog/Articles
+  // Blog/Artículos
   BLOG: {
     ARTICULOS: '/api/blog/articulos/',
     CATEGORIAS: '/api/blog/categorias/',
   },
   
-  // Emerging Bands
+  // Bandas Emergentes
   EMERGENTE: {
     BANDAS: '/api/emergente/bandas/',
   },
   
-  // Location
+  // Ubicación
   UBICACION: {
     PAISES: '/api/ubicacion/paises/',
     CIUDADES: '/api/ubicacion/ciudades/',
@@ -50,7 +50,7 @@ export const API_ENDPOINTS = {
   },
 };
 
-// Form validation constants
+// Constantes de validación de formularios
 export const VALIDATION = {
   EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   PHONE_REGEX: /^[\+]?[1-9][\d]{0,15}$/,
@@ -61,7 +61,7 @@ export const VALIDATION = {
   MAX_NAME_LENGTH: 100,
 };
 
-// UI Constants
+// Constantes de Interfaz de Usuario
 export const UI = {
   TOAST_DURATION: 4000,
   LOADING_DELAY: 300,
@@ -74,7 +74,7 @@ export const UI = {
   },
 };
 
-// Days of week mapping
+// Mapeo de días de la semana
 export const DAYS_OF_WEEK = {
   0: 'Domingo',
   1: 'Lunes',
@@ -85,7 +85,7 @@ export const DAYS_OF_WEEK = {
   6: 'Sábado',
 };
 
-// Link types for bands
+// Tipos de enlaces para bandas
 export const LINK_TYPES = [
   { value: 'spotify', label: 'Spotify' },
   { value: 'youtube', label: 'YouTube' },
@@ -96,7 +96,7 @@ export const LINK_TYPES = [
   { value: 'otro', label: 'Otro' },
 ];
 
-// Default fallback data
+// Datos predeterminados de respaldo
 export const FALLBACK_DATA = {
   GENEROS: [
     { id: 1, nombre: 'Rock' },
@@ -134,7 +134,7 @@ export const FALLBACK_DATA = {
   },
 };
 
-// Error messages
+// Mensajes de error
 export const ERROR_MESSAGES = {
   NETWORK_ERROR: 'Error de conexión. Verifica tu internet e inténtalo de nuevo.',
   SERVER_ERROR: 'Error del servidor. Inténtalo más tarde.',
@@ -144,7 +144,7 @@ export const ERROR_MESSAGES = {
   PERMISSION_DENIED: 'No tienes permisos para realizar esta acción.',
 };
 
-// Success messages
+// Mensajes de éxito
 export const SUCCESS_MESSAGES = {
   CONTACT_SENT: 'Mensaje enviado exitosamente. Te contactaremos pronto.',
   SUBSCRIPTION_SUCCESS: 'Suscripción exitosa. ¡Gracias por unirte!',
@@ -155,7 +155,7 @@ export const SUCCESS_MESSAGES = {
   LOGOUT_SUCCESS: 'Sesión cerrada exitosamente.',
 };
 
-// Local storage keys
+// Claves para almacenamiento local
 export const STORAGE_KEYS = {
   TOKEN: 'token',
   USER: 'user',

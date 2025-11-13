@@ -334,9 +334,3 @@ El sistema se integra con:
 - **PostgreSQL**: Base de datos
 - **Pillow**: Procesamiento de imágenes
 - **React**: Frontend (a implementar)
-
----
-
-## 📞 Soporte
-
-Para dudas o problemas, contactar al equipo de desarrollo.
