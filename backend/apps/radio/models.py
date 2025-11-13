@@ -57,6 +57,7 @@ class Conductor(models.Model):
 
 class Programa(models.Model):
     """Programas de radio normalizados"""
+    estacion = models.ForeignKey(EstacionRadio, on_delete=models.CASCADE, related_name='programas')
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
     imagen_url = models.URLField(max_length=500, blank=True, null=True)

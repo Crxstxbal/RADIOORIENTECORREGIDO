@@ -3728,16 +3728,14 @@ def delete_suscripcion(request, suscripcion_id):
 def crear_conductor(request):
     """Muestra el formulario para crear un nuevo conductor."""
     if request.method == 'POST':
-        # Si el formulario se envió con datos (POST)
-        form = ConductorForm(request.POST, request.FILES) # request.FILES es para la foto
+        form = ConductorForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, 'Conductor creado exitosamente.')
-            return redirect('dashboard_radio') # Vuelve a la página de radio
+            return redirect('dashboard_radio')
         else:
             messages.error(request, 'Error al crear el conductor. Revisa el formulario.')
     else:
-        # Si es la primera vez que se carga la página (GET)
         form = ConductorForm()
 
     context = {
@@ -3746,7 +3744,6 @@ def crear_conductor(request):
     }
     return render(request, 'dashboard/conductor_form.html', context)
 
-# --- VISTAS CRUD DE CONDUCTORES ---
 
 @login_required
 @user_passes_test(is_staff_user)
@@ -3764,25 +3761,22 @@ def editar_conductor(request, conductor_id):
         else:
             messages.error(request, 'Error al actualizar. Revisa el formulario.')
     else:
-        # Si es la primera vez (GET), muestra el form pre-cargado
         form = ConductorForm(instance=conductor) 
 
     context = {
         'form': form,
         'page_title': f'Editar Conductor: {conductor.nombre}'
     }
-    # Reusamos la misma plantilla del formulario de creación
     return render(request, 'dashboard/conductor_form.html', context)
 
 
 @login_required
 @user_passes_test(is_staff_user)
-@require_POST # Esta vista solo acepta peticiones POST
+@require_POST
 def toggle_activo_conductor(request, conductor_id):
     """Activa o desactiva un conductor."""
     conductor = get_object_or_404(Conductor, id=conductor_id)
 
-    # Invierte el estado 'activo'
     conductor.activo = not conductor.activo
     conductor.save()
 
@@ -3796,7 +3790,7 @@ def toggle_activo_conductor(request, conductor_id):
 
 @login_required
 @user_passes_test(is_staff_user)
-@require_POST # Esta vista solo acepta peticiones POST
+@require_POST
 def eliminar_conductor(request, conductor_id):
     """Elimina un conductor."""
     conductor = get_object_or_404(Conductor, id=conductor_id)
