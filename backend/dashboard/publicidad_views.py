@@ -56,17 +56,51 @@ def api_publicidad_media(request, campania_id):
                 file_path = archivo_media.path
             elif hasattr(archivo_media, 'url'):
                 from django.conf import settings
-                file_path = os.path.join(settings.MEDIA_ROOT, str(archivo_media.url).replace(settings.MEDIA_URL, '', 1))
+                rel = str(archivo_media.url)
+                # Normalizar contra MEDIA_URL si aplica
+                if rel.startswith(settings.MEDIA_URL):
+                    rel = rel[len(settings.MEDIA_URL):]
+                # Asegurar ruta relativa para evitar que os.path.join ignore MEDIA_ROOT
+                rel = rel.lstrip('/')
+                file_path = os.path.join(settings.MEDIA_ROOT, rel)
             else:
-                # Si es una ruta relativa, construir la ruta completa
+                # Si es string/relativo/absoluto
                 from django.conf import settings
-                file_path = os.path.join(settings.MEDIA_ROOT, str(archivo_media))
+                rel = str(archivo_media)
+                # Normalizar separadores para análisis
+                rel_norm = rel.replace('\\', '/').strip()
+                # Si es URL completa, redirigir directamente
+                if rel_norm.startswith('http://') or rel_norm.startswith('https://'):
+                    logger.info(f"[PUBLICIDAD MEDIA] Redirigiendo a URL externa: {rel_norm}")
+                    from django.http import HttpResponseRedirect
+                    return HttpResponseRedirect(rel_norm)
+                # Si contiene segmento '/media/', extraer parte relativa después de 'media/'
+                if '/media/' in rel_norm:
+                    rel_part = rel_norm.split('/media/', 1)[1]
+                else:
+                    rel_part = rel_norm
+                    # Si empieza con MEDIA_URL, recortar
+                    if rel_part.startswith(settings.MEDIA_URL):
+                        rel_part = rel_part[len(settings.MEDIA_URL):]
+                # Asegurar ruta relativa (evitar que comience con '/' o 'C:/')
+                while rel_part.startswith('/'):
+                    rel_part = rel_part[1:]
+                # Si queda algo tipo 'C:/' aún, intentar eliminar prefijo de unidad si contiene 'media/'
+                if ':' in rel_part and '/media/' in rel_norm:
+                    # Ya tomamos parte después de media/, así que no debería entrar aquí, pero por si acaso
+                    rel_part = rel_norm.split('/media/', 1)[1]
+                file_path = os.path.join(settings.MEDIA_ROOT, rel_part)
 
             # Verificar que el archivo existe
             if not os.path.exists(file_path):
                 logger.error(f"[PUBLICIDAD MEDIA] Archivo no encontrado: {file_path}")
                 return HttpResponse('Archivo no encontrado', status=404)
                 
+            # Determinar content-type
+            content_type, _ = mimetypes.guess_type(file_path)
+            if not content_type:
+                content_type = 'application/octet-stream'
+
             # Abrir y devolver el archivo
             response = FileResponse(open(file_path, 'rb'), content_type=content_type)
 

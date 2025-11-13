@@ -954,39 +954,6 @@ async function eliminarCampania(campaniaId) {
     }
 }
 
-// Función para eliminar una solicitud
-async function eliminarSolicitud(solicitudId) {
-    if (!confirm('¿Está seguro de eliminar esta solicitud? Esta acción no se puede deshacer.')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/dashboard/api/publicidad/solicitudes/${solicitudId}/`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            // Mostrar notificación de éxito
-            const toast = new bootstrap.Toast(document.getElementById('toastExito'));
-            document.getElementById('toastMensaje').textContent = 'Solicitud eliminada correctamente';
-            toast.show();
-            
-            // Recargar la página después de un breve retraso
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            const error = await response.json();
-            throw new Error(error.message || 'Error al eliminar la solicitud');
-        }
-    } catch (error) {
-        console.error('Error al eliminar la solicitud:', error);
-        alert(`Error al eliminar la solicitud: ${error.message}`);
-    }
-}
-
 // Función para guardar los cambios en la campaña
 async function guardarEdicionCampania() {
   const id = document.getElementById('campaniaId').value;
@@ -1715,7 +1682,7 @@ if (!document.getElementById('toastExito')) {
 
 // Función para cargar y mostrar los detalles de la solicitud
 async function verDetallesSolicitud(solicitudId) {
-  try {
+  
     console.log('verDetallesSolicitud llamado con ID:', solicitudId);
     currentSolicitudId = solicitudId;
     const modalBody = document.getElementById('detallesSolicitudBody');
@@ -1874,12 +1841,11 @@ async function verDetallesSolicitud(solicitudId) {
       // Actualizar el modal
       modalBody.innerHTML = html;
 
-      // Mostrar el modal (inicialización perezosa y segura)
-      const modalElement = document.getElementById('detallesSolicitudModal');
-      if (window.bootstrap && modalElement) {
-          if (!detallesModal) detallesModal = new bootstrap.Modal(modalElement);
-          detallesModal.show();
+      // Mostrar el modal (usando la variable ya inicializada)
+      if (detallesSolicitudModal) {
+          detallesSolicitudModal.show();
       } else if (modalElement) {
+          // Fallback en caso de que no esté inicializado
           modalElement.style.display = 'block';
           modalElement.classList.add('show');
       }
@@ -1906,35 +1872,45 @@ async function verDetallesSolicitud(solicitudId) {
  
 
 // Función para eliminar una solicitud
-function eliminarSolicitud(solicitudId) {
+async function eliminarSolicitud(solicitudId) {
   if (!confirm('¿Estás seguro de que deseas eliminar esta solicitud? Esta acción no se puede deshacer.')) {
     return;
   }
-  const csrftoken = getCookie('csrftoken');
-  fetch(`/dashboard/api/publicidad/solicitudes/${solicitudId}/eliminar/`, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': csrftoken,
-      'Content-Type': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest'
-    },
-    credentials: 'same-origin'
-  })
-  .then(async (response) => {
-    const text = await response.text();
-    let data = {};
-    try { data = text ? JSON.parse(text) : {}; } catch (_) {}
-    if (response.ok && (data.success === undefined || data.success === true)) {
-      location.reload();
-    } else {
-      const msg = (data && (data.message || data.error)) || `Error ${response.status}: ${response.statusText}`;
-      throw new Error(msg);
+  
+  try {
+    const csrftoken = getCookie('csrftoken');
+    const response = await fetch(`/dashboard/api/publicidad/solicitudes/${solicitudId}/eliminar/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrftoken,
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      credentials: 'same-origin'
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = `Error ${response.status}: ${response.statusText}`;
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch (e) {
+        // Si no es JSON válido, usar el texto del error
+        if (errorText) {
+          errorMessage = errorText;
+        }
+      }
+      
+      throw new Error(errorMessage);
     }
-  })
-  .catch(error => {
+    
+    // Si llegamos aquí, la eliminación fue exitosa
+    location.reload();
+  } catch (error) {
     console.error('Error al eliminar la solicitud:', error);
     alert('Error al eliminar la solicitud: ' + (error.message || 'Error desconocido'));
-  });
+  }
 }
 
 // Configurar el modal para que se cierre correctamente

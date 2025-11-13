@@ -3295,6 +3295,7 @@ def agregar_tipo_asunto(request):
 def eliminar_tipo_asunto(request, tipo_id):
     """
     Eliminar un tipo de asunto, con soporte para AJAX y fallback.
+    Si hay contactos usando este tipo, se les asignará un tipo por defecto.
     """
     if request.method != 'POST':
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -3307,15 +3308,20 @@ def eliminar_tipo_asunto(request, tipo_id):
         tipo = TipoAsunto.objects.get(id=tipo_id)
         nombre_tipo = tipo.nombre
         
-        # Verificar si hay contactos usando este tipo de asunto
+        # Obtener el primer tipo de asunto que no sea el actual
+        tipo_por_defecto = TipoAsunto.objects.exclude(id=tipo_id).first()
+        
+        # Si hay contactos usando este tipo, actualizarlos al tipo por defecto
         if Contacto.objects.filter(tipo_asunto=tipo).exists():
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': False, 
-                    'error': 'No se puede eliminar este tipo de asunto porque está siendo utilizado por uno o más contactos.'
-                }, status=400)
-            messages.error(request, 'No se puede eliminar este tipo de asunto porque está siendo utilizado por uno o más contactos.')
-            return redirect('dashboard_contactos')
+            if not tipo_por_defecto:
+                error_msg = 'No se puede eliminar el tipo de asunto porque es el único existente.'
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': error_msg}, status=400)
+                messages.error(request, error_msg)
+                return redirect('dashboard_contactos')
+            
+            # Actualizar los contactos al tipo por defecto
+            Contacto.objects.filter(tipo_asunto=tipo).update(tipo_asunto=tipo_por_defecto)
         
         # Eliminar el tipo de asunto
         tipo.delete()

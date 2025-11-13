@@ -112,9 +112,38 @@
 }
 
 @media (max-width: 768px) {
+  .main-content {
+    padding-bottom: 140px;
+  }
+  
   .grid-cols-2,
   .grid-cols-3 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  
+  .card {
+    padding: 1rem;
+  }
+  
+  .card-title {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding-bottom: 150px;
+  }
+  
+  .form-input,
+  .form-textarea,
+  .form-select {
+    font-size: 16px; /* Evita zoom en iOS */
+  }
+  
+  .card {
+    padding: 0.875rem;
+    border-radius: 0.5rem;
   }
 }
 

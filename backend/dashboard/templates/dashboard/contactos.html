@@ -1198,12 +1198,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const tipoNombre = button.dataset.tipoNombre;
 
             if (confirm(`¿Estás seguro de que deseas eliminar el tipo de asunto "${tipoNombre}"?`)) {
+                const formData = new FormData();
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                
                 fetch(`/dashboard/contactos/tipos/${tipoId}/eliminar/`, {
                     method: 'POST',
                     headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
                         'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    },
+                    body: formData
                 })
                 .then(response => response.json())
                 .then(data => {

@@ -270,6 +270,9 @@
         .navbar {
             border: 1px solid var(--border-color) !important;
             backdrop-filter: blur(20px) !important;
+            position: sticky;
+            top: 0;
+            z-index: 3000; /* Asegura que quede por encima del contenido */
         }
 
         /* Notification Button - Modern Design */
@@ -436,7 +439,7 @@
             border-radius: 10px;
             box-shadow: var(--card-shadow);
             overflow: hidden;
-            z-index: 1050;
+            z-index: 4000; /* Superior a navbar y a cualquier card */
             display: none;
         }
 

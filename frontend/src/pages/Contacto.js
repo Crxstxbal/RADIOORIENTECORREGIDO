@@ -132,7 +132,7 @@ const Contacto = () => {
               <MapPin className="contact-icon" />
               <div>
                 <h3>Dirección</h3>
-                <p>{estacionInfo?.direccion || 'Av. Providencia 1234, Santiago, Chile'}</p>
+                <p>{estacionInfo?.direccion || 'Av. Ictinos 858, Peñalolen, Santiago, Chile'}</p>
               </div>
             </div>
 
@@ -149,7 +149,7 @@ const Contacto = () => {
                 </div>
                 <div className="hours-item">
                   <span className="day">Domingos</span>
-                  <span className="time">Cerrado</span>
+                  <span className="time">Cerrado para atención</span>
                 </div>
               </div>
             </div>
