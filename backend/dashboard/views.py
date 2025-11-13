@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime as dt_datetime
 from datetime import timezone as dt_timezone
 import traceback
 import os
@@ -33,7 +33,7 @@ from .forms import ConductorForm
 from apps.users.models import User
 from apps.articulos.models import Articulo, Categoria
 from .models import Notificacion
-from apps.radio.models import Programa, EstacionRadio, HorarioPrograma, GeneroMusical, ReproduccionRadio, Conductor
+from apps.radio.models import Programa, EstacionRadio, HorarioPrograma, GeneroMusical, ReproduccionRadio, Conductor, ProgramaConductor
 from apps.chat.models import ChatMessage, InfraccionUsuario
 from apps.contact.models import Contacto, Suscripcion, Estado, TipoAsunto
 from apps.emergente.models import BandaEmergente, BandaLink, Integrante, BandaIntegrante
@@ -220,7 +220,6 @@ def eliminar_categoria(request, categoria_id):
         categoria = get_object_or_404(Categoria, id=categoria_id)
         nombre_categoria = categoria.nombre
         
-        # Verificar si hay artículos usando esta categoría
         if Articulo.objects.filter(categoria=categoria).exists():
             message = f'No se puede eliminar la categoría "{nombre_categoria}" porque tiene artículos asociados.'
             if is_ajax:
@@ -250,7 +249,7 @@ def dashboard_radio(request):
     """Gestión de radio y programas con paginación"""
     # Paginación para programas
     programs_list = Programa.objects.all().order_by('nombre')
-    programs_paginator = Paginator(programs_list, 10)  # 10 programas por página
+    programs_paginator = Paginator(programs_list, 10) # 10 programas por página
     programs_page_number = request.GET.get('programs_page', 1)
     programs = programs_paginator.get_page(programs_page_number)
 
@@ -259,19 +258,17 @@ def dashboard_radio(request):
     except EstacionRadio.DoesNotExist:
         station = None
 
-    # Obtener los 3 artículos más recientes
     articulos_recientes = Articulo.objects.filter(
         publicado=True
     ).select_related('categoria', 'autor').order_by('-fecha_publicacion')[:3]
 
-    # Obtener el total de artículos
     total_articulos = Articulo.objects.count()
-
-    # Paginación para conductores
     conductores_list = Conductor.objects.all().order_by('nombre')
-    conductores_paginator = Paginator(conductores_list, 10)  # 10 conductores por página
+    conductores_paginator = Paginator(conductores_list, 10) # 10 conductores por página
     conductores_page_number = request.GET.get('conductores_page', 1)
-    conductores = conductores_paginator.get_page(conductores_page_number)
+    conductores_paginados = conductores_paginator.get_page(conductores_page_number)
+    
+    all_conductores = conductores_list 
 
     context = {
         'programs': programs,
@@ -279,7 +276,8 @@ def dashboard_radio(request):
         'articulos_recientes': articulos_recientes,
         'total_articulos': total_articulos,
         'total_articulos_count': total_articulos,
-        'conductores': conductores
+        'conductores': conductores_paginados,
+        'all_conductores': all_conductores,
     }
     return render(request, 'dashboard/radio.html', context)
 
@@ -287,10 +285,7 @@ def dashboard_radio(request):
 @user_passes_test(is_staff_user)
 def dashboard_chat(request):
     """Moderación del chat"""
-    # Obtener todos los mensajes
     messages = ChatMessage.objects.all().order_by('-fecha_envio')[:50]
-
-    # Calcular estadísticas usando timezone aware datetime
     now = timezone.now()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
@@ -300,19 +295,16 @@ def dashboard_chat(request):
         fecha_envio__lte=today_end
     ).count()
 
-    # Usuarios únicos activos hoy (basado en mensajes)
     active_users_today = ChatMessage.objects.filter(
         fecha_envio__gte=today_start,
         fecha_envio__lte=today_end
     ).values('usuario_id').distinct().count()
 
-    # Obtener usuarios más activos (top 10 con más mensajes)
     from django.db.models import Count
     top_users = ChatMessage.objects.values('usuario_id', 'usuario_nombre').annotate(
         message_count=Count('id')
     ).order_by('-message_count')[:10]
 
-    # Obtener información de bloqueo para cada usuario
     User = get_user_model()
     top_users_list = []
     for user_data in top_users:
@@ -505,7 +497,6 @@ def ubicaciones_publicidad(request):
 
         # Gestión de Ubicaciones
         else:
-            # Handle form submission for creating/updating locations
             ubicacion_id = request.POST.get('ubicacion_id')
             nombre = request.POST.get('nombre')
             tipo_id = request.POST.get('tipo')
@@ -518,7 +509,7 @@ def ubicaciones_publicidad(request):
             try:
                 tipo = TipoUbicacion.objects.get(id=tipo_id)
                 
-                if ubicacion_id:  # Update existing
+                if ubicacion_id: 
                     ubicacion = UbicacionPublicidadWeb.objects.get(id=ubicacion_id)
                     ubicacion.nombre = nombre
                     ubicacion.tipo = tipo
@@ -529,7 +520,7 @@ def ubicaciones_publicidad(request):
                     ubicacion.orden = orden
                     ubicacion.save()
                     messages.success(request, 'Ubicación actualizada correctamente')
-                else:  # Create new
+                else:
                     UbicacionPublicidadWeb.objects.create(
                         nombre=nombre,
                         tipo=tipo,
@@ -2606,32 +2597,50 @@ def create_program(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
         descripcion = request.POST.get('descripcion')
-        hora_inicio = request.POST.get('hora_inicio')
-        hora_fin = request.POST.get('hora_fin')
-        dias = request.POST.getlist('dias[]')  # Obtener lista de días seleccionados
+        hora_inicio_str = request.POST.get('hora_inicio')
+        hora_fin_str = request.POST.get('hora_fin')
+        dias = request.POST.getlist('dias[]')
         activo = request.POST.get('activo') == 'on'
+        conductor_ids = request.POST.getlist('conductores[]')
         
         try:
-            # Crear el programa
+            # --- Convertir strings de hora a objetos time ---
+            hora_inicio_obj = dt_datetime.strptime(hora_inicio_str, '%H:%M').time()
+            hora_fin_obj = dt_datetime.strptime(hora_fin_str, '%H:%M').time()
+            # ----------------------------------------------------
+        except (ValueError, TypeError):
+            messages.error(request, 'Formato de hora inválido. Use HH:MM.')
+            return redirect('dashboard_radio')
+        
+        try:
             program = Programa.objects.create(
                 nombre=nombre,
                 descripcion=descripcion,
                 activo=activo
             )
             
-            # Crear horarios para cada día seleccionado
-            if dias and hora_inicio and hora_fin:
+            if dias and hora_inicio_str and hora_fin_str:
                 for dia in dias:
                     HorarioPrograma.objects.create(
                         programa=program,
                         dia_semana=int(dia),
-                        hora_inicio=hora_inicio,
-                        hora_fin=hora_fin,
+                        hora_inicio=hora_inicio_obj,
+                        hora_fin=hora_fin_obj,
                         activo=True
                     )
             
-            messages.success(request, f'Programa "{nombre}" creado exitosamente con {len(dias)} horarios')
+            if conductor_ids:
+                for conductor_id in conductor_ids:
+                    try:
+                        conductor = Conductor.objects.get(id=conductor_id)
+                        ProgramaConductor.objects.create(programa=program, conductor=conductor)
+                    except Conductor.DoesNotExist:
+                        pass 
+            
+            messages.success(request, f'Programa "{nombre}" creado exitosamente.')
         except Exception as e:
+            print("--- ERROR EN CREATE_PROGRAM ---")
+            traceback.print_exc()
             messages.error(request, f'Error al crear programa: {str(e)}')
     
     return redirect('dashboard_radio')
@@ -2647,30 +2656,46 @@ def edit_program(request, program_id):
         program.descripcion = request.POST.get('descripcion')
         program.activo = request.POST.get('activo') == 'on'
         
-        hora_inicio = request.POST.get('hora_inicio')
-        hora_fin = request.POST.get('hora_fin')
+        hora_inicio_str = request.POST.get('hora_inicio')
+        hora_fin_str = request.POST.get('hora_fin')
         dias = request.POST.getlist('dias[]')
+        conductor_ids = request.POST.getlist('conductores[]')
         
+        try:
+            hora_inicio_obj = dt_datetime.strptime(hora_inicio_str, '%H:%M').time()
+            hora_fin_obj = dt_datetime.strptime(hora_fin_str, '%H:%M').time()
+            # ----------------------------------------------------
+        except (ValueError, TypeError):
+            messages.error(request, 'Formato de hora inválido. Use HH:MM.')
+            return redirect('dashboard_radio')
+            
         try:
             program.save()
             
-            # Actualizar horarios: eliminar los existentes y crear nuevos
-            if dias and hora_inicio and hora_fin:
-                # Eliminar horarios antiguos
+            if dias and hora_inicio_str and hora_fin_str:
                 program.horarios.all().delete()
-                
-                # Crear nuevos horarios
                 for dia in dias:
                     HorarioPrograma.objects.create(
                         programa=program,
                         dia_semana=int(dia),
-                        hora_inicio=hora_inicio,
-                        hora_fin=hora_fin,
+                        hora_inicio=hora_inicio_obj,
+                        hora_fin=hora_fin_obj,
                         activo=True
                     )
             
+            program.conductores.all().delete()
+            if conductor_ids:
+                for conductor_id in conductor_ids:
+                    try:
+                        conductor = Conductor.objects.get(id=conductor_id)
+                        ProgramaConductor.objects.create(programa=program, conductor=conductor)
+                    except Conductor.DoesNotExist:
+                        pass
+            
             messages.success(request, f'Programa "{program.nombre}" actualizado exitosamente')
         except Exception as e:
+            print("--- ERROR EN EDIT_PROGRAM ---")
+            traceback.print_exc()
             messages.error(request, f'Error al actualizar programa: {str(e)}')
     
     return redirect('dashboard_radio')

@@ -5,10 +5,8 @@ import './Pages.css';
 
 const Programming = () => {
   const [programs, setPrograms] = useState([]);
-  const [horarios, setHorarios] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Orden correcto: Lunes a Domingo
   const daysOfWeek = [
     { key: 1, name: 'Lunes' },
     { key: 2, name: 'Martes' },
@@ -22,28 +20,12 @@ const Programming = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Cargar programas
-        const programsResponse = await axios.get('/api/radio/api/programas/');
+        const programsResponse = await axios.get('/api/radio/programas/');
         const programsData = programsResponse.data.results || programsResponse.data;
-        console.log('Programas cargados:', programsData);
         setPrograms(programsData);
-        
-        // Cargar horarios
-        const horariosResponse = await axios.get('/api/radio/api/horarios/');
-        const horariosData = horariosResponse.data.results || horariosResponse.data;
-        console.log('Horarios cargados:', horariosData);
-        setHorarios(horariosData);
+
       } catch (error) {
         console.error('Error fetching data:', error);
-        // Agregar datos de fallback para testing
-        setPrograms([
-          { id: 1, nombre: 'Buenos Días Oriente', descripcion: 'Programa matutino' },
-          { id: 2, nombre: 'Tarde de Éxitos', descripcion: 'Los hits de la tarde' }
-        ]);
-        setHorarios([
-          { id: 1, programa: 1, dia_semana: 1, hora_inicio: '06:00:00', hora_fin: '10:00:00', activo: true },
-          { id: 2, programa: 2, dia_semana: 1, hora_inicio: '14:00:00', hora_fin: '18:00:00', activo: true }
-        ]);
       } finally {
         setLoading(false);
       }
@@ -54,33 +36,40 @@ const Programming = () => {
 
   const groupProgramsByDay = () => {
     const grouped = {};
-    console.log('Agrupando programas por día...');
-    console.log('Programas disponibles:', programs);
-    console.log('Horarios disponibles:', horarios);
-
     daysOfWeek.forEach(day => {
-      const dayNumber = day.key;
-      const horariosDelDia = horarios.filter(horario =>
-        horario.dia_semana === dayNumber && (horario.activo !== false)
-      );
-
-      console.log(`Día ${dayNumber} (${day.name}):`, horariosDelDia);
-
-      grouped[dayNumber] = horariosDelDia.map(horario => {
-        const programa = programs.find(p => p.id === horario.programa);
-        console.log(`Horario ${horario.id} busca programa ${horario.programa}:`, programa);
-        return {
-          ...horario,
-          programa: programa
-        };
-      }).sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio));
+      grouped[day.key] = [];
     });
 
-    console.log('Programas agrupados:', grouped);
+    programs.forEach(program => {
+      if (!program.activo) return;
+      program.horarios.forEach(horario => {
+        if (horario.activo === false) return;
+
+        const scheduleItem = {
+          id: `${program.id}-${horario.id}`,
+          hora_inicio: horario.hora_inicio,
+          hora_fin: horario.hora_fin,
+          programa_nombre: program.nombre,
+          programa_descripcion: program.descripcion,
+          programa_imagen: program.imagen_url,
+          conductores: program.conductores 
+        };
+        
+        if (grouped[horario.dia_semana]) {
+          grouped[horario.dia_semana].push(scheduleItem);
+        }
+      });
+    });
+
+    daysOfWeek.forEach(day => {
+      grouped[day.key].sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio));
+    });
+    
     return grouped;
   };
 
   const formatTime = (time) => {
+    if (!time) return '';
     return new Date(`2000-01-01T${time}`).toLocaleTimeString('es-ES', {
       hour: '2-digit',
       minute: '2-digit'
@@ -116,38 +105,39 @@ const Programming = () => {
                   <h2 className="day-title">{day.name}</h2>
                   <div className="programs-list">
                     {groupedPrograms[dayNumber]?.length > 0 ? (
-                      groupedPrograms[dayNumber].map((horario) => (
-                        <div key={`${horario.id}-${dayNumber}`} className="program-card">
-                          {horario.programa?.imagen_url && (
+                      groupedPrograms[dayNumber].map((schedule) => (
+                        <div key={schedule.id} className="program-card">
+                          {schedule.programa_imagen && (
                             <img 
-                              src={horario.programa.imagen_url} 
-                              alt={horario.programa.nombre}
+                              src={schedule.programa_imagen} 
+                              alt={schedule.programa_nombre}
                               className="program-image"
                             />
                           )}
                           <div className="program-content">
+                            
                             <h3 className="program-title">
-                              {horario.programa?.nombre || `Programa ID: ${horario.programa || 'N/A'}`}
+                              {schedule.programa_nombre}
                             </h3>
+                            
                             <p className="program-description">
-                              {horario.programa?.descripcion || 'Sin descripción disponible'}
+                              {schedule.programa_descripcion || 'Sin descripción disponible'}
                             </p>
                             <div className="program-meta">
                               <div className="program-time">
                                 <Clock size={16} />
-                                {formatTime(horario.hora_inicio)} - {formatTime(horario.hora_fin)}
+                                {formatTime(schedule.hora_inicio)} - {formatTime(schedule.hora_fin)}
                               </div>
-                              {horario.programa?.conductores && horario.programa.conductores.length > 0 ? (
-                                <div className="program-host">
-                                  <User size={16} />
-                                  {horario.programa.conductores.map(c => c.nombre).join(', ')}
-                                </div>
-                              ) : (
-                                <div className="program-host">
-                                  <User size={16} />
-                                  Radio Oriente FM
-                                </div>
-                              )}
+                              
+                              <div className="program-host">
+                                <User size={16} />
+                                {schedule.conductores && schedule.conductores.length > 0 ? (
+                                  schedule.conductores.map(c => c.conductor_nombre).join(', ')
+                                ) : (
+                                  'Radio Oriente FM'
+                                )}
+                              </div>
+
                             </div>
                           </div>
                         </div>

@@ -123,3 +123,8 @@ class LocutoresActivosListView(ListAPIView):
     serializer_class = ConductorSerializer
 
     permission_classes = [AllowAny]
+
+class ProgramaListView(ListAPIView):
+    queryset = Programa.objects.all().order_by('nombre')
+    serializer_class = ProgramaSerializer
+    permission_classes = [AllowAny]
