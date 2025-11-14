@@ -111,11 +111,11 @@ html:not(.dark) .locutores-carrusel-container h2 {
   /* Degradado vibrante: cyan → magenta → azul → cyan */
   background: conic-gradient(
     from 0deg,
-    #06b6d4 0%,
-    #3b82f6 25%,
-    #8b5cf6 50%,
-    #ec4899 75%,
-    #06b6d4 100%
+    #9e2a2a 0%,
+    #aa1010 25%,
+    #501818 50%,
+    #a12121 75%,
+    #000000 100%
   );
   box-shadow:
     0 0 30px rgba(6, 182, 212, 0.4),

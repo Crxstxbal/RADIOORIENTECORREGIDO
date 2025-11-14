@@ -139,18 +139,19 @@ const Home = () => {
 
   const particleElements = useMemo(() => {
     const colors = [
-      'rgba(239, 68, 68, 0.5)',
-      'rgba(248, 113, 113, 0.4)',
-      'rgba(220, 38, 38, 0.6)',
-      'rgba(239, 68, 68, 0.35)'
+      '#c62828',
+      '#d32f2f',
+      '#b71c1c',
+      '#c62828',
+      '#e53935'
     ];
 
     return [...Array(15)].map((_, i) => {
       const randomX = Math.random() * 100;
       const randomY = Math.random() * 100;
-      const randomDelay = Math.random() * 8;
-      const randomDuration = 35 + Math.random() * 15;
-      const randomSize = 2 + Math.random() * 2;
+      const randomDelay = Math.random() * -40; // Delay negativo para que empiecen en diferentes puntos
+      const randomDuration = 30 + Math.random() * 20; // 30-50 segundos (lento)
+      const randomSize = 2 + Math.random() * 2; // 2-4px pequeñas
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
       return (
@@ -162,9 +163,10 @@ const Home = () => {
             top: `${randomY}%`,
             width: `${randomSize}px`,
             height: `${randomSize}px`,
-            background: randomColor,
+            backgroundColor: randomColor,
             animationDelay: `${randomDelay}s`,
-            animationDuration: `${randomDuration}s`
+            animationDuration: `${randomDuration}s`,
+            color: randomColor
           }}
         />
       );

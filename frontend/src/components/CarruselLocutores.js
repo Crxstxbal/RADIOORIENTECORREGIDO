@@ -96,16 +96,15 @@ const CarruselLocutores = () => {
         modules={[Navigation, Pagination, Autoplay]}
         spaceBetween={30}
         slidesPerView={1}
-        navigation
+        navigation={true}
         pagination={{ clickable: true }}
-        loop={locutores.length >= 3}
-        loopAdditionalSlides={2}
+        loop={true}
         autoplay={{
-          delay: 3000,
+          delay: 4000,
           disableOnInteraction: false,
           pauseOnMouseEnter: false,
         }}
-        speed={600}
+        speed={1200}
         grabCursor={true}
         breakpoints={{
           320: { slidesPerView: 1, spaceBetween: 10 },

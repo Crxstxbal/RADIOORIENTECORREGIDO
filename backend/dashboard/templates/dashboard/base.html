@@ -98,7 +98,7 @@
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
+            z-index: 3400; /* Entre el navbar (3000) y el sidebar (3500) */
         }
 
         .sidebar .nav-link {
@@ -110,6 +110,14 @@
             position: relative;
             background: transparent;
             font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar .nav-link i {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .sidebar .nav-link:hover {
@@ -626,6 +634,15 @@
             border-color: var(--primary-color);
         }
         
+        /* Modales - Asegurar que queden por encima de todo */
+        .modal {
+            z-index: 4000 !important; /* Por encima del sidebar (3500) */
+        }
+
+        .modal-backdrop {
+            z-index: 3900 !important; /* Entre el sidebar (3500) y el modal (4000) */
+        }
+
         html.dark .modal-content {
             background-color: var(--card-bg);
             color: var(--text-primary);
@@ -770,9 +787,9 @@
                 width: 250px;
                 position: fixed;
                 transition: margin-left 0.3s ease;
-                z-index: 1001;
+                z-index: 3500; /* Mayor que el navbar (3000) para quedar por encima */
             }
-            
+
             .sidebar.show {
                 margin-left: 0;
                 box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);

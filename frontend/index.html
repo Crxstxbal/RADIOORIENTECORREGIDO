@@ -37,8 +37,69 @@
       consent-title="Terminos y Condiciones"
       consent-content="Al aceptar estas dando consentimiento de que tu chat puede ser registrado y analizado por los administradores."
       consent-storage-key="vapi_widget_consent"
+      style="--vapi-widget-bottom-offset: 85px !important;"
     ></vapi-widget>
     <script src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js" async type="text/javascript"></script>
+    <script>
+      // Ajustar posición del widget Vapi - buscar el DIV interno
+      function adjustVapiWidget() {
+        const vapiWidget = document.querySelector('vapi-widget');
+        if (!vapiWidget) return;
+
+        // Buscar el DIV interno que tiene position: fixed
+        const innerDiv = vapiWidget.querySelector('div[style*="position: fixed"]') ||
+                         vapiWidget.querySelector('div.vapi-widget-wrapper') ||
+                         vapiWidget.querySelector('div');
+
+        const isMobile = window.innerWidth <= 768;
+        const isSmallMobile = window.innerWidth <= 480;
+
+        // Aplicar estilos al widget principal
+        vapiWidget.style.setProperty('z-index', '1400', 'important');
+
+        // Aplicar estilos al DIV interno (el que realmente se posiciona)
+        if (innerDiv) {
+          innerDiv.style.setProperty('z-index', '1400', 'important');
+
+          if (isSmallMobile) {
+            innerDiv.style.setProperty('bottom', '85px', 'important');
+            innerDiv.style.setProperty('left', '0.75rem', 'important');
+          } else if (isMobile) {
+            innerDiv.style.setProperty('bottom', '90px', 'important');
+            innerDiv.style.setProperty('left', '1rem', 'important');
+          } else {
+            innerDiv.style.setProperty('bottom', '1.5rem', 'important');
+            innerDiv.style.setProperty('left', '1.5rem', 'important');
+          }
+        }
+      }
+
+      // Ejecutar continuamente
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', adjustVapiWidget);
+      } else {
+        adjustVapiWidget();
+      }
+
+      setTimeout(adjustVapiWidget, 500);
+      setTimeout(adjustVapiWidget, 1000);
+      setTimeout(adjustVapiWidget, 2000);
+      setTimeout(adjustVapiWidget, 3000);
+      setTimeout(adjustVapiWidget, 5000);
+
+      window.addEventListener('resize', adjustVapiWidget);
+
+      const observer = new MutationObserver(() => adjustVapiWidget());
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      // Forzar ajuste cada 2 segundos durante los primeros 10 segundos
+      let attempts = 0;
+      const forceAdjust = setInterval(() => {
+        adjustVapiWidget();
+        attempts++;
+        if (attempts >= 5) clearInterval(forceAdjust);
+      }, 2000);
+    </script>
     <script type="module" src="/src/index.js"></script>
   </body>
 </html>

@@ -285,11 +285,76 @@ select::-webkit-scrollbar-thumb:hover {
                 </p>
             </div>
         {% endif %}
+
+        <!-- Paginación -->
+        {% if page_obj.has_other_pages %}
+        <div style="margin-top: 24px; display: flex; justify-content: center;">
+            <nav aria-label="Paginación de notificaciones">
+                <ul style="display: flex; list-style: none; padding: 0; margin: 0; gap: 6px;">
+                    {% if page_obj.has_previous %}
+                    <li>
+                        <a href="?page=1{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if filtro_leidas %}&leidas={{ filtro_leidas }}{% endif %}"
+                           style="display: flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; padding: 0 12px; border-radius: 8px; background: white; border: 1px solid #e5e7eb; color: #374151; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s;">
+                            Primera
+                        </a>
+                    </li>
+                    <li>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if filtro_leidas %}&leidas={{ filtro_leidas }}{% endif %}"
+                           style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; background: white; border: 1px solid #e5e7eb; color: #374151; text-decoration: none; font-size: 14px; transition: all 0.2s;">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li>
+                            <span style="display: flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; padding: 0 12px; border-radius: 8px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; font-size: 14px; font-weight: 600; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);">
+                                {{ num }}
+                            </span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li>
+                            <a href="?page={{ num }}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if filtro_leidas %}&leidas={{ filtro_leidas }}{% endif %}"
+                               style="display: flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; padding: 0 12px; border-radius: 8px; background: white; border: 1px solid #e5e7eb; color: #374151; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s;">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li>
+                        <a href="?page={{ page_obj.next_page_number }}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if filtro_leidas %}&leidas={{ filtro_leidas }}{% endif %}"
+                           style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; background: white; border: 1px solid #e5e7eb; color: #374151; text-decoration: none; font-size: 14px; transition: all 0.2s;">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if filtro_leidas %}&leidas={{ filtro_leidas }}{% endif %}"
+                           style="display: flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; padding: 0 12px; border-radius: 8px; background: white; border: 1px solid #e5e7eb; color: #374151; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s;">
+                            Última
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
     </div>
 
 </div>
 
 <style>
+/* Estilos de paginación */
+nav[aria-label="Paginación de notificaciones"] a:hover {
+    background: #f3f4f6 !important;
+    border-color: #6366f1 !important;
+    color: #6366f1 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 /* Responsive para móviles */
 @media (max-width: 768px) {
     .notif-page {
@@ -300,6 +365,25 @@ select::-webkit-scrollbar-thumb:hover {
     }
     .notif-filters-form {
         grid-template-columns: 1fr !important;
+    }
+
+    /* Paginación responsive */
+    nav[aria-label="Paginación de notificaciones"] ul {
+        gap: 4px !important;
+    }
+
+    nav[aria-label="Paginación de notificaciones"] a,
+    nav[aria-label="Paginación de notificaciones"] span {
+        min-width: 32px !important;
+        height: 32px !important;
+        font-size: 12px !important;
+        padding: 0 8px !important;
+    }
+
+    /* Ocultar botones "Primera" y "Última" en móvil */
+    nav[aria-label="Paginación de notificaciones"] li:first-child,
+    nav[aria-label="Paginación de notificaciones"] li:last-child {
+        display: none;
     }
 }
 </style>

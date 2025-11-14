@@ -34,7 +34,7 @@
   position: relative;
   width: 100%;
   max-width: 48rem;
-  background-color: #dc2626;
+  background: linear-gradient(135deg, var(--color-red) 0%, #000000 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -67,7 +67,7 @@
 }
 
 .collapse-btn {
-  background-color: #320a0ab1;
+  background-color: rgba(198, 40, 40, 0.7);
   border: none;
   color: white;
   border-radius: 50%;
@@ -82,7 +82,7 @@
 }
 
 .collapse-btn:hover {
-  background-color: #ef4444;
+  background-color: #e57373;
 }
 
 /* ===========================
@@ -97,11 +97,11 @@
 }
 
 .radio-player.paused .volume-progress {
-  background-color: #ef4444;
+  background-color: #e57373;
 }
 
 .radio-player.paused .volume-slider-container:hover .volume-progress {
-  background-color: #f87171;
+  background-color: #ef9a9a;
 }
 
 /* ===========================
@@ -151,7 +151,7 @@
 }
 
 .status-indicator.paused {
-  background-color: #ef4444;
+  background-color: #e57373;
 }
 
 .radio-details {
@@ -195,7 +195,7 @@
   align-items: center;
   justify-content: center;
   color: white;
-  background: linear-gradient(135deg, #000 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #000 0%, #c62828 100%);
   border-radius: 50%;
   border: none;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -239,7 +239,7 @@
 
 .expand-btn:hover {
   transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 4px 12px rgba(168, 51, 51, 0.4);
   border-color: rgba(255,255,255,0.4);
 }
 

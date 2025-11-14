@@ -2,8 +2,8 @@
   position: fixed;
   bottom: 20px;
   right: 2rem;
-  padding: 0.75rem 1.25rem;
-  background: var(--color-red);
+  padding: 0.875rem 1.5rem;
+  background: #c62828;
   color: var(--color-white);
   border: none;
   border-radius: 2rem;
@@ -12,21 +12,21 @@
   justify-content: center;
   gap: 0.5rem;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3);
+  box-shadow: 0 4px 20px rgba(198, 40, 40, 0.25);
   transition: all 0.3s ease;
   z-index: 1500;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .chat-toggle:hover {
-  background: var(--color-red-dark);
+  background: #b71c1c;
   transform: scale(1.05);
-  box-shadow: 0 6px 25px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 6px 25px rgba(198, 40, 40, 0.3);
 }
 
 .chat-toggle.active {
-  background: var(--color-red-dark);
+  background: #b71c1c;
   transform: scale(0.95);
 }
 
@@ -232,7 +232,7 @@
 }
 
 .message.own .message-content {
-  background: var(--color-red);
+  background: #c62828;
   color: var(--color-white);
 }
 
@@ -253,7 +253,7 @@
 }
 
 .message.other .message-author {
-  color: var(--color-red);
+  color: #c62828;
 }
 
 .message-time {
@@ -319,7 +319,7 @@
 }
 
 .send-btn {
-  background: var(--color-red);
+  background: #c62828;
   color: var(--color-white);
   border: none;
   border-radius: 50%;
@@ -333,7 +333,7 @@
 }
 
 .send-btn:hover:not(:disabled) {
-  background: var(--color-red-dark);
+  background: #b71c1c;
 }
 
 .send-btn:disabled {
@@ -362,14 +362,14 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .chat-toggle {
-    bottom: 20px;
+    bottom: 90px;
     right: 1rem;
-    padding: 0.6rem 1rem;
-    font-size: 0.875rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
   }
 
   .chat-window {
-    bottom: 70px;
+    bottom: 150px;
     right: 1rem;
     left: 1rem;
     width: auto;
@@ -390,8 +390,18 @@
 }
 
 @media (max-width: 480px) {
+  .chat-toggle {
+    bottom: 85px;
+    right: 0.75rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+
   .chat-window {
     height: 350px;
+    bottom: 145px;
+    right: 0.75rem;
+    left: 0.75rem;
   }
 
   .messages-list {
@@ -437,12 +447,12 @@ html.dark .message-content {
 }
 
 html.dark .message.own .message-content {
-  background: var(--color-red);
+  background: #c62828;
   color: var(--color-white);
 }
 
 html.dark .message.other .message-author {
-  color: var(--color-red);
+  color: #c62828;
 }
 
 html.dark .chat-error {

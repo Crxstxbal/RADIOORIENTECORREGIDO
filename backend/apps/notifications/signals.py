@@ -142,7 +142,7 @@ def notificar_cambio_horario(sender, instance, created, **kwargs):
         titulo = f"Horario actualizado: {instance.programa.nombre}"
         mensaje = f"Se modifico el horario del {instance.get_dia_semana_display()} para '{instance.programa.nombre}'"
 
-    enlace = f"/dashboard/horarios/?programa={instance.programa.id}"
+    enlace = f"/dashboard/radio/?programa={instance.programa.id}"
 
     crear_notificacion_para_staff(
         tipo='programa',
