@@ -57,11 +57,26 @@ class Conductor(models.Model):
 
 class Programa(models.Model):
     """Programas de radio normalizados"""
-    estacion = models.ForeignKey(EstacionRadio, on_delete=models.CASCADE, related_name='programas')
+    estacion = models.ForeignKey(
+        EstacionRadio, 
+        on_delete=models.SET_NULL,  # No eliminar programas si se elimina la estación
+        related_name='programas',
+        null=True,                  # Permite valores nulos temporalmente
+        blank=True,                 # Permite que el campo esté en blanco en formularios
+        help_text='Este campo se completará automáticamente con la estación de radio existente.'
+    )
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
     imagen_url = models.URLField(max_length=500, blank=True, null=True)
     activo = models.BooleanField(default=True)
+    
+    def save(self, *args, **kwargs):
+        # Si no hay una estación asignada, asigna la primera estación disponible
+        if not self.estacion_id:
+            estacion = EstacionRadio.objects.first()
+            if estacion:
+                self.estacion = estacion
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = 'programa'
