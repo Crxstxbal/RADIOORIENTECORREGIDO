@@ -538,100 +538,86 @@ html.dark .navbar {
   font-weight: 500;
 }
 
-/* Responsive Design */
-
-/* Ocultar menú móvil en desktop */
-@media (min-width: 769px) {
-  .mobile-nav {
-    display: none !important;
-  }
-  
-  .mobile-menu-btn {
-    display: none !important;
-  }
-}
-
-@media (max-width: 1024px) {
-  .nav-links {
-    gap: 1.5rem;
-  }
-  
-  .nav-logo {
-    margin-right: 2rem;
-  }
-}
-
-@media (max-width: 1024px) {
-  .nav-links {
-    gap: 1rem;
-  }
-  
-  .nav-link {
-    font-size: 0.9rem;
-    padding: 0.5rem;
-  }
-}
-
-@media (max-width: 768px) {
+/* --- Diseño Base: MÓVIL --- */
+@media (max-width: 1249px) {
   .container {
     padding: 0 1.25rem;
   }
-  
+
   .nav-content {
     height: 65px;
   }
   
-  .logo-text {
-    font-size: 1.2rem;
-  }
-  
-  .logo-icon {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .desktop {
-    display: none !important;
+  /* Escondemos los enlaces de escritorio */
+  .nav-links {
+    display: none;
   }
 
+  /* Escondemos el botón de login de escritorio */
+  .nav-auth .btn-primary {
+    display: none;
+  }
+  
+  /* Escondemos el menú de usuario de escritorio */
+  .nav-auth .user-menu {
+    display: none;
+  }
+
+  /* MOSTRAMOS el botón de hamburguesa */
   .mobile-menu-btn {
-    display: block;
-    margin-left: 0.5rem;
+    display: flex; /* Usamos flex para centrar el ícono */
+    align-items: center;
+    justify-content: center;
     background: rgba(220, 38, 38, 0.1);
+    border: none;
+    color: var(--color-white);
+    cursor: pointer;
     border-radius: 50%;
     width: 36px;
     height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    margin-left: 0.5rem;
     transition: all 0.3s ease;
   }
-
+  
   .mobile-menu-btn:hover {
     background: rgba(220, 38, 38, 0.2);
     color: #f87171;
     transform: scale(1.05);
   }
-  
+
   .nav-logo {
-    margin-right: auto;
+    margin-right: auto; /* Empuja el logo a la izquierda y los botones a la derecha */
   }
-  
+
   .logo-text {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
   }
-  
+
   .logo-icon {
     width: 40px;
     height: 40px;
   }
+  
+  /* Ocultamos esto (si lo usabas) */
+  .desktop {
+    display: none !important;
+  }
 }
 
-@media (max-width: 480px) {
-  .navbar {
-    padding: 0.75rem 0;
+/* --- 2. Diseño de ESCRITORIO (1024px y MÁS GRANDE) --- */
+/* (Aquí ocultamos el menú móvil) */
+@media (min-width: 1249px) {
+  .mobile-menu-btn {
+    display: none !important;
   }
   
+  .mobile-nav {
+    display: none !important;
+  }
+}
+
+/* --- 3. Ajustes para Teléfonos Pequeños (Por debajo de 480px) --- */
+@media (max-width: 480px) {
   .container {
     padding: 0 0.75rem;
   }
@@ -644,7 +630,7 @@ html.dark .navbar {
     width: 35px;
     height: 35px;
   }
-  
+
   .mobile-nav-link {
     padding: 0.5rem 0;
     font-size: 0.95rem;
@@ -656,6 +642,7 @@ html.dark .navbar {
   }
 }
 
+/* --- ESTILOS DE USUARIO (Deben estar fuera de @media) --- */
 .user-menu {
   display: flex;
   align-items: center;
