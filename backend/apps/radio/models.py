@@ -10,7 +10,7 @@ class EstacionRadio(models.Model):
     email = models.EmailField(max_length=254, blank=True, null=True)
     direccion = models.TextField(blank=True, null=True)
     listeners_count = models.IntegerField(default=0)
-    activo = models.BooleanField(default=True, verbose_name='En el aire', 
+    activo = models.BooleanField(default=True, verbose_name='En el aire',
                               help_text='Indica si la estación está transmitiendo actualmente')
 
     class Meta:
