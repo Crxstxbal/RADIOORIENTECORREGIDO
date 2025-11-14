@@ -292,149 +292,78 @@ html:not(.dark) .locutores-carrusel-container h2 {
 }
 
 /* ====================================
-   ESTILOS MEJORADOS PARA NAVEGACIÓN
+   ESTILOS MEJORADOS PARA NAVEGACIÓN (SLICK CAROUSEL)
    ==================================== */
 
 /* Contenedor de navegación */
-.locutores-carrusel-container .swiper {
+.locutores-carrusel-container .locutores-slider {
   position: relative;
-  padding: 0 60px; /* Más espacio para los botones */
+  padding: 0 70px;
 }
 
-/* Botones de navegación - Diseño minimalista y elegante */
-.locutores-carrusel-container .swiper-button-next,
-.locutores-carrusel-container .swiper-button-prev {
-  --swiper-navigation-size: 24px;
-  --btn-size: 40px;
-  width: var(--btn-size);
-  height: var(--btn-size);
-  border-radius: 50px; /* Bordes redondeados suaves, no círculo */
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: none;
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.12),
-    0 2px 4px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  color: #1e293b;
+/* Botones de navegación personalizados para Slick - Diseño minimalista */
+.locutores-carrusel-container .slick-prev,
+.locutores-carrusel-container .slick-next {
+  width: 45px;
+  height: 45px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: none;
   z-index: 10;
-  margin: 0;
-  top: 50%;
-  transform: translateY(-50%);
+}
+
+.locutores-carrusel-container .slick-prev::before,
+.locutores-carrusel-container .slick-next::before {
+  font-size: 18px;
+  font-weight: 700;
+  color: #374151;
+  opacity: 1;
 }
 
 /* Posicionamiento específico para cada botón */
-.locutores-carrusel-container .swiper-button-prev {
-  left: 0;
+.locutores-carrusel-container .slick-prev {
+  left: 10px;
 }
 
-.locutores-carrusel-container .swiper-button-next {
-  right: 0;
+.locutores-carrusel-container .slick-next {
+  right: 10px;
 }
 
-/* Efecto hover elegante con rebote */
-.locutores-carrusel-container .swiper-button-next:hover,
-.locutores-carrusel-container .swiper-button-prev:hover {
-  background: rgba(255, 255, 255, 1);
-  transform: translateY(-50%) scale(1.08);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.18),
-    0 4px 8px rgba(0, 0, 0, 0.12);
-  color: #dc2626; /* Rojo de la marca */
+/* Sin hover effect - estático */
+.locutores-carrusel-container .slick-prev:hover,
+.locutores-carrusel-container .slick-next:hover {
+  background: rgba(255, 255, 255, 0.9) !important;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Efecto al hacer clic con rebote hacia adentro */
-.locutores-carrusel-container .swiper-button-next:active,
-.locutores-carrusel-container .swiper-button-prev:active {
-  transform: translateY(-50%) scale(0.95);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.12),
-    0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-/* Flechas personalizadas - Limpias y modernas */
-.locutores-carrusel-container .swiper-button-next::after,
-.locutores-carrusel-container .swiper-button-prev::after {
-  font-size: var(--swiper-navigation-size);
-  font-weight: 700;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* Efecto hover en las flechas con desplazamiento suave */
-.locutores-carrusel-container .swiper-button-next:hover::after {
-  transform: translateX(2px);
-}
-
-.locutores-carrusel-container .swiper-button-prev:hover::after {
-  transform: translateX(-2px);
-}
-
-/* Estado deshabilitado sutil */
-.locutores-carrusel-container .swiper-button-disabled {
-  opacity: 0.3 !important;
-  transform: translateY(-50%) scale(0.9);
+/* Estado deshabilitado */
+.locutores-carrusel-container .slick-disabled {
+  opacity: 0.3;
   cursor: not-allowed;
-  pointer-events: none;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(200, 200, 200, 0.5) !important;
 }
 
-/* Paginación mejorada */
-.swiper-pagination {
+/* Paginación mejorada para Slick */
+.locutores-carrusel-container .slick-dots {
   position: relative;
   margin-top: 20px;
   bottom: 0 !important;
 }
 
-.swiper-pagination-bullet {
-  width: 10px;
-  height: 10px;
-  background: rgba(0, 0, 0, 0.2);
+.locutores-carrusel-container .slick-dots li button:before {
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.2);
   opacity: 1;
-  transition: all 0.3s ease;
-  margin: 0 5px !important;
 }
 
-.swiper-pagination-bullet-active {
-  width: 30px;
-  height: 10px;
-  border-radius: 5px;
-  background: #dc2626 !important;
-  transform: scale(1);
+.locutores-carrusel-container .slick-dots li.slick-active button:before {
+  color: #c62828;
+  opacity: 1;
 }
 
-/* Modo oscuro para navegación */
-@media (prefers-color-scheme: dark) {
-  .locutores-carrusel-container .swiper-button-next,
-  .locutores-carrusel-container .swiper-button-prev {
-    background: rgba(30, 30, 30, 0.85);
-    color: #f3f4f6;
-    box-shadow:
-      0 4px 16px rgba(0, 0, 0, 0.4),
-      0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-
-  .locutores-carrusel-container .swiper-button-next:hover,
-  .locutores-carrusel-container .swiper-button-prev:hover {
-    background: rgba(40, 40, 40, 0.95);
-    color: #f87171; /* Rojo más claro para modo oscuro */
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.5),
-      0 4px 8px rgba(0, 0, 0, 0.3);
-  }
-
-  .swiper-pagination-bullet {
-    background: rgba(255, 255, 255, 0.2);
-  }
-}
-
-/* Efecto de foco para accesibilidad */
-.swiper-button-next:focus-visible,
-.swiper-button-prev:focus-visible {
-  outline: 2px solid #dc2626;
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.3);
-}
 
 /* Responsivo: ajustar tamaño del avatar en pantallas pequeñas */
 @media (max-width: 768px) {
@@ -467,4 +396,142 @@ html.dark .locutores-carrusel-container .locutor-slide .locutor-rol {
 html:not(.dark) .locutores-carrusel-container .locutor-slide .locutor-nombre,
 html:not(.dark) .locutores-carrusel-container .locutor-slide .locutor-rol {
   color: #111827 !important; /* Negro cuando el sitio fuerza modo claro */
+}
+
+/* ====================================
+   SWIPER SLIDE WIDTHS
+   ==================================== */
+
+.locutor-slide {
+  width: 300px !important;
+}
+
+@media (max-width: 768px) {
+  .locutor-slide {
+    width: 200px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .locutor-slide {
+    width: 180px !important;
+  }
+}
+
+/* ====================================
+   SCROLL INFINITO CONTINUO CON CSS
+   ==================================== */
+
+.infinite-scroll-wrapper {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  padding: 20px 0;
+}
+
+.infinite-scroll-track {
+  display: flex;
+  gap: 30px;
+  animation: scroll-infinito 60s linear infinite;
+  width: max-content;
+}
+
+/* Animación de scroll continuo */
+@keyframes scroll-infinito {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333%); /* Mueve 1/3 ya que duplicamos 3 veces */
+  }
+}
+
+/* Pausar animación al hacer hover */
+.infinite-scroll-track:hover {
+  animation-play-state: paused;
+}
+
+/* Ajustar slides para scroll horizontal */
+.infinite-scroll-track .locutor-slide {
+  flex-shrink: 0;
+  width: 300px;
+}
+
+@media (max-width: 768px) {
+  .infinite-scroll-track {
+    gap: 20px;
+  }
+
+  .infinite-scroll-track .locutor-slide {
+    width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .infinite-scroll-track {
+    gap: 15px;
+  }
+
+  .infinite-scroll-track .locutor-slide {
+    width: 180px;
+  }
+}
+
+/* ====================================
+   ESTILOS PARA SPLIDE CAROUSEL
+   ==================================== */
+
+/* Estilo para las flechas de Splide */
+.splide-locutores .splide__arrow {
+  width: 45px;
+  height: 45px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.splide-locutores .splide__arrow svg {
+  fill: #374151;
+  width: 18px;
+  height: 18px;
+}
+
+.splide-locutores .splide__arrow:hover {
+  background: rgba(255, 255, 255, 1) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.splide-locutores .splide__arrow--prev {
+  left: 10px;
+}
+
+.splide-locutores .splide__arrow--next {
+  right: 10px;
+}
+
+/* Estado deshabilitado */
+.splide-locutores .splide__arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Ajustar ancho de los slides de Splide */
+.splide-locutores .splide__slide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .splide-locutores .splide__arrow {
+    width: 40px;
+    height: 40px;
+  }
+
+  .splide-locutores .splide__arrow svg {
+    width: 16px;
+    height: 16px;
+  }
 }

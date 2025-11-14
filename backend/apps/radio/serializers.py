@@ -48,10 +48,20 @@ class HorarioProgramaSerializer(serializers.ModelSerializer):
 
 class ProgramaConductorSerializer(serializers.ModelSerializer):
     conductor_nombre = serializers.CharField(source='conductor.__str__', read_only=True)
-    
+    conductor_foto = serializers.SerializerMethodField()
+    conductor_apodo = serializers.CharField(source='conductor.apodo', read_only=True)
+
     class Meta:
         model = ProgramaConductor
-        fields = ['id', 'programa', 'conductor', 'conductor_nombre']
+        fields = ['id', 'programa', 'conductor', 'conductor_nombre', 'conductor_foto', 'conductor_apodo']
+
+    def get_conductor_foto(self, obj):
+        if obj.conductor and obj.conductor.foto:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.conductor.foto.url)
+            return obj.conductor.foto.url
+        return None
 
 class ProgramaSerializer(serializers.ModelSerializer):
     conductores = ProgramaConductorSerializer(many=True, read_only=True)

@@ -146,27 +146,40 @@ const Home = () => {
       '#e53935'
     ];
 
-    return [...Array(15)].map((_, i) => {
+    return [...Array(25)].map((_, i) => {
       const randomX = Math.random() * 100;
       const randomY = Math.random() * 100;
-      const randomDelay = Math.random() * -40; // Delay negativo para que empiecen en diferentes puntos
-      const randomDuration = 30 + Math.random() * 20; // 30-50 segundos (lento)
-      const randomSize = 2 + Math.random() * 2; // 2-4px pequeñas
+      const randomDelay = Math.random() * 15;
+      const randomSize = 3 + Math.random() * 3;
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+      // Dirección aleatoria: arriba, abajo, izquierda o derecha
+      const directions = [
+        'floatUp',
+        'floatDown',
+        'floatLeft',
+        'floatRight',
+        'floatDiagonal1',
+        'floatDiagonal2',
+        'floatDiagonal3',
+        'floatDiagonal4'
+      ];
+      const randomDirection = directions[Math.floor(Math.random() * directions.length)];
 
       return (
         <div
           key={i}
-          className="particle"
+          className={`particle particle-${randomDirection}`}
           style={{
             left: `${randomX}%`,
             top: `${randomY}%`,
             width: `${randomSize}px`,
             height: `${randomSize}px`,
             backgroundColor: randomColor,
+            position: 'absolute',
+            borderRadius: '50%',
             animationDelay: `${randomDelay}s`,
-            animationDuration: `${randomDuration}s`,
-            color: randomColor
+            boxShadow: `0 0 10px ${randomColor}`
           }}
         />
       );
@@ -201,6 +214,56 @@ const Home = () => {
             transform: scale(1);
           }
         }
+
+        @keyframes floatUp {
+          0% { transform: translateY(0); opacity: 0.7; }
+          100% { transform: translateY(-100vh); opacity: 0; }
+        }
+
+        @keyframes floatDown {
+          0% { transform: translateY(0); opacity: 0.7; }
+          100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        @keyframes floatLeft {
+          0% { transform: translateX(0); opacity: 0.7; }
+          100% { transform: translateX(-100vw); opacity: 0; }
+        }
+
+        @keyframes floatRight {
+          0% { transform: translateX(0); opacity: 0.7; }
+          100% { transform: translateX(100vw); opacity: 0; }
+        }
+
+        @keyframes floatDiagonal1 {
+          0% { transform: translate(0, 0); opacity: 0.7; }
+          100% { transform: translate(100vw, -100vh); opacity: 0; }
+        }
+
+        @keyframes floatDiagonal2 {
+          0% { transform: translate(0, 0); opacity: 0.7; }
+          100% { transform: translate(-100vw, -100vh); opacity: 0; }
+        }
+
+        @keyframes floatDiagonal3 {
+          0% { transform: translate(0, 0); opacity: 0.7; }
+          100% { transform: translate(100vw, 100vh); opacity: 0; }
+        }
+
+        @keyframes floatDiagonal4 {
+          0% { transform: translate(0, 0); opacity: 0.7; }
+          100% { transform: translate(-100vw, 100vh); opacity: 0; }
+        }
+
+        .particle-floatUp { animation: floatUp 20s linear infinite !important; }
+        .particle-floatDown { animation: floatDown 20s linear infinite !important; }
+        .particle-floatLeft { animation: floatLeft 20s linear infinite !important; }
+        .particle-floatRight { animation: floatRight 20s linear infinite !important; }
+        .particle-floatDiagonal1 { animation: floatDiagonal1 25s linear infinite !important; }
+        .particle-floatDiagonal2 { animation: floatDiagonal2 25s linear infinite !important; }
+        .particle-floatDiagonal3 { animation: floatDiagonal3 25s linear infinite !important; }
+        .particle-floatDiagonal4 { animation: floatDiagonal4 25s linear infinite !important; }
+
       `}</style>
 
       <div className="home-page">
