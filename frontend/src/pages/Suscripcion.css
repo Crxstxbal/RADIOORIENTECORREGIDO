@@ -199,10 +199,10 @@
 
 .benefit-card-modern {
   background: var(--card-bg);
-  border: 2px solid transparent;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
   border-radius: 16px;
   padding: 2rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
@@ -216,7 +216,7 @@
   bottom: 0;
   background: linear-gradient(135deg, transparent 0%, rgba(220, 38, 38, 0.03) 100%);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.1s ease;
 }
 
 .benefit-card-modern:hover::before {
