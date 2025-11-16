@@ -82,7 +82,7 @@
 }
 
 .collapse-btn:hover {
-  background-color: #e57373;
+  background-color: #f02222;
 }
 
 /* ===========================
@@ -97,11 +97,11 @@
 }
 
 .radio-player.paused .volume-progress {
-  background-color: #e57373;
+  background-color: #f32a2a;
 }
 
 .radio-player.paused .volume-slider-container:hover .volume-progress {
-  background-color: #ef9a9a;
+  background-color: #d62323;
 }
 
 /* ===========================
@@ -151,7 +151,7 @@
 }
 
 .status-indicator.paused {
-  background-color: #e57373;
+  background-color: #ec1010;
 }
 
 .radio-details {
