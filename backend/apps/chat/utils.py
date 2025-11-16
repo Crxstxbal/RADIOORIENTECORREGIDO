@@ -3,7 +3,6 @@ Utilidades para análisis de contenido con Machine Learning
 """
 import re
 from typing import Dict, Tuple
-from detoxify import Detoxify
 from .models import ContentFilterConfig, PalabraProhibida, InfraccionUsuario
 
 
@@ -16,6 +15,7 @@ class ContentAnalyzer:
         """Inicializar modelo ML de detoxify para español"""
         try:
             # Usar modelo multilingüe que incluye español
+            from detoxify import Detoxify
             self.model = Detoxify('multilingual')
         except Exception as e:
             print(f"Error al cargar modelo Detoxify: {e}")
