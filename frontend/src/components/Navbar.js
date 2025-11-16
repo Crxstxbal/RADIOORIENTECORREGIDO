@@ -230,28 +230,62 @@ const Navbar = () => {
                 Dashboard
               </a>
             )}
-            <div className="mobile-theme-notification">
+            {isAuthenticated && (
+              <div className="mobile-theme-notification">
+                <button
+                  className="notification-toggle-mobile"
+                  aria-label="Notificaciones"
+                  title="Notificaciones"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await toggleNotifications();
+                    // NO cerramos el menú para que se vean las notificaciones
+                  }}
+                >
+                  <Bell size={20} />
+                  {notifCount > 0 && (
+                    <span className="notification-badge-mobile">{Math.min(notifCount, 99)}</span>
+                  )}
+                  <span>Notificaciones {notifCount > 0 && `(${notifCount})`}</span>
+                </button>
+
+                {/* Panel de notificaciones mobile */}
+                {notifsOpen && (
+                  <div className="notifications-dropdown-mobile">
+                    <div className="notifications-header">
+                      <span>Notificaciones</span>
+                      {notifCount > 0 && (
+                        <button className="mark-all" onClick={markAllRead}>Marcar todas como leídas</button>
+                      )}
+                    </div>
+                    <div className="notifications-body">
+                      {loadingNotifs ? (
+                        <div className="notifications-empty">Cargando...</div>
+                      ) : notifs.length === 0 ? (
+                        <div className="notifications-empty">Sin notificaciones</div>
+                      ) : (
+                        notifs.slice(0, 8).map(n => (
+                          <div key={n.id} className="notification-item">
+                            <div className="notification-title">{n.titulo}</div>
+                            <div className="notification-message">{n.mensaje}</div>
+                            <div className="notification-meta">{n.tipo_display} · {n.tiempo_transcurrido}</div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="mobile-theme-toggle-wrapper">
               <button
-                className="notification-toggle mobile"
-                aria-label="Notificaciones"
-                title="Notificaciones"
-                onClick={() => {
-                  console.log('Abrir notificaciones móvil');
-                  setIsOpen(false);
-                }}
-              >
-                <Bell size={18} />
-                <span className="notification-badge">0</span>
-                <span>Notificaciones</span>
-              </button>
-              <button
-                className="theme-toggle mobile"
+                className="theme-toggle-mobile"
                 onClick={() => { toggleTheme(); setIsOpen(false); }}
                 aria-label="Cambiar tema"
                 title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
               >
-                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                <span className="theme-toggle-text">{theme === 'dark' ? 'Claro' : 'Oscuro'}</span>
+                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                <span className="theme-toggle-text">Modo {theme === 'dark' ? 'Claro' : 'Oscuro'}</span>
               </button>
             </div>
             <div className="mobile-auth">
