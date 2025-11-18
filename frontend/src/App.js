@@ -5,6 +5,7 @@ import { AudioProvider } from './contexts/AudioContext'; // <-- Importa tu Audio
 import { ThemeProvider } from './contexts/ThemeContext';
 import './App.css';
 
+
 // Componentes
 import Navbar from './components/Navbar';
 import RadioPlayer from './components/RadioPlayer';
@@ -14,7 +15,7 @@ import Footer from "./components/Footer";
 // Páginas
 import Home from './pages/Home';
 import Programacion from './pages/Programacion';
-import Articulos from './pages/Articulos'; // Nueva página unificada
+import Articulos from './pages/Articulos';
 import Contacto from './pages/Contacto';
 import Suscripcion from './pages/Suscripcion';
 import IniciarSesion from './pages/IniciarSesion';
@@ -24,6 +25,7 @@ import ResetearContrasena from './pages/ResetearContrasena';
 import Emergente from './components/Emergente';
 import Reproductor from './pages/reproductor';
 import PublicidadPage from './pages/PublicidadPage';
+import EnVivo from './pages/EnVivo';
 
 // Layouts en español
 import LayoutPrincipal from './layouts/LayoutPrincipal';
@@ -72,6 +74,7 @@ function App() {
               <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
               <Route path="/resetear-contrasena/:uid/:token" element={<ResetearContrasena />} />
               <Route path="/publicidad" element={<PublicidadPage />} />
+              <Route path="/en-vivo" element={<EnVivo />} />
             </Route>
 
             {/* Layout full screen solo para el reproductor */}

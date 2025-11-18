@@ -2497,7 +2497,7 @@ def create_articulo(request):
                 messages.error(request, 'Por favor complete todos los campos requeridos')
                 return redirect('dashboard_articulos')
                 
-            # Crear el artículo
+            # Crear el artículo y adjuntar archivos antes del primer save
             articulo = Articulo(
                 titulo=titulo,
                 contenido=contenido,
@@ -2508,19 +2508,15 @@ def create_articulo(request):
                 imagen_url=imagen_url if imagen_url else None,
                 video_url=video_url if video_url else None
             )
-            
-            # Guardar el artículo para obtener un ID
-            articulo.save()
-            
-            # Manejar archivos
+            # Asignar archivos antes del primer guardado
             if imagen_portada:
                 articulo.imagen_portada = imagen_portada
             if imagen_thumbnail:
                 articulo.imagen_thumbnail = imagen_thumbnail
             if archivo_adjunto:
                 articulo.archivo_adjunto = archivo_adjunto
-                
-            # Guardar nuevamente con los archivos
+
+            # Guardar con todo adjuntado
             articulo.save()
             
             # La notificación se maneja mediante la señal post_save en el modelo Notificacion
@@ -2879,6 +2875,8 @@ def update_station(request):
         station.nombre = request.POST.get('nombre', station.nombre)
         station.descripcion = request.POST.get('descripcion', station.descripcion)
         station.stream_url = request.POST.get('stream_url', station.stream_url)
+        station.live_stream_url = request.POST.get('live_stream_url', station.live_stream_url)
+        station.activo = request.POST.get('activo') == 'on'
         # Actualizar otros campos si existen en el formulario
         station.telefono = request.POST.get('telefono', station.telefono)
         station.email = request.POST.get('email', station.email)

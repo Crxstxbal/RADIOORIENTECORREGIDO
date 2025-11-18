@@ -72,6 +72,8 @@ class ArticuloListSerializer(serializers.ModelSerializer):
     imagen_destacada = serializers.SerializerMethodField()
     imagen_portada = serializers.SerializerMethodField()
     imagen_thumbnail = serializers.SerializerMethodField()
+    imagen_portada_url = serializers.SerializerMethodField()
+    imagen_thumbnail_url = serializers.SerializerMethodField()
     archivo_adjunto = serializers.SerializerMethodField()
     tiene_multimedia = serializers.BooleanField(read_only=True)
     categoria = serializers.SerializerMethodField()
@@ -80,7 +82,7 @@ class ArticuloListSerializer(serializers.ModelSerializer):
         model = Articulo
         fields = [
             'id', 'titulo', 'slug', 'resumen', 'contenido',
-            'imagen_portada', 'imagen_thumbnail', 'imagen_url', 'imagen_destacada',
+            'imagen_portada', 'imagen_thumbnail', 'imagen_portada_url', 'imagen_thumbnail_url', 'imagen_url', 'imagen_destacada',
             'video_url', 'archivo_adjunto',
             'autor_nombre', 'categoria', 'categoria_nombre', 
             'publicado', 'destacado',
@@ -100,6 +102,18 @@ class ArticuloListSerializer(serializers.ModelSerializer):
         return None
     
     def get_imagen_thumbnail(self, obj):
+        request = self.context.get('request')
+        if obj.imagen_thumbnail and request:
+            return request.build_absolute_uri(obj.imagen_thumbnail.url)
+        return None
+
+    def get_imagen_portada_url(self, obj):
+        request = self.context.get('request')
+        if obj.imagen_portada and request:
+            return request.build_absolute_uri(obj.imagen_portada.url)
+        return None
+
+    def get_imagen_thumbnail_url(self, obj):
         request = self.context.get('request')
         if obj.imagen_thumbnail and request:
             return request.build_absolute_uri(obj.imagen_thumbnail.url)

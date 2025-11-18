@@ -6,6 +6,9 @@ class EstacionRadio(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
     stream_url = models.URLField(max_length=500, blank=True, null=True)
+    live_stream_url = models.URLField(max_length=500, blank=True, null=True, 
+                                    verbose_name='URL de transmisión en vivo',
+                                    help_text='URL de YouTube, Facebook Live u otra plataforma para transmisión en vivo')
     telefono = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(max_length=254, blank=True, null=True)
     direccion = models.TextField(blank=True, null=True)

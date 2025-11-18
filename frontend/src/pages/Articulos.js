@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { BookOpen, Calendar, User, Eye, Tag, Filter, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import PaginacionFusion from '../components/PaginacionFusion';
@@ -9,6 +9,7 @@ import './Pages.css';
 const Articles = () => {
   const location = useLocation();
   const { slug } = useParams(); // Capturar el slug de la URL
+  const navigate = useNavigate(); // Para navegación programática
   const [articles, setArticles] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -133,6 +134,8 @@ const Articles = () => {
     try {
       const response = await axios.get(`/api/articulos/api/articulos/${article.slug}/`);
       setSelectedArticle(response.data);
+      // Actualizar la URL con el slug del artículo
+      navigate(`/articulos/${article.slug}`, { replace: true });
     } catch (error) {
       console.error('Error loading article detail:', error);
       // Si falla, usar los datos que ya tenemos
@@ -142,18 +145,36 @@ const Articles = () => {
 
   const closeModal = () => {
     setSelectedArticle(null);
+    // Volver a la lista de artículos en la URL
+    navigate('/articulos', { replace: true });
   };
 
   // Función auxiliar para obtener la imagen thumbnail (para tarjetas)
   const getArticleThumbnail = (article) => {
-    // Priorizar thumbnail, luego imagen_url
-    return article.imagen_thumbnail || article.imagen_url || article.imagen_portada;
+    // Soportar claves de lista y detalle del backend
+    // Lista: imagen_thumbnail (abs), imagen_portada (abs), imagen_url
+    // Detalle: imagen_thumbnail_url (abs), imagen_portada_url (abs), imagen_destacada
+    return (
+      article.imagen_thumbnail ||
+      article.imagen_thumbnail_url ||
+      article.imagen_destacada ||
+      article.imagen_portada ||
+      article.imagen_portada_url ||
+      article.imagen_url ||
+      null
+    );
   };
 
   // Función auxiliar para obtener la imagen banner (para modal)
   const getArticleBanner = (article) => {
-    // Priorizar portada, luego imagen_url
-    return article.imagen_portada || article.imagen_url;
+    // Priorizar portada absoluta; fallback a destacada o url externa
+    return (
+      article.imagen_portada ||
+      article.imagen_portada_url ||
+      article.imagen_destacada ||
+      article.imagen_url ||
+      null
+    );
   };
 
   // Filtrar artículos por búsqueda local (categoría se filtra en la API)
@@ -384,7 +405,7 @@ const Articles = () => {
               <div className="modal-content">
                 <div className="meta-item" style={{marginBottom: '1rem'}}>
                   <Tag size={16} />
-                  <span>{selectedArticle.categoria?.nombre || 'Sin categoría'}</span>
+                  <span>{selectedArticle.categoria_nombre || 'Sin categoría'}</span>
                 </div>
                 
                 <h1 className="modal-title">{selectedArticle.titulo}</h1>
@@ -401,59 +422,81 @@ const Articles = () => {
                 </div>
                 
                 {selectedArticle.resumen && (
-                  <div style={{marginBottom: '2rem', padding: '1rem', backgroundColor: 'var(--color-gray-50)', borderRadius: '0.5rem'}}>
+                  <div className="modal-resumen" style={{marginBottom: '2rem', padding: '1rem', borderRadius: '0.5rem'}}>
                     <p><strong>{selectedArticle.resumen}</strong></p>
                   </div>
                 )}
                 
-                <div style={{display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'flex-start'}}>
-                  {/* Imagen thumbnail cuadrada */}
+                <div>
+                  {/* Imagen thumbnail cuadrada flotada para que el texto la rodee */}
                   {getArticleThumbnail(selectedArticle) && (
-                    <div style={{flex: '0 0 300px', maxWidth: '300px'}}>
-                      <img 
-                        src={getArticleThumbnail(selectedArticle)} 
-                        alt={selectedArticle.titulo}
-                        style={{
-                          width: '100%',
-                          aspectRatio: '1/1',
-                          objectFit: 'cover',
-                          borderRadius: '0.5rem',
-                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                        }}
-                      />
-                      <p style={{
-                        marginTop: '0.5rem',
-                        fontSize: '0.875rem',
-                        color: 'var(--color-gray-500)',
-                        textAlign: 'center'
-                      }}>
-                        {selectedArticle.categoria?.nombre || 'Artículo'}
-                      </p>
-                    </div>
+                    <img
+                      src={getArticleThumbnail(selectedArticle)}
+                      alt={selectedArticle.titulo}
+                      style={{
+                        float: 'left',
+                        width: '300px',
+                        height: '300px',
+                        objectFit: 'cover',
+                        borderRadius: '0.5rem',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                        marginRight: '1.25rem',
+                        marginBottom: '0.75rem'
+                      }}
+                    />
                   )}
-                  
+
                   {/* Contenido del artículo */}
-                  <div className="modal-text" style={{flex: '1', minWidth: '300px'}}>
-                    <div dangerouslySetInnerHTML={{ __html: selectedArticle.contenido }} />
+                  <div className="modal-text" style={{minWidth: '300px'}}>
+                    {(() => {
+                      const raw = selectedArticle.contenido || '';
+                      const hasHtml = /<\s*(p|br|div|ul|ol|li|h\d)/i.test(raw);
+                      const html = hasHtml ? raw : raw.replace(/\r?\n/g, '<br/>');
+                      return <div dangerouslySetInnerHTML={{ __html: html }} />;
+                    })()}
                   </div>
+                  {/* Limpiar el float para evitar solapamientos posteriores */}
+                  <div style={{clear: 'both'}} />
                 </div>
                 
-                {/* Video embebido si existe */}
-                {selectedArticle.video_url && (
-                  <div style={{marginTop: '2rem'}}>
-                    <h3 style={{marginBottom: '1rem', fontSize: '1.25rem', fontWeight: '600'}}>Video relacionado</h3>
-                    <div style={{position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden'}}>
-                      <iframe
-                        src={selectedArticle.video_url.includes('youtube.com') || selectedArticle.video_url.includes('youtu.be') 
-                          ? selectedArticle.video_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')
-                          : selectedArticle.video_url}
-                        style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', borderRadius: '0.5rem'}}
-                        allowFullScreen
-                        title="Video del artículo"
-                      />
+                {/* Video embebido si existe (video_url o enlace dentro del contenido) */}
+                {(() => {
+                  // encontrar url de video priorizando video_url
+                  const rawVideo = selectedArticle.video_url || '';
+                  const content = selectedArticle.contenido || '';
+                  let url = rawVideo.trim();
+                  if (!url) {
+                    // Buscar primer enlace de YouTube/Vimeo en el contenido en texto
+                    const match = content.match(/https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=[^\s"']+|shorts\/[^\s"']+)|youtu\.be\/[^\s"']+|vimeo\.com\/\d+)/i);
+                    if (match) url = match[0];
+                  }
+                  if (!url) return null;
+                  // Normalizar a URL embebible
+                  let embed = '';
+                  if (/youtube\.com|youtu\.be/i.test(url)) {
+                    // extraer id de youtube (watch?v=, youtu.be/, shorts/)
+                    const idMatch = url.match(/(?:watch\?v=|youtu\.be\/|shorts\/)([A-Za-z0-9_-]{6,})/);
+                    const id = idMatch ? idMatch[1] : '';
+                    if (id) embed = `https://www.youtube.com/embed/${id}`;
+                  } else if (/vimeo\.com\/(\d+)/i.test(url)) {
+                    const vm = url.match(/vimeo\.com\/(\d+)/i);
+                    if (vm) embed = `https://player.vimeo.com/video/${vm[1]}`;
+                  }
+                  const finalSrc = embed || url; // fallback por si ya es embebible
+                  return (
+                    <div style={{marginTop: '2rem'}}>
+                      <h3 style={{marginBottom: '1rem', fontSize: '1.25rem', fontWeight: '600'}}>Video relacionado</h3>
+                      <div style={{position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden'}}>
+                        <iframe
+                          src={finalSrc}
+                          style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', borderRadius: '0.5rem'}}
+                          allowFullScreen
+                          title="Video del artículo"
+                        />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
                 
                 {/* Archivo adjunto si existe */}
                 {selectedArticle.archivo_adjunto && (

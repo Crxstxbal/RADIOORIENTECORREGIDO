@@ -1,10 +1,9 @@
 .home-page {
   min-height: 100vh;
-  overflow-x: hidden; /* Only hide horizontal overflow to prevent horizontal scroll */
-  overflow-y: visible; /* Allow vertical overflow for particles */
+  overflow-x: hidden; 
+  overflow-y: visible;
 }
 
-/* Hero Section */
 .home-page .hero {
   position: relative;
   color: var(--color-white);
@@ -18,7 +17,6 @@
 
 }
 
-/* Animated gradient mesh background */
 .home-page .hero::before {
   content: '';
   position: absolute;
@@ -35,7 +33,7 @@
   z-index: 0;
 }
 
-/* Subtle overlay for depth */
+  /* Subtle overlay for depth */
 .home-page .hero::after {
   content: '';
   position: absolute;
@@ -860,6 +858,23 @@ html.dark .home-page .news-excerpt {
 
 html.dark .home-page .news-meta {
   color: var(--text-tertiary);
+}
+
+/* autor y la fecha de articulos en home */
+.home-page .news-meta,
+.home-page .news-meta .meta-item span {
+  color: #111 !important;
+}
+.home-page .news-meta .meta-item svg {
+  color: #111 !important;
+}
+
+html.dark .home-page .news-meta,
+html.dark .home-page .news-meta .meta-item span {
+  color: #ffffff !important;
+}
+html.dark .home-page .news-meta .meta-item svg {
+  color: #ffffff !important;
 }
 
 html.dark .home-page .loading {

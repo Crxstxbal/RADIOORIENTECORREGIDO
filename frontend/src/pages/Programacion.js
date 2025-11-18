@@ -103,7 +103,8 @@ const Programming = () => {
             className={`day-filter-btn ${selectedDay === null ? 'active' : ''}`}
             onClick={() => setSelectedDay(null)}
           >
-            Todos
+            <span className="day-full">Todos</span>
+            <span className="day-short">Todos</span>
           </button>
           {daysOfWeek.map((day) => (
             <button

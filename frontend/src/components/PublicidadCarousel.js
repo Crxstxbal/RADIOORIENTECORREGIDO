@@ -795,7 +795,7 @@ export default function PublicidadCarousel({
             style={{
               ...containerStyle,
               position: 'relative',
-              overflow: 'hidden',
+              overflow: 'visible',
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
             }}
             title={currentItem?.ubicacion?.nombre || 'Publicidad'}

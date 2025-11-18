@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { Menu, X, Radio, User, Sun, Moon, LayoutDashboard, Bell } from "lucide-react";
+import { Menu, X, Radio, User, Sun, Moon, LayoutDashboard, Bell, Wifi } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import "./Navbar.css";
 import axios from "axios";
@@ -21,6 +21,7 @@ const Navbar = () => {
     { name: "Inicio", path: "/" },
     { name: "Programación", path: "/programacion" },
     { name: "Artículos", path: "/articulos" },
+    { name: "En Vivo", path: "/en-vivo", icon: <Wifi size={16} /> },
     { name: "Contacto", path: "/contacto" },
     { name: "Suscripción", path: "/suscripcion" }
   ];
