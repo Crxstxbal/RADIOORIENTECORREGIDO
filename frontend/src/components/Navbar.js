@@ -134,9 +134,11 @@ const Navbar = () => {
           <div className="nav-auth desktop">
             {isAuthenticated ? (
               <div className="user-menu">
-                <User className="user-icon" size={35 } />
-                <span className="user-name">Hola, {user.username}</span>
-                <button onClick={handleLogout} className="btn btn-primary">
+                <div className="user-avatar">
+                  <User className="user-icon" size={18} />
+                </div>
+                <span className="user-name">{user.username}</span>
+                <button onClick={handleLogout} className="btn btn-logout">
                   Cerrar Sesión
                 </button>
               </div>

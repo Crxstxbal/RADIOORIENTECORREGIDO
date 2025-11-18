@@ -13,9 +13,30 @@ const LiveChat = () => {
   const [onlineUsers, setOnlineUsers] = useState(0);
   const [error, setError] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [isPlayerCollapsed, setIsPlayerCollapsed] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const messagesEndRef = useRef(null);
   const pollingIntervalRef = useRef(null);
+
+  // Detectar si el reproductor está colapsado
+  useEffect(() => {
+    const checkPlayerCollapsed = () => {
+      const radioPlayer = document.querySelector('.radio-player-wrapper');
+      setIsPlayerCollapsed(radioPlayer?.classList.contains('collapsed') || false);
+    };
+
+    checkPlayerCollapsed();
+
+    // Observer para detectar cambios
+    const observer = new MutationObserver(checkPlayerCollapsed);
+    const radioPlayer = document.querySelector('.radio-player-wrapper');
+
+    if (radioPlayer) {
+      observer.observe(radioPlayer, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   // Verificar estado de la radio
   useEffect(() => {
@@ -167,7 +188,7 @@ const LiveChat = () => {
     <>
       {/* Chat Toggle Button */}
       <button
-        className={`chat-toggle ${isOpen ? 'active' : ''}`}
+        className={`chat-toggle ${isOpen ? 'active' : ''} ${isPlayerCollapsed ? 'player-collapsed' : ''}`}
         onClick={toggleChat}
         title="Chat en vivo"
       >

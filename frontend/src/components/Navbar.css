@@ -87,6 +87,7 @@ html.dark .navbar {
   justify-content: space-between;
   width: 100%;
   height: 70px;
+  max-width: 100%;
 }
 
 .nav-logo {
@@ -242,8 +243,9 @@ html.dark .navbar {
 .nav-auth {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 12px;
   position: relative;
+  flex-shrink: 0;
 }
 
 .notification-toggle {
@@ -354,27 +356,68 @@ html.dark .navbar {
 .user-menu {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-left: 0.5rem;
+  gap: 12px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.user-menu:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #000000 0%, #7e2525 100%);
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+}
+
+.user-avatar:hover {
+  background: linear-gradient(135deg, #000000 0%, #ff0000 100%);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
 }
 
 .user-icon {
-  background: rgba(0, 0, 0, 0.705);
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: all 0.2s ease;
+  color: white;
   flex-shrink: 0;
-}
-
-.user-icon:hover {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 .user-name {
   color: var(--color-white);
   font-weight: 500;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.btn-logout {
+  background: rgb(75, 7, 7);
+  color: #ffffff;
+  border: 1px solid rgb(51, 44, 44);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-logout:hover {
+  background: rgb(156, 4, 4);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 .mobile-menu-btn {
@@ -461,7 +504,7 @@ html.dark .navbar {
 }
 
 .mobile-auth .user-icon {
-  background: linear-gradient(135deg, var(--color-red) 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, var(--color-red) 90%, #000000 100%);
   padding: 1rem;
   border-radius: 50%;
   width: 60px;
@@ -843,15 +886,26 @@ html.dark .navbar {
   }
 }
 
-/* --- ESTILOS DE USUARIO (Deben estar fuera de @media) --- */
-.user-menu {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+/* --- Dark Mode Styles --- */
+html.dark .user-menu {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
-.user-icon {
+html.dark .user-menu:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+html.dark .btn-logout {
+  background: rgb(65, 1, 1);
   color: #ffffff;
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+html.dark .btn-logout:hover {
+  background: rgb(248, 75, 75);
+  border-color: rgba(239, 68, 68, 0.4);
 }
 
 .nav-icon {

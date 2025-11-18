@@ -29,7 +29,15 @@ const RadioPlayer = () => {
 
   const handleVolumeChange = (e) => setVolume(Number(e.target.value));
   const handleToggleMute = () => setVolume(isMuted ? (lastVolume || 1) : 0);
-  const toggleCollapse = () => setIsCollapsed(prev => !prev);
+  const toggleCollapse = () => {
+    setIsCollapsed(prev => !prev);
+    // Esperar a que termine la animación y ajustar el widget
+    setTimeout(() => {
+      if (window.forceVapiPosition) {
+        window.forceVapiPosition();
+      }
+    }, 350);
+  };
 
   const handleExpand = () => {
     if (isExpanding) return;
