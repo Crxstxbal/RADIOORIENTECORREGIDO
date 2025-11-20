@@ -5,6 +5,7 @@ from . import publicidad_views
 urlpatterns = [
     path('', views.dashboard_home, name='dashboard_home'),
     path('login/', views.dashboard_login, name='dashboard_login'),
+    path('password-reset/', views.dashboard_password_reset, name='dashboard_password_reset'),
 
     path('calendario/', views.dashboard_calendario, name='dashboard_calendario'),
     path('api/calendario/eventos/', views.api_get_calendar_events, name='api_get_calendar_events'),

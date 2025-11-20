@@ -386,7 +386,7 @@
   gap: 0.75rem;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+  background: linear-gradient(135deg, #d10000 0%, #000000 100%);
   border: 1px solid #ef4444;
   color: white;
   box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
@@ -394,9 +394,10 @@
 }
 
 .auth-submit-modern:hover:not(:disabled):not(.success) {
+  
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
-  background: linear-gradient(135deg, #f87171 0%, #fca5a5 100%);
+  background: linear-gradient(135deg, #020202 0%, #ff0000 100%);
 }
 
 .auth-submit-modern:active:not(:disabled):not(.success) {

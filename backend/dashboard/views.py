@@ -3798,3 +3798,70 @@ def eliminar_conductor(request, conductor_id):
 
     messages.error(request, f'Conductor "{nombre_conductor}" eliminado permanentemente.')
     return redirect('dashboard_radio')
+
+
+def dashboard_password_reset(request):
+    """Vista para solicitar recuperación de contraseña desde el dashboard"""
+    if request.method == 'POST':
+        email = request.POST.get('email')
+
+        try:
+            user = User.objects.get(email=email)
+
+            # Generar token de reseteo
+            from django.contrib.auth.tokens import default_token_generator
+            from django.utils.encoding import force_bytes
+            from django.utils.http import urlsafe_base64_encode
+            from django.core.mail import send_mail
+
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+            # Construir URL de reseteo para el frontend
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+            reset_url = f"{frontend_url}/resetear-contrasena/{uid}/{token}"
+
+            # Enviar correo electrónico
+            subject = 'Recuperación de Contraseña - Radio Oriente FM Dashboard'
+            message = f"""
+Hola {user.first_name or user.username},
+
+Recibimos una solicitud para restablecer tu contraseña del Dashboard de Radio Oriente FM.
+
+Para crear una nueva contraseña, haz clic en el siguiente enlace:
+
+{reset_url}
+
+Este enlace expirará en 24 horas.
+
+Si no solicitaste este cambio, puedes ignorar este correo electrónico y tu contraseña permanecerá sin cambios.
+
+Saludos,
+El equipo de Radio Oriente FM
+            """
+
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+                return render(request, 'dashboard/password_reset.html', {
+                    'success': True,
+                    'message': 'Se ha enviado un correo electrónico con instrucciones para restablecer tu contraseña.'
+                })
+            except Exception as e:
+                return render(request, 'dashboard/password_reset.html', {
+                    'error': f'Error al enviar el correo: {str(e)}'
+                })
+
+        except User.DoesNotExist:
+            # Por seguridad, mostrar el mismo mensaje aunque el email no exista
+            return render(request, 'dashboard/password_reset.html', {
+                'success': True,
+                'message': 'Si el correo existe en nuestro sistema, recibirás instrucciones para restablecer tu contraseña.'
+            })
+
+    return render(request, 'dashboard/password_reset.html')
