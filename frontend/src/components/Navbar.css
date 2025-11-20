@@ -401,23 +401,18 @@ html.dark .navbar {
 }
 
 .btn-logout {
-  background: rgb(75, 7, 7);
-  color: #ffffff;
-  border: 1px solid rgb(51, 44, 44);
+  background: linear-gradient(135deg, var(--color-red) 0%, #380808 100%);
+  color: white;
   padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  border-radius: 0.375rem;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  font-size: 0.95rem;
   white-space: nowrap;
 }
 
 .btn-logout:hover {
-  background: rgb(156, 4, 4);
-  border-color: rgba(239, 68, 68, 0.5);
+  opacity: 0.9;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 .mobile-menu-btn {
@@ -533,9 +528,6 @@ html.dark .navbar {
 }
 
 .btn {
-  padding: 0.5rem 1.5rem;
-  border-radius: 0.375rem;
-  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -543,8 +535,6 @@ html.dark .navbar {
 .btn-primary {
   background: linear-gradient(135deg, var(--color-red) 0%, #380808 100%);
   color: white;
-  border: 1px solid var(--color-red);
-  
 }
 
 .btn-outline {
@@ -898,14 +888,13 @@ html.dark .user-menu:hover {
 }
 
 html.dark .btn-logout {
-  background: rgb(65, 1, 1);
+  background: linear-gradient(135deg, var(--color-red) 0%, #380808 100%);
   color: #ffffff;
-  border-color: rgba(239, 68, 68, 0.25);
 }
 
 html.dark .btn-logout:hover {
-  background: rgb(248, 75, 75);
-  border-color: rgba(239, 68, 68, 0.4);
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .nav-icon {

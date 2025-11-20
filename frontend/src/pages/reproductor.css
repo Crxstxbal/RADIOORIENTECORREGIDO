@@ -8,7 +8,7 @@
   --color-black: #000000;
 }
 
-/* MANTENEMOS TU CONFIGURACIÓN DE PARTÍCULAS ORIGINAL */
+/* MANTENEMOS CONFIGURACIÓN DE PARTÍCULAS ORIGINAL */
 .fondoparticulas {
   position: absolute;
   width: 100%;
@@ -16,7 +16,7 @@
   z-index: 0;
 }
 
-/* Layout general - CONSERVAMOS TU CONFIGURACIÓN ORIGINAL */
+/* Layout general - CONSERVAMOS CONFIGURACIÓN ORIGINAL */
 .reproductor-page {
   position: relative;
   height: 100vh;
@@ -88,7 +88,7 @@
   animation: slideInFromLeft 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
 }
 
-/* Overlay de transparencia - MANTENEMOS ORIGINAL */
+/* Overlay de transparencia - MANTENEMOS CONFIGURACIÓN ORIGINAL */
 .reproductor-background {
   position: absolute;
   inset: 0;
@@ -97,7 +97,7 @@
   backdrop-filter: blur(3px);
 }
 
-/* Contenido principal - MODERNIZADO CON GLASSMORPHISM */
+/* Contenido principal - MODERNIZADO CON GLASSMORPHISM - MANTENEMOS CONFIGURACIÓN ORIGINAL */
 .reproductor-content {
   position: relative;
   z-index: 10;

@@ -108,19 +108,19 @@ html:not(.dark) .locutores-carrusel-container h2 {
 .avatar-ring {
   padding: 4px;
   border-radius: 9999px;
-  /* Degradado vibrante: cyan → magenta → azul → cyan */
+  /* Degradado vibrante: rojo → negro */
   background: conic-gradient(
     from 0deg,
-    #9e2a2a 0%,
-    #aa1010 25%,
-    #501818 50%,
-    #a12121 75%,
-    #000000 100%
+    #7f1d1d 0%,
+    #b91c1c 25%,
+    #000000 50%,
+    #dc2626 75%,
+    #0b0b0b 100%
   );
   box-shadow:
-    0 0 30px rgba(6, 182, 212, 0.4),
-    0 0 60px rgba(139, 92, 246, 0.3),
-    0 8px 32px rgba(0, 0, 0, 0.2);
+    0 0 30px rgba(220, 38, 38, 0.35),
+    0 0 60px rgba(153, 27, 27, 0.25),
+    0 8px 32px rgba(0, 0, 0, 0.35);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
@@ -128,9 +128,9 @@ html:not(.dark) .locutores-carrusel-container h2 {
 .avatar-ring:hover {
   transform: scale(1.05);
   box-shadow:
-    0 0 40px rgba(6, 182, 212, 0.6),
-    0 0 80px rgba(139, 92, 246, 0.4),
-    0 12px 40px rgba(0, 0, 0, 0.3);
+    0 0 40px rgba(220, 38, 38, 0.55),
+    0 0 80px rgba(153, 27, 27, 0.4),
+    0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 .avatar-inner {
@@ -139,7 +139,7 @@ html:not(.dark) .locutores-carrusel-container h2 {
   border-radius: 9999px;
   overflow: hidden;
   /* Fondo del avatar: gradiente suave */
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1a0000 0%, #7f1d1d 40%, #dc2626 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -522,6 +522,60 @@ html:not(.dark) .locutores-carrusel-container .locutor-slide .locutor-rol {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+/* Efecto de desvanecido en los bordes del carrusel */
+.splide-locutores {
+  position: relative;
+}
+
+.splide-locutores .splide__track {
+  overflow: visible; /* permitir que el anillo no se corte */
+  padding: 0 24px;   /* un pequeño margen interno para el fade */
+  /* Soporte estándar */
+  mask-image: linear-gradient(
+    to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0.85) 8%,
+    #000 16%,
+    #000 84%,
+    rgba(0,0,0,0.85) 92%,
+    rgba(0,0,0,0) 100%
+  );
+  /* WebKit/Safari */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0.85) 8%,
+    #000 16%,
+    #000 84%,
+    rgba(0,0,0,0.85) 92%,
+    rgba(0,0,0,0) 100%
+  );
+}
+
+@media (max-width: 768px) {
+  .splide-locutores .splide__track {
+    padding: 0 12px;
+    mask-image: linear-gradient(
+      to right,
+      rgba(0,0,0,0) 0%,
+      rgba(0,0,0,0.85) 12%,
+      #000 22%,
+      #000 78%,
+      rgba(0,0,0,0.85) 88%,
+      rgba(0,0,0,0) 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      rgba(0,0,0,0) 0%,
+      rgba(0,0,0,0.85) 12%,
+      #000 22%,
+      #000 78%,
+      rgba(0,0,0,0.85) 88%,
+      rgba(0,0,0,0) 100%
+    );
+  }
 }
 
 @media (max-width: 768px) {

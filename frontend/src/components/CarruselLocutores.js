@@ -101,7 +101,7 @@ const CarruselLocutores = () => {
           arrows: true,
           pagination: false,
           autoScroll: {
-            speed: 0.3, // Velocidad muy lenta (0.5 pixels por frame)
+            speed: 0.3, // Desktop
             pauseOnHover: false,
             pauseOnFocus: false,
           },
@@ -109,18 +109,22 @@ const CarruselLocutores = () => {
             1280: {
               perPage: 4,
               gap: '30px',
+              autoScroll: { speed: 0.45, pauseOnHover: false, pauseOnFocus: false },
             },
             1024: {
               perPage: 3,
               gap: '30px',
+              autoScroll: { speed: 0.6, pauseOnHover: false, pauseOnFocus: false },
             },
             768: {
               perPage: 2,
-              gap: '20px',
+              gap: '10px',
+              autoScroll: { speed: 0.9, pauseOnHover: false, pauseOnFocus: false },
             },
             640: {
               perPage: 1,
-              gap: '15px',
+              gap: '8px',
+              autoScroll: { speed: 1.2, pauseOnHover: false, pauseOnFocus: false },
             },
           },
         }}

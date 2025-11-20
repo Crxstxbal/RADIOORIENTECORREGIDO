@@ -3,6 +3,7 @@ import { Play, Pause, Volume2, VolumeX, ArrowLeft } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AudioContextGlobal } from "../contexts/AudioContext";
 import FondoParticulas from "../components/fondoparticulas";
+
 import './reproductor.css';
 
 const Reproductor = () => {

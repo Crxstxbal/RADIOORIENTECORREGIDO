@@ -110,7 +110,7 @@ const EnVivo = () => {
     return "";
   };
 
-  // Cargar título del video con oEmbed (YouTube). Facebook requiere token, así que omitimos.
+  //Para cargar el título del video con oEmbed de YouTube. Facebook requiere token, así que se omite por el momento.
   useEffect(() => {
     const loadTitle = async () => {
       if (!liveStream?.url) return;
@@ -206,80 +206,88 @@ const EnVivo = () => {
         </div>
 
         <div className="live-content">
-          {/* Reproductor de video */}
-          <div className="video-container">
+
+        {/* Contenedor principal del video */}
+        <div className="live-video-section">
+          <div className="video-container-modern">
             {embedUrl ? (
-              <div className="video-wrapper">
+              <div className="video-wrapper-modern">
                 <iframe
                   src={embedUrl}
                   title="Transmisión en vivo"
                   frameBorder="0"
                   allowFullScreen
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  className="video-iframe"
+                  className="video-iframe-modern"
                 />
+                <div className="video-overlay">
+                  <div className="video-controls-overlay">
+                    <Wifi className="live-icon" size={24} />
+                    <span className="overlay-text">Transmisión en Vivo</span>
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="video-error">
-                <Play size={48} style={{color: 'var(--color-gray-400)', marginBottom: '1rem'}} />
-                <h3>Error al cargar el video</h3>
-                <p>No se pudo cargar la transmisión. Verifica el enlace o intenta más tarde.</p>
+              <div className="video-error-modern">
+                <div className="error-icon-wrapper">
+                  <Play size={64} />
+                </div>
+                <h3>Error al cargar la transmisión</h3>
+                <p>No se pudo establecer conexión con la transmisión en vivo</p>
                 {liveStream.url && (
                   <a 
                     href={liveStream.url} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="external-link"
+                    className="btn-external-modern"
                   >
-                    <ExternalLink size={16} />
-                    Ver en plataforma original
+                    <ExternalLink size={18} />
+                    <span>Ver en plataforma original</span>
                   </a>
                 )}
               </div>
             )}
           </div>
+        </div>
 
-          {/* Información en un solo contenedor debajo del video */}
-          <div className="stream-details">
-            <div className="stream-left">
-              <div className="status-label">
-                <span className="status-top">EN</span>
-                <span className="status-bottom">VIVO</span>
-              </div>
-              <div className="stream-info">
-                <h2>{liveStream.nombre}</h2>
-                {liveStream.descripcion && <p>{liveStream.descripcion}</p>}
-              </div>
+        {/* Información del stream modernizada */}
+        <div className="stream-info-modern">
+          <div className="stream-main-info">
+            <div className="stream-title-section">
+              <h2 className="stream-name">{liveStream.nombre}</h2>
+              {liveStream.descripcion && (
+                <p className="stream-description">{liveStream.descripcion}</p>
+              )}
             </div>
-
-            <div className="stream-right">
-              <div className="stream-actions">
-                <a
-                  href={liveStream.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-external"
-                >
-                  <ExternalLink size={16} />
-                  Ver en plataforma original
-                </a>
-              </div>
-              <div className="platform-info">
+            
+            <div className="stream-meta">
+              <div className="platform-badges">
                 {isYouTubeUrl(liveStream.url) && (
-                  <div className="platform-badge youtube">
-                    <Youtube size={16} style={{ marginRight: 6 }} />
+                  <div className="platform-badge-modern youtube">
+                    <Youtube size={20} />
                     <span>YouTube Live</span>
                   </div>
                 )}
                 {isFacebookUrl(liveStream.url) && (
-                  <div className="platform-badge facebook">
-                    <Facebook size={16} style={{ marginRight: 6 }} />
+                  <div className="platform-badge-modern facebook">
+                    <Facebook size={20} />
                     <span>Facebook Live</span>
                   </div>
                 )}
               </div>
+              
+              <a
+                href={liveStream.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-external-modern primary"
+              >
+                <ExternalLink size={18} />
+                <span>Abrir en plataforma</span>
+              </a>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>

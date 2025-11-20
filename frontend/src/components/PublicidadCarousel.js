@@ -423,7 +423,7 @@ export default function PublicidadCarousel({
     'bottom': {
       ...baseContainerStyle,
       display: 'flex',
-      margin: '20px auto 0',
+      margin: '20px auto 40px',
       padding: '0',
       width: '100%',
       maxWidth: '1200px',
@@ -496,78 +496,54 @@ export default function PublicidadCarousel({
     }
   };
 
-  // Estilo para el skeleton loader
+  // Estilo para el skeleton loader - debe mantener exactamente las mismas dimensiones que el contenido final
   const skeletonStyle = {
-    width: '100%',
-    height: '100%',
-    minHeight: dims ? `${dims.h}px` : '300px',
+    ...containerStyle, // Aplicar primero los estilos del contenedor
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
     borderRadius: '8px',
-    position: 'relative',
     overflow: 'hidden',
-    ...containerStyle
+    // Asegurar dimensiones específicas según posición
+    ...(position === 'top' && {
+      width: '100%',
+      maxWidth: dims ? `${dims.w}px` : '1920px',
+      height: dims ? `${dims.h}px` : '200px',
+      aspectRatio: dims ? `${dims.w}/${dims.h}` : '1920/200'
+    }),
+    ...(position === 'bottom' && {
+      width: '100%',
+      maxWidth: '1200px',
+      height: '200px',
+      aspectRatio: '1200/200'
+    }),
+    ...(position === 'left-fixed' && {
+      width: dims ? `${Math.min(dims.w, 180)}px` : '180px',
+      height: dims ? `${dims.h * (180 / dims.w)}px` : '300px',
+      maxHeight: '450px'
+    }),
+    ...(position === 'right-fixed' && {
+      width: dims ? `${Math.min(dims.w, 180)}px` : '180px',
+      height: dims ? `${dims.h * (180 / dims.w)}px` : '300px',
+      maxHeight: '450px'
+    }),
+    ...(position === 'inline' && {
+      width: '100%',
+      height: dims ? `${dims.h}px` : '300px',
+      aspectRatio: dims ? `${dims.w}/${dims.h}` : '16/9'
+    })
   };
 
-  // Mientras carga
+  // Mientras carga - no renderizar nada para evitar layout shift
   if (isLoading) {
-    return (
-      <div style={skeletonStyle}>
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'linear-gradient(90deg, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.03) 100%)',
-          backgroundSize: '200% 100%',
-          animation: 'shimmer 1.5s infinite linear',
-        }}>
-          <Loader2 className="animate-spin" style={{ 
-            marginBottom: '10px',
-            color: '#e53e3e',
-            opacity: 0.7
-          }} />
-          <div style={{ 
-            color: '#666',
-            fontSize: '0.9rem',
-            textAlign: 'center',
-            padding: '0 1rem'
-          }}>
-            Cargando publicidad...
-          </div>
-        </div>
-        <style jsx global>{`
-          @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-          }
-        `}</style>
-      </div>
-    );
+    return null;
   }
 
-  //En estado de error por si acaso
+  //En estado de error - no renderizar nada para evitar layout shift
   if (error) {
-    return (
-      <div style={containerStyle}>
-        <div style={{
-          padding: '20px',
-          color: '#666',
-          textAlign: 'center'
-        }}>
-          <div>No se pudo cargar la publicidad</div>
-          {debug && <div style={{ fontSize: '0.8em', marginTop: '8px' }}>{error}</div>}
-        </div>
-      </div>
-    );
+    return null;
   }
 
-  // No renderizar si no hay items o si hay un error
-  if (isLoading || error || items.length === 0) {
+  // No renderizar si no hay items
+  if (items.length === 0) {
     return null;
   }
 
@@ -776,9 +752,11 @@ export default function PublicidadCarousel({
     //Estilo del panel
     const panelStyle = {
       position: 'fixed',
-      [position === 'left-fixed' ? 'left' : 'right']: '8px',
+      [position === 'left-fixed' ? 'left' : 'right']: '16px',
       top: '30%', // Misma posición que en el home (30% desde arriba)
       zIndex: 1000,
+      overflow: 'visible',
+      pointerEvents: 'auto'
     };
 
     // En artículos y programación con animación de entrada
@@ -806,8 +784,8 @@ export default function PublicidadCarousel({
               title="Cerrar"
               style={{
                 position: 'absolute',
-                top: '-10px',
-                right: '-10px',
+                top: '6px',
+                right: '6px',
                 width: '28px',
                 height: '28px',
                 borderRadius: '50%',
@@ -857,17 +835,20 @@ export default function PublicidadCarousel({
       >
         <div 
           className={`pub-carousel pos-${position}`} 
-          style={containerStyle}
+          style={{
+            ...containerStyle,
+            overflow: 'visible'
+          }}
           title={currentItem?.ubicacion?.nombre || 'Publicidad'}
         >
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDismiss(); }}
             aria-label="Cerrar publicidad"
             title="Cerrar"
-            style={{
+            style={{ 
               position: 'absolute',
-              top: '-10px',
-              right: '-10px',
+              top: '6px',
+              right: '6px',
               width: '28px',
               height: '28px',
               borderRadius: '50%',
@@ -911,7 +892,7 @@ export default function PublicidadCarousel({
             ...containerStyle,
             position: 'relative',
             overflow: 'visible',
-            margin: '20px auto 0',
+            margin: '20px auto 40px',
             padding: '0',
             width: '100%',
             maxWidth: '1200px',

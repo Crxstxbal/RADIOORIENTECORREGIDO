@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Music, Users, Link, Send, X, Plus } from 'lucide-react';
+import { Upload, Music, Users, Link, Send, X, Plus, CheckCircle, User, MapPin, Mail, Phone, Globe, Radio, Home } from 'lucide-react';
 import {
   FaSpotify,
   FaYoutube,
   FaInstagram,
   FaFacebook,
+  FaTiktok,
   FaSoundcloud,
-  FaGlobe,
-  FaLink
+  FaLink,
+  FaTwitter,
+  FaBandcamp,
+  FaApple
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import './emergente.css';
@@ -455,23 +458,51 @@ const Emergente = () => {
     if (submitted) {
         return (
             <div className="success-container">
-                <div className="card success-card">
-                    <div className="success-icon">
-                        <img 
-                            src="/images/radiooriente.png" 
-                            alt="Radio Oriente" 
-                            style={{ width: '60px', height: '60px' }} 
-                        />
+                <div className="success-card">
+                    <div className="success-animation">
+                        <div className="success-icon-wrapper">
+                            <CheckCircle className="success-icon" size={80} />
+                        </div>
+                        <div className="success-waves">
+                            <div className="wave wave-1"></div>
+                            <div className="wave wave-2"></div>
+                            <div className="wave wave-3"></div>
+                        </div>
                     </div>
-                    <h2>¡Formulario Enviado Exitosamente!</h2>
-                    <p>Gracias por enviar tu propuesta. Nuestro equipo revisará tu información y nos pondremos en contacto contigo pronto.</p>
-                    <br />
-                    <div className="buttons-container">
-                        <button onClick={resetForm}>Enviar Otra Propuesta</button>
+                    
+                    <div className="success-content">
+                        <h2 className="success-title">¡Propuesta Enviada con Éxito!</h2>
+                        <p className="success-message">
+                            Tu banda ha sido registrada en nuestro sistema. Nuestro equipo de curaduría 
+                            revisará tu propuesta musical y nos pondremos en contacto contigo pronto.
+                        </p>
+                        
+                        <div className="success-info">
+                            <div className="info-item">
+                                <Music className="info-icon" />
+                                <span>Revisión en 3-5 días hábiles</span>
+                            </div>
+                            <div className="info-item">
+                                <Mail className="info-icon" />
+                                <span>Te contactaremos por email</span>
+                            </div>
+                            <div className="info-item">
+                                <Radio className="info-icon" />
+                                <span>Posible emisión los domingos</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="success-actions">
+                        <button onClick={resetForm} className="btn btn-primary success-btn">
+                            <Plus size={20} />
+                            Enviar Otra Propuesta
+                        </button>
                         <button 
                             onClick={() => window.location.href = '/'} 
-                            style={{ marginLeft: '10px' }}
+                            className="btn btn-outline success-btn"
                         >
+                            <Home size={20} />
                             Ir a Página Principal
                         </button>
                     </div>
@@ -482,59 +513,56 @@ const Emergente = () => {
 
     return (
         <div className="emergente-container">
-            <div className="emergente-wrapper">
-                {/* Header */}
-                <div className="emergente-header">
-                    <div className="logo-title">
-                        <div className="logo-circle">
-                            <Music className="icon" />
-                        </div>
-                        <h1>Radio Oriente FM</h1>
+            <div className="container">
+                <div className="page-header">
+                    <Music className="page-icon" />
+                    <div>
+                        <h1 className="page-title">Bandas Emergentes</h1>
+                        <p className="page-subtitle">
+                            ¿Eres parte de una banda emergente? ¡Queremos conocerte! Envíanos tu información y podrías ser parte de nuestra programación especial para artistas locales.
+                        </p>
                     </div>
-                    <h2 className="gradient-text">Bandas Emergentes</h2>
-                    <p>
-                        ¿Eres parte de una banda emergente? ¡Queremos conocerte! Envíanos tu información 
-                        y podrías ser parte de nuestra programación especial para artistas locales.
-                    </p>
                 </div>
 
-                <div className="grid grid-cols-2">
-                    {/* Información */}
-                    <div className="info-section">
-                        <div className="card">
-                            <div className="card-header">
-                                <Users className="icon" />
-                                <h3>¿Por qué participar?</h3>
+                <div className="emergente-content">
+                    <div className="emergente-info">
+                        <h2 className="section-title">¿Por qué participar?</h2>
+                        
+                        <div className="emergente-item">
+                            <Users className="emergente-icon" />
+                            <div>
+                                <h3>Beneficios para tu banda</h3>
+                                <ul className="benefits-list">
+                                    <li>Tu música puede sonar en nuestro espacio dominical de bandas emergentes, entre las 12:00 y las 15:00 hrs.</li>
+                                    <li>Posibilidad de entrevistas en vivo y conversación en profundidad sobre tu proyecto.</li>
+                                    <li>Difusión en la programación de Radio Oriente FM y en nuestras redes sociales.</li>
+                                    <li>Visibilidad frente a una audiencia que busca descubrir nuevas voces y propuestas serias.</li>
+                                    <li>Conexión con otras bandas y solistas que también están construyendo la escena local.</li>
+                                    <li>Ser parte de una curaduría donde se valora la calidad, la identidad y la coherencia artística.</li>
+                                </ul>
                             </div>
-                            <ul className="benefits-list">
-                                <li>Exposición en nuestra programación</li>
-                                <li>Entrevistas en vivo</li>
-                                <li>Promoción en redes sociales</li>
-                                <li>Conexión con otros artistas</li>
-                                <li>Apoyo al talento local</li>
-                            </ul>
                         </div>
 
-                        <div className="card">
-                            <div className="card-header">
-                                <Link className="icon" />
+                        <div className="emergente-item">
+                            <Link className="emergente-icon" />
+                            <div>
                                 <h3>Proceso de Selección</h3>
-                            </div>
-                            <div className="process-steps">
-                                <div className="step"><span>1</span> Envías tu información</div>
-                                <div className="step"><span>2</span> Revisamos tu material</div>
-                                <div className="step"><span>3</span> Te contactamos</div>
+                                <div className="process-steps">
+                                    <div className="step"><span>1</span> Envías tu información y material a través de este formulario.</div>
+                                    <div className="step"><span>2</span> Nuestro equipo revisa tu propuesta: sonido, mensaje, originalidad y seriedad del proyecto.</div>
+                                    <div className="step"><span>3</span> Te contactamos si eres seleccionado para coordinar la emisión de tu música y posibles entrevistas en el programa de Bandas Emergentes.</div>
+                                </div>
                             </div>
                         </div>
+
+                        <p className="form-description">
+                            Las bandas y solistas seleccionados formarán parte de nuestro espacio de bandas emergentes los domingos, donde dedicamos la franja de 12:00 a 15:00 hrs. a escuchar y compartir nuevas propuestas musicales.
+                        </p>
                     </div>
 
-                    {/* Formulario */}
-                    <div className="form-section">
-                        <div className="card">
-                            <div className="card-content">
-                                <div className="card-header">
-                                    <h3 className="card-title">Envíanos tu Información</h3>
-                                </div>
+                    <div className="emergente-form-container">
+                        <h2 className="section-title">Envíanos tu Información</h2>
+                        <p className="form-description">Completa el formulario y nos pondremos en contacto contigo pronto</p>
 
                                 {errors.general && <div className="error-box">{errors.general}</div>}
 
@@ -574,11 +602,15 @@ const Emergente = () => {
                                             <div className="integrantes-list">
                                                 {formData.integrantes.map((integrante, index) => (
                                                     <div key={index} className="integrante-item">
-                                                        <span>{integrante}</span>
+                                                        <div className="integrante-info">
+                                                            <User className="integrante-icon" size={18} />
+                                                            <span className="integrante-nombre">{integrante}</span>
+                                                        </div>
                                                         <button 
                                                             type="button" 
                                                             onClick={() => eliminarIntegrante(index)}
                                                             className="btn-remove"
+                                                            title="Eliminar integrante"
                                                         >
                                                             <X size={14} />
                                                         </button>
@@ -729,14 +761,14 @@ const Emergente = () => {
                                                     <option value="otro">Otro</option>
                                                 </select>
                                                 {newLink.tipo && (
-                                                    <span className="select-icon">
-                                                        {newLink.tipo === 'spotify' && <FaSpotify data-icon="FaSpotify" />}
-                                                        {newLink.tipo === 'youtube' && <FaYoutube data-icon="FaYoutube" />}
-                                                        {newLink.tipo === 'instagram' && <FaInstagram data-icon="FaInstagram" />}
-                                                        {newLink.tipo === 'facebook' && <FaFacebook data-icon="FaFacebook" />}
-                                                        {newLink.tipo === 'soundcloud' && <FaSoundcloud data-icon="FaSoundcloud" />}
-                                                        {newLink.tipo === 'website' && <FaGlobe data-icon="FaGlobe" />}
-                                                        {newLink.tipo === 'otro' && <FaLink data-icon="FaLink" />}
+                                                    <span className={`select-icon ${newLink.tipo}`}>
+                                                        {newLink.tipo === 'spotify' && <FaSpotify size={18} />}
+                                                        {newLink.tipo === 'youtube' && <FaYoutube size={18} />}
+                                                        {newLink.tipo === 'instagram' && <FaInstagram size={18} />}
+                                                        {newLink.tipo === 'facebook' && <FaFacebook size={18} />}
+                                                        {newLink.tipo === 'soundcloud' && <FaSoundcloud size={18} />}
+                                                        {newLink.tipo === 'website' && <Globe size={18} />}
+                                                        {newLink.tipo === 'otro' && <FaLink size={18} />}
                                                     </span>
                                                 )}
                                             </div>
@@ -760,22 +792,45 @@ const Emergente = () => {
                                         </div>
                                         {formData.links.length > 0 && (
                                             <div className="links-list">
-                                                {formData.links.map((link, index) => (
-                                                    <div key={index} className="link-item">
-                                                        <div className="link-info">
-                                                            <span className="link-type-badge">{link.tipo}</span>
-                                                            <span className="link-url">{link.url}</span>
+                                                {formData.links.map((link, index) => {
+                                                    const getSocialIcon = (tipo) => {
+                                                        switch(tipo.toLowerCase()) {
+                                                            case 'spotify': return <FaSpotify className="social-icon spotify" />;
+                                                            case 'youtube': return <FaYoutube className="social-icon youtube" />;
+                                                            case 'instagram': return <FaInstagram className="social-icon instagram" />;
+                                                            case 'facebook': return <FaFacebook className="social-icon facebook" />;
+                                                            case 'tiktok': return <FaTiktok className="social-icon tiktok" />;
+                                                            case 'soundcloud': return <FaSoundcloud className="social-icon soundcloud" />;
+                                                            case 'twitter': return <FaTwitter className="social-icon twitter" />;
+                                                            case 'bandcamp': return <FaBandcamp className="social-icon bandcamp" />;
+                                                            case 'apple music': return <FaApple className="social-icon apple" />;
+                                                            case 'sitio web': return <Globe className="social-icon website" />;
+                                                            default: return <FaLink className="social-icon default" />;
+                                                        }
+                                                    };
+                                                    
+                                                    return (
+                                                        <div key={index} className="link-item">
+                                                            <div className="link-info">
+                                                                <div className="link-icon-wrapper">
+                                                                    {getSocialIcon(link.tipo)}
+                                                                </div>
+                                                                <div className="link-details">
+                                                                    <span className="link-type">{link.tipo}</span>
+                                                                    <span className="link-url">{link.url}</span>
+                                                                </div>
+                                                            </div>
+                                                            <button 
+                                                                type="button" 
+                                                                onClick={() => eliminarLink(index)}
+                                                                className="btn-remove"
+                                                                title="Eliminar link"
+                                                            >
+                                                                <X size={16} />
+                                                            </button>
                                                         </div>
-                                                        <button 
-                                                            type="button" 
-                                                            onClick={() => eliminarLink(index)}
-                                                            className="btn-remove"
-                                                            title="Eliminar link"
-                                                        >
-                                                            <X size={16} />
-                                                        </button>
-                                                    </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
                                         )}
                                     </div>
@@ -817,8 +872,6 @@ const Emergente = () => {
                                     {isLoading ? 'Enviando...' : 'Enviar Propuesta'}
                                 </button>
                                 </form>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
