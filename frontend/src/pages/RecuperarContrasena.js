@@ -63,7 +63,7 @@ const RecuperarContrasena = () => {
     <div className="auth-page">
       <div className="container">
         <div className="auth-container">
-          <div className="auth-card">
+          <div className="auth-card" >
             <div className="auth-header">
               <Mail className="auth-icon" />
               <h1 className="auth-title">Recuperar Contraseña</h1>
