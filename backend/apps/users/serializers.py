@@ -73,12 +73,8 @@ class PasswordResetRequestSerializer(serializers.Serializer):
     """Serializer para solicitar el reseteo de contraseña"""
     email = serializers.EmailField()
 
-    def validate_email(self, value):
-        try:
-            user = User.objects.get(email=value)
-        except User.DoesNotExist:
-            raise serializers.ValidationError("No existe un usuario con este correo electrónico.")
-        return value
+    # NOTA DE SEGURIDAD: No validamos si el email existe en la base de datos
+    # para prevenir user enumeration attacks. La vista manejará esto de forma segura.
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     """Serializer para confirmar el reseteo de contraseña con token"""

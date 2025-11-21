@@ -91,23 +91,29 @@ def password_reset_request(request):
     """
     Solicitar reseteo de contraseña.
     Envía un correo electrónico con el enlace de recuperación.
+
+    NOTA DE SEGURIDAD: Siempre retorna el mismo mensaje de éxito,
+    independientemente de si el email existe o no, para prevenir
+    user enumeration attacks.
     """
     serializer = PasswordResetRequestSerializer(data=request.data)
     if serializer.is_valid():
         email = serializer.validated_data['email']
-        user = User.objects.get(email=email)
 
-        # Generar token de reseteo
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        try:
+            user = User.objects.get(email=email)
 
-        # Construir URL de reseteo (frontend)
-        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
-        reset_url = f"{frontend_url}/resetear-contrasena/{uid}/{token}"
+            # Generar token de reseteo
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        # Enviar correo electrónico
-        subject = 'Recuperación de Contraseña - Radio Oriente FM'
-        message = f"""
+            # Construir URL de reseteo (frontend)
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+            reset_url = f"{frontend_url}/resetear-contrasena/{uid}/{token}"
+
+            # Enviar correo electrónico
+            subject = 'Recuperación de Contraseña - Radio Oriente FM'
+            message = f"""
 Hola {user.first_name or user.username},
 
 Recibimos una solicitud para restablecer tu contraseña en Radio Oriente FM.
@@ -122,23 +128,29 @@ Si no solicitaste este cambio, puedes ignorar este correo electrónico y tu cont
 
 Saludos,
 El equipo de Radio Oriente FM
-        """
+            """
 
-        try:
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
-            return Response({
-                'message': 'Se ha enviado un correo electrónico con instrucciones para restablecer tu contraseña.'
-            }, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({
-                'error': f'Error al enviar el correo: {str(e)}'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+            except Exception:
+                # Aún si falla el envío, retornamos mensaje de éxito por seguridad
+                pass
+
+        except User.DoesNotExist:
+            # Por seguridad, no revelamos que el email no existe
+            # NO se envía correo, pero retornamos el mismo mensaje de éxito
+            pass
+
+        # Siempre retornamos el mismo mensaje de éxito
+        return Response({
+            'message': 'Se ha enviado un correo electrónico con instrucciones para restablecer tu contraseña.'
+        }, status=status.HTTP_200_OK)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
