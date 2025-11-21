@@ -582,23 +582,22 @@ async function verDetallesSolicitud(solicitudId) {
                             <strong>Imágenes:</strong>
                             <div class="d-flex flex-wrap gap-2 mt-1">
                                 ${item.imagenes.map(img => {
-                                    // Manejar diferentes estructuras de objeto de imagen
-                                    const imagePath = img.imagen || img.archivo || img.url || img;
+                                    // La API devuelve la propiedad 'url' que ya es la URL correcta
+                                    let imageUrl = img.url;
                                     
-                                    if (!imagePath) {
-                                        console.warn('Objeto de imagen sin ruta válida:', img);
+                                    if (!imageUrl) {
+                                        console.warn('Imagen sin URL válida:', img);
                                         return '';
                                     }
                                     
-                                    // Asegurar que la URL de la imagen sea absoluta
-                                    const isFullUrl = /^https?:\/\//.test(imagePath);
-                                    const isAbsolutePath = imagePath.startsWith('/');
+                                    // Si la URL no es absoluta, construirla correctamente
+                                    if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                                        imageUrl = '/media/' + imageUrl;
+                                    }
                                     
-                                    let imageUrl = imagePath;
-                                    if (!isFullUrl) {
-                                        imageUrl = isAbsolutePath ? 
-                                            window.location.origin + imagePath : 
-                                            window.location.origin + '/media/' + imagePath;
+                                    // Asegurar que sea una URL completa
+                                    if (imageUrl.startsWith('/')) {
+                                        imageUrl = window.location.origin + imageUrl;
                                     }
                                     
                                     return `
@@ -607,7 +606,7 @@ async function verDetallesSolicitud(solicitudId) {
                                             class="img-fluid h-100 w-100 object-fit-cover border rounded bg-light" 
                                             alt="Imagen de publicidad"
                                             style="object-fit: cover;"
-                                            onerror="this.onerror=null; this.src='/static/img/placeholder.jpg';">
+                                            onerror="this.onerror=null; this.src='${window.location.origin}/static/img/placeholder.jpg';">
                                     </a>`;
                                 }).join('')}
                             </div>
@@ -782,13 +781,13 @@ async function verDetallesCampania(campaniaId) {
           <h5 class="mb-3">Vista Previa</h5>
           ${campania.web_config?.archivo_media ? 
             `<div class="text-center mb-3">
-              <img src="${campania.web_config.archivo_media}" 
+              <img src="${campania.web_config.archivo_media.startsWith('http') ? campania.web_config.archivo_media : (campania.web_config.archivo_media.startsWith('/') ? window.location.origin + campania.web_config.archivo_media : window.location.origin + '/media/' + campania.web_config.archivo_media)}" 
                    class="img-fluid rounded border" 
                    style="max-height: 200px;" 
                    alt="Vista previa" 
-                   onerror="this.src='/static/img/placeholder-banner.png'" />
+                   onerror="this.src='${window.location.origin}/static/img/placeholder-banner.png'" />
               <div class="mt-2">
-                <a href="${campania.web_config.archivo_media}" 
+                <a href="${campania.web_config.archivo_media.startsWith('http') ? campania.web_config.archivo_media : (campania.web_config.archivo_media.startsWith('/') ? window.location.origin + campania.web_config.archivo_media : window.location.origin + '/media/' + campania.web_config.archivo_media)}" 
                    target="_blank" 
                    class="btn btn-sm btn-outline-primary">
                   <i class="fas fa-external-link-alt me-1"></i> Ver imagen completa
@@ -885,7 +884,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Manejar errores de carga de imagen
         imagenPrevia.onerror = function() {
-          imagenPrevia.src = '/static/img/placeholder-banner.png';
+          imagenPrevia.src = window.location.origin + '/static/img/placeholder-banner.png';
         };
       } else {
         vistaPrevia.style.display = 'none';
@@ -897,7 +896,78 @@ document.addEventListener('DOMContentLoaded', function() {
   const btnSubirImagen = document.getElementById('btnSubirImagen');
   if (btnSubirImagen) {
     btnSubirImagen.addEventListener('click', function() {
-      alert('Función de subida de imágenes no implementada. Por ahora, ingresa manualmente la URL de la imagen.');
+      // Crear un input de archivo temporal
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.style.display = 'none';
+      
+      fileInput.addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // Validar que sea una imagen
+        if (!file.type.startsWith('image/')) {
+          alert('Por favor selecciona un archivo de imagen válido.');
+          return;
+        }
+        
+        // Validar tamaño (máximo 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          alert('El archivo es demasiado grande. Máximo 5MB.');
+          return;
+        }
+        
+        try {
+          // Crear FormData para enviar el archivo
+          const formData = new FormData();
+          formData.append('imagen', file);
+          
+          // Mostrar indicador de carga
+          btnSubirImagen.disabled = true;
+          btnSubirImagen.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+          
+          // Enviar archivo al servidor
+          const response = await fetch('/dashboard/api/publicidad/subir-imagen/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+          });
+          
+          if (!response.ok) {
+            throw new Error('Error al subir la imagen');
+          }
+          
+          const result = await response.json();
+          
+          // Actualizar el campo de URL con la imagen subida
+          document.getElementById('archivoMedia').value = result.url;
+          
+          // Actualizar vista previa si existe
+          const imagenPrevia = document.getElementById('imagenPrevia');
+          if (imagenPrevia) {
+            imagenPrevia.src = result.url;
+            document.getElementById('vistaPreviaImagen').style.display = 'block';
+          }
+          
+          alert('Imagen subida correctamente');
+          
+        } catch (error) {
+          console.error('Error al subir imagen:', error);
+          alert('Error al subir la imagen: ' + error.message);
+        } finally {
+          // Restaurar botón
+          btnSubirImagen.disabled = false;
+          btnSubirImagen.innerHTML = '<i class="fas fa-upload"></i>';
+        }
+      });
+      
+      // Simular click en el input de archivo
+      document.body.appendChild(fileInput);
+      fileInput.click();
+      document.body.removeChild(fileInput);
     });
   }
 });
@@ -968,7 +1038,7 @@ async function guardarEdicionCampania() {
   }
   
   try {
-    const response = await fetch(`/dashboard/api/publicidad/campanias/${id}/actualizar/`, {
+    const response = await fetch(`/dashboard/api/publicidad/campanias-web/${id}/actualizar_web/`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -982,8 +1052,15 @@ async function guardarEdicionCampania() {
     });
     
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Error al actualizar la campaña');
+      let errorMessage = 'Error al actualizar la campaña';
+      try {
+        const error = await response.json();
+        errorMessage = error.message || errorMessage;
+      } catch (e) {
+        // Si no es JSON válido, usar el status text
+        errorMessage = `Error ${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
     
     // Mostrar notificación de éxito
@@ -1506,13 +1583,13 @@ async function verDetallesCampania(campaniaId) {
           <h5 class="mb-3">Vista Previa</h5>
           ${campania.web_config?.archivo_media ? 
             `<div class="text-center mb-3">
-              <img src="${campania.web_config.archivo_media}" 
+              <img src="${campania.web_config.archivo_media.startsWith('http') ? campania.web_config.archivo_media : (campania.web_config.archivo_media.startsWith('/') ? window.location.origin + campania.web_config.archivo_media : window.location.origin + '/media/' + campania.web_config.archivo_media)}" 
                    class="img-fluid rounded border" 
                    style="max-height: 200px;" 
                    alt="Vista previa" 
-                   onerror="this.src='/static/img/placeholder-banner.png'" />
+                   onerror="this.src='${window.location.origin}/static/img/placeholder-banner.png'" />
               <div class="mt-2">
-                <a href="${campania.web_config.archivo_media}" 
+                <a href="${campania.web_config.archivo_media.startsWith('http') ? campania.web_config.archivo_media : (campania.web_config.archivo_media.startsWith('/') ? window.location.origin + campania.web_config.archivo_media : window.location.origin + '/media/' + campania.web_config.archivo_media)}" 
                    target="_blank" 
                    class="btn btn-sm btn-outline-primary">
                   <i class="fas fa-external-link-alt me-1"></i> Ver imagen completa
@@ -1599,19 +1676,14 @@ document.getElementById('archivoMedia').addEventListener('change', function() {
     
     // Manejar errores de carga de imagen
     imagenPrevia.onerror = function() {
-      imagenPrevia.src = '/static/img/placeholder-banner.png';
+      imagenPrevia.src = window.location.origin + '/static/img/placeholder-banner.png';
     };
   } else {
     vistaPrevia.style.display = 'none';
   }
 });
 
-// Manejar la subida de imágenes
-// Nota: Necesitarás implementar el backend para manejar la subida de archivos
-document.getElementById('btnSubirImagen').addEventListener('click', function() {
-  alert('Función de subida de imágenes no implementada. Por ahora, ingresa manualmente la URL de la imagen.');
-  // Aquí iría el código para manejar la subida de archivos
-});
+// Código de subida de imágenes ya implementado arriba
 
 async function guardarEdicionCampania() {
   const id = document.getElementById('campaniaId').value;
@@ -1626,7 +1698,7 @@ async function guardarEdicionCampania() {
   }
   
   try {
-    const response = await fetch(`/dashboard/api/publicidad/campanias/${id}/actualizar/`, {
+    const response = await fetch(`/dashboard/api/publicidad/campanias-web/${id}/actualizar_web/`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -1640,8 +1712,15 @@ async function guardarEdicionCampania() {
     });
     
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Error al actualizar la campaña');
+      let errorMessage = 'Error al actualizar la campaña';
+      try {
+        const error = await response.json();
+        errorMessage = error.message || errorMessage;
+      } catch (e) {
+        // Si no es JSON válido, usar el status text
+        errorMessage = `Error ${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
     
     // Mostrar notificación de éxito
@@ -1808,7 +1887,7 @@ async function verDetallesSolicitud(solicitudId) {
                                                class="img-thumbnail" 
                                                style="width: 100%; height: 100%; object-fit: cover;" 
                                                alt="${imagen.descripcion || 'Imagen'}" 
-                                               onerror="this.src='/static/img/placeholder-banner.png'" />
+                                               onerror="this.src='${window.location.origin}/static/img/placeholder-banner.png'" />
                                           <a href="${imagen.url}" 
                                              target="_blank" 
                                              class="position-absolute top-0 end-0 m-1 btn btn-sm btn-light" 

@@ -38,6 +38,8 @@ urlpatterns = [
     path('api/publicidad/solicitudes/<int:solicitud_id>/estado/', views.api_cambiar_estado_solicitud, name='api_cambiar_estado_solicitud'),
     path('api/publicidad/campanias-web/<int:campania_id>/', views.eliminar_campania_web, name='api_eliminar_campania_web'),
     path('api/publicidad/campanias-web/<int:campania_id>/actualizar_web/', views.api_actualizar_campania_web, name='api_actualizar_campania_web'),
+    # Subida de imágenes para campañas
+    path('api/publicidad/subir-imagen/', views.api_subir_imagen_campania, name='api_subir_imagen_campania'),
     # Imágenes por item de solicitud web
     path('api/publicidad/items/<int:item_id>/imagenes/', views.api_item_imagenes, name='api_item_imagenes'),
     path('api/publicidad/items/<int:item_id>/imagenes/subir/', views.api_item_subir_imagen, name='api_item_subir_imagen'),

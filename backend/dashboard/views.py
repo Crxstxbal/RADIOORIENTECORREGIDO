@@ -3865,3 +3865,64 @@ El equipo de Radio Oriente FM
             })
 
     return render(request, 'dashboard/password_reset.html')
+
+@login_required
+@user_passes_test(is_staff_user)
+@require_http_methods(["POST"])
+def api_subir_imagen_campania(request):
+    """API para subir imágenes de campañas de publicidad"""
+    import os
+    import uuid
+    from django.core.files.storage import default_storage
+    from django.core.files.base import ContentFile
+    from django.conf import settings
+    
+    try:
+        if 'imagen' not in request.FILES:
+            return JsonResponse({'success': False, 'message': 'No se envió ningún archivo'}, status=400)
+        
+        imagen = request.FILES['imagen']
+        
+        # Validar tipo de archivo
+        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+        if imagen.content_type not in allowed_types:
+            return JsonResponse({
+                'success': False, 
+                'message': 'Tipo de archivo no permitido. Solo se permiten imágenes (JPEG, PNG, GIF, WebP)'
+            }, status=400)
+        
+        # Validar tamaño (máximo 5MB)
+        if imagen.size > 5 * 1024 * 1024:
+            return JsonResponse({
+                'success': False, 
+                'message': 'El archivo es demasiado grande. Máximo 5MB'
+            }, status=400)
+        
+        # Generar nombre único para el archivo
+        ext = os.path.splitext(imagen.name)[1].lower()
+        filename = f"campania_{uuid.uuid4().hex}{ext}"
+        
+        # Crear directorio si no existe
+        upload_path = os.path.join('publicidad', 'campanias')
+        full_path = os.path.join(upload_path, filename)
+        
+        # Guardar archivo
+        saved_path = default_storage.save(full_path, ContentFile(imagen.read()))
+        
+        # Construir URL completa
+        file_url = default_storage.url(saved_path)
+        
+        return JsonResponse({
+            'success': True,
+            'url': file_url,
+            'filename': filename,
+            'message': 'Imagen subida correctamente'
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al subir la imagen: {str(e)}'
+        }, status=500)
