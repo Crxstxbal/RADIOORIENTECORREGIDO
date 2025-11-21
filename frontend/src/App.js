@@ -11,6 +11,7 @@ import Navbar from './components/Navbar';
 import RadioPlayer from './components/RadioPlayer';
 import LiveChat from './components/LiveChat';
 import Footer from "./components/Footer";
+import ScrollToTop from './components/ScrollToTop';
 
 // Páginas
 import Home from './pages/Home';
@@ -55,7 +56,7 @@ function App() {
     <ThemeProvider>
       <AudioProvider> {/* <-- AudioProvider envuelve todo */}
         <Router>
-
+          <ScrollToTop />
           <Routes>
             {/* Layout principal con navbar, radio, chat y footer */}
             <Route element={<LayoutPrincipal />}>
