@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, User, Calendar } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api';
 import './Pages.css';
 
 const Programming = () => {
@@ -21,7 +21,7 @@ const Programming = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const programsResponse = await axios.get('/api/radio/programas/');
+        const programsResponse = await api.get('/api/radio/programas/');
         const programsData = programsResponse.data.results || programsResponse.data;
         setPrograms(programsData);
 

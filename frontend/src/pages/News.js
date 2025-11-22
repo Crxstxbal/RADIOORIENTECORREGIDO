@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Newspaper, Calendar, User, Eye } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api';
 import './Pages.css';
 
 const News = () => {
@@ -11,7 +11,7 @@ const News = () => {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await axios.get('/api/radio/news/');
+        const response = await api.get('/api/radio/news/');
         setNews(response.data.results || response.data);
       } catch (error) {
         console.error('Error fetching news:', error);

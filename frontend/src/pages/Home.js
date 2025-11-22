@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Radio, Users, Music, Newspaper, Calendar, User, Tag, ArrowRight } from "lucide-react";
-import axios from "axios";
+import api from "../utils/api";
 import "./Home.css";
 import PublicidadCarousel from "../components/PublicidadCarousel";
 import CarruselLocutores from '../components/CarruselLocutores';
@@ -91,8 +91,8 @@ const Home = () => {
     const fetchData = async () => {
       try {
         const [articlesResponse, stationResponse] = await Promise.all([
-          axios.get("/api/articulos/api/articulos/"),
-          axios.get("/api/radio/station/"),
+          api.get("/api/articulos/api/articulos/"),
+          api.get("/api/radio/station/"),
         ]);
 
         const articles = articlesResponse.data.results || articlesResponse.data || [];

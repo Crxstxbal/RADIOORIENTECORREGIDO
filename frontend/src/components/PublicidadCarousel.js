@@ -129,7 +129,8 @@ export default function PublicidadCarousel({
         if (query) params.set('q', query);
         params.set('limit', '100');
         
-        const url = `/dashboard/api/publicidad/activas/?${params.toString()}`;
+        const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const url = `${base}/dashboard/api/publicidad/activas/?${params.toString()}`;
         if (debug) {
           console.log(`[PublicidadCarousel] API URL: ${url}`);
         }
@@ -197,7 +198,8 @@ export default function PublicidadCarousel({
 
   const trackImpression = async (campaignId) => {
     try {
-      await fetch(`/dashboard/api/publicidad/campanias/${campaignId}/impresion/`, {
+      const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      await fetch(`${base}/dashboard/api/publicidad/campanias/${campaignId}/impresion/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -209,7 +211,8 @@ export default function PublicidadCarousel({
 
   const trackClick = async (campaignId) => {
     try {
-      const res = await fetch(`/dashboard/api/publicidad/campanias/${campaignId}/click/`, {
+      const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${base}/dashboard/api/publicidad/campanias/${campaignId}/click/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });

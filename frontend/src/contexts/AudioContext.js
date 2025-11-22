@@ -15,7 +15,8 @@ export const AudioProvider = ({ children }) => {
   useEffect(() => {
     const fetchStream = async () => {
       try {
-        const res = await fetch("/api/radio/station/");
+        const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${base}/api/radio/station/`);
         const data = await res.json();
 
         // Asegurarse de que streamUrl sea un string

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Users, Wifi, WifiOff, ExternalLink, Youtube, Facebook } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api';
 import './Pages.css';
 
 const EnVivo = () => {
@@ -12,7 +12,7 @@ const EnVivo = () => {
   useEffect(() => {
     const fetchLiveStreamData = async () => {
       try {
-        const response = await axios.get('/api/radio/station/');
+        const response = await api.get('/api/radio/station/');
         const estacionData = response.data;
         
         if (estacionData && estacionData.live_stream_url) {
@@ -118,10 +118,12 @@ const EnVivo = () => {
         if (isYouTubeUrl(liveStream.url)) {
           const id = getYouTubeId(liveStream.url);
           const watchUrl = id ? `https://www.youtube.com/watch?v=${id}` : liveStream.url;
-          const resp = await axios.get('https://www.youtube.com/oembed', {
-            params: { url: watchUrl, format: 'json' }
-          });
-          if (resp?.data?.title) setVideoTitle(resp.data.title);
+          const url = `https://www.youtube.com/oembed?url=${encodeURIComponent(watchUrl)}&format=json`;
+          const resp = await fetch(url);
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data?.title) setVideoTitle(data.title);
+          }
         } else {
           setVideoTitle("");
         }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { BookOpen, Calendar, User, Eye, Tag, Filter, ArrowRight } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api';
 import PaginacionFusion from '../components/PaginacionFusion';
 import PublicidadCarousel from '../components/PublicidadCarousel';
 import './Pages.css';
@@ -44,7 +44,7 @@ const Articles = () => {
         }
 
         // Cargar artículos desde nueva API
-        const articlesResponse = await axios.get(endpoint, { params });
+        const articlesResponse = await api.get(endpoint, { params });
 
         // Extraer datos de paginación
         const data = articlesResponse.data;
@@ -76,7 +76,7 @@ const Articles = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const categoriesResponse = await axios.get('/api/articulos/api/categorias/');
+        const categoriesResponse = await api.get('/api/articulos/api/categorias/');
         setCategories(categoriesResponse.data.results || categoriesResponse.data);
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -109,7 +109,7 @@ const Articles = () => {
     const loadArticleBySlug = async () => {
       if (slug) {
         try {
-          const response = await axios.get(`/api/articulos/api/articulos/${slug}/`);
+          const response = await api.get(`/api/articulos/api/articulos/${slug}/`);
           setSelectedArticle(response.data);
         } catch (error) {
           console.error('Error loading article by slug:', error);
@@ -132,7 +132,7 @@ const Articles = () => {
   const handleArticleClick = async (article) => {
     // Hacer petición al backend para obtener el detalle (esto incrementa las vistas)
     try {
-      const response = await axios.get(`/api/articulos/api/articulos/${article.slug}/`);
+      const response = await api.get(`/api/articulos/api/articulos/${article.slug}/`);
       setSelectedArticle(response.data);
       // Actualizar la URL con el slug del artículo
       navigate(`/articulos/${article.slug}`, { replace: true });

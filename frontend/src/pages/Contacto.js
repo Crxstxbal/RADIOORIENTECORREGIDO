@@ -24,7 +24,8 @@ const Contacto = () => {
     const cargarDatos = async () => {
       try {
         // Usar fetch en lugar de axios para evitar problemas con headers globales
-        const tiposResponse = await fetch('/api/contact/api/tipos-asunto/');
+        const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const tiposResponse = await fetch(`${base}/api/contact/api/tipos-asunto/`);
         if (!tiposResponse.ok) {
           throw new Error('Error al cargar tipos de asunto');
         }
@@ -34,7 +35,7 @@ const Contacto = () => {
         setTiposAsunto(tiposArray);
 
         // Cargar información de la estación
-        const estacionResponse = await fetch('/api/radio/api/estaciones/');
+        const estacionResponse = await fetch(`${base}/api/radio/api/estaciones/`);
         if (estacionResponse.ok) {
           const estacionData = await estacionResponse.json();
           // Los endpoints DRF devuelven objetos paginados con { results: [] }
@@ -96,7 +97,8 @@ const Contacto = () => {
 
     try {
       // Usar fetch para enviar sin autenticación (formulario público)
-      const response = await fetch('/api/contact/api/contactos/', {
+      const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${base}/api/contact/api/contactos/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

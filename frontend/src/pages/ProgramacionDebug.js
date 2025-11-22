@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, User, Calendar } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api';
 import './Pages.css';
 
 const ProgramacionDebug = () => {
@@ -26,14 +26,14 @@ const ProgramacionDebug = () => {
         
         // Cargar programas
         console.log('📡 Cargando programas...');
-        const programsResponse = await axios.get('/api/radio/api/programas/');
+        const programsResponse = await api.get('/api/radio/api/programas/');
         const programsData = programsResponse.data.results || programsResponse.data;
         console.log('✅ Programas cargados:', programsData);
         setPrograms(programsData);
         
         // Cargar horarios
         console.log('📅 Cargando horarios...');
-        const horariosResponse = await axios.get('/api/radio/api/horarios/');
+        const horariosResponse = await api.get('/api/radio/api/horarios/');
         const horariosData = horariosResponse.data.results || horariosResponse.data;
         console.log('✅ Horarios cargados:', horariosData);
         setHorarios(horariosData);

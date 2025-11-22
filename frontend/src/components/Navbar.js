@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Menu, X, Radio, User, Sun, Moon, LayoutDashboard, Bell, Wifi } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import "./Navbar.css";
-import axios from "axios";
+import api from '../utils/api';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,7 +43,7 @@ const Navbar = () => {
     }
     const fetchCount = async () => {
       try {
-        const resp = await axios.get('/api/notifications/api/notificaciones/contador/', {
+        const resp = await api.get('/api/notifications/api/notificaciones/contador/', {
           headers: { Authorization: `Token ${token}` }
         });
         setNotifCount(resp.data?.no_leidas ?? 0);
@@ -61,7 +61,7 @@ const Navbar = () => {
     if (!token) return;
     setLoadingNotifs(true);
     try {
-      const resp = await axios.get('/api/notifications/api/notificaciones/no_leidas/', {
+      const resp = await api.get('/api/notifications/api/notificaciones/no_leidas/', {
         headers: { Authorization: `Token ${token}` }
       });
       setNotifs(Array.isArray(resp.data) ? resp.data : resp.data?.results || []);
@@ -82,7 +82,7 @@ const Navbar = () => {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-      await axios.post('/api/notifications/api/notificaciones/marcar_todas_leidas/', {}, {
+      await api.post('/api/notifications/api/notificaciones/marcar_todas_leidas/', {}, {
         headers: { Authorization: `Token ${token}` }
       });
       setNotifCount(0);

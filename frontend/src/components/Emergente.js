@@ -60,7 +60,8 @@ const Emergente = () => {
     useEffect(() => {
         const inicializarDatos = async () => {
             try {
-                const paisesResponse = await fetch('/api/ubicacion/paises/');
+                const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+                const paisesResponse = await fetch(`${base}/api/ubicacion/paises/`);
                 if (!paisesResponse.ok) {
                     throw new Error('Error al cargar países');
                 }
@@ -73,7 +74,7 @@ const Emergente = () => {
                     const loadingToast = toast.loading('Cargando regiones y comunas de Chile desde API oficial...');
 
                     try {
-                        const response = await fetch('/api/ubicacion/paises/reiniciar_datos_chile/', {
+                        const response = await fetch(`${base}/api/ubicacion/paises/reiniciar_datos_chile/`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' }
                         });
@@ -82,7 +83,7 @@ const Emergente = () => {
                             toast.dismiss(loadingToast);
                             toast.success(`${data.message}\n${data.regiones_creadas} regiones\n${data.comunas_creadas} comunas`);
 
-                            const paisesActualizadosResponse = await fetch('/api/ubicacion/paises/');
+                            const paisesActualizadosResponse = await fetch(`${base}/api/ubicacion/paises/`);
                             if (paisesActualizadosResponse.ok) {
                                 const paisesActualizados = await paisesActualizadosResponse.json();
                                 const paisesActualizadosArray = paisesActualizados.results || (Array.isArray(paisesActualizados) ? paisesActualizados : []);
@@ -102,7 +103,7 @@ const Emergente = () => {
                         setPaises([]);
                     }
                 } else {
-                    const ciudadesResponse = await fetch(`/api/ubicacion/ciudades/por_pais/?pais_id=${chile.id}`);
+                    const ciudadesResponse = await fetch(`${base}/api/ubicacion/ciudades/por_pais/?pais_id=${chile.id}`);
                     const ciudadesData = ciudadesResponse.ok ? await ciudadesResponse.json() : [];
 
                     if (!ciudadesData || ciudadesData.length < 10) {
@@ -110,7 +111,7 @@ const Emergente = () => {
                         const loadingToast = toast.loading('Actualizando datos desde API oficial de Chile...');
 
                         try {
-                            const response = await fetch('/api/ubicacion/paises/reiniciar_datos_chile/', {
+                            const response = await fetch(`${base}/api/ubicacion/paises/reiniciar_datos_chile/`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' }
                             });
@@ -139,7 +140,8 @@ const Emergente = () => {
 
         const cargarGeneros = async () => {
             try {
-                const response = await fetch('/api/radio/api/generos/');
+                const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+                const response = await fetch(`${base}/api/radio/api/generos/`);
                 if (!response.ok) {
                     throw new Error('Error al cargar géneros');
                 }
@@ -178,7 +180,8 @@ const Emergente = () => {
 
             setIsLoadingCiudades(true);
             try {
-                const response = await fetch(`/api/ubicacion/ciudades/por_pais/?pais_id=${formData.pais}`);
+                const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+                const response = await fetch(`${base}/api/ubicacion/ciudades/por_pais/?pais_id=${formData.pais}`);
                 if (!response.ok) {
                     throw new Error('Error al cargar ciudades');
                 }
@@ -217,7 +220,8 @@ const Emergente = () => {
 
             setIsLoadingComunas(true);
             try {
-                const response = await fetch(`/api/ubicacion/comunas/por_ciudad/?ciudad_id=${formData.ciudad}`);
+                const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+                const response = await fetch(`${base}/api/ubicacion/comunas/por_ciudad/?ciudad_id=${formData.ciudad}`);
                 if (!response.ok) {
                     throw new Error('Error al cargar comunas');
                 }
@@ -422,8 +426,8 @@ const Emergente = () => {
                 integrantes_data: formData.integrantes.filter(i => i.trim()),
                 links_data: formData.links.filter(l => l.tipo && l.url.trim())
             };
-
-            const response = await fetch('/api/emergentes/api/bandas/', {
+            const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            const response = await fetch(`${base}/api/emergentes/api/bandas/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Token ${token}`,

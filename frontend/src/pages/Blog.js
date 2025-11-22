@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Calendar, User, MessageCircle, Eye } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api';
 import './Pages.css';
 
 const Blog = () => {
@@ -11,7 +11,7 @@ const Blog = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await axios.get('/api/blog/posts/');
+        const response = await api.get('/api/blog/posts/');
         setPosts(response.data.results || response.data);
       } catch (error) {
         console.error('Error fetching blog posts:', error);

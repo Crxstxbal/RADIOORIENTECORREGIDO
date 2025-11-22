@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Splide, SplideSlide } from '@splidejs/react-splide';
 import { AutoScroll } from '@splidejs/splide-extension-auto-scroll';
-import axios from 'axios';
+import api from '../utils/api';
 
 // Estilos de Splide
 import '@splidejs/react-splide/css';
@@ -20,7 +20,7 @@ const CarruselLocutores = () => {
     const fetchLocutores = async () => {
       try {
         console.log('Fetching locutores from:', API_URL);
-        const response = await axios.get(API_URL);
+        const response = await api.get(API_URL);
         const data = response.data;
         console.log('API Response:', data);
 

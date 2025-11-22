@@ -88,12 +88,7 @@ const PublicidadPage = () => {
   const [selectedIds, setSelectedIds] = useState([]);
 
   const backendBase = useMemo(() => {
-    if (window.location.port === '3000') {
-      const host = window.location.hostname; // respeta localhost vs 127.0.0.1
-      const protocol = window.location.protocol || 'http:';
-      return `${protocol}//${host}:8000`;
-    }
-    return window.location.origin;
+    return import.meta.env.VITE_API_URL || 'http://localhost:8000';
   }, []);
 
   useEffect(() => {

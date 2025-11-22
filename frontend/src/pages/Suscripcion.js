@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mail, Bell, CheckCircle, Gift, Users, Calendar, Star } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import './Pages.css';
@@ -85,7 +85,7 @@ const Subscription = () => {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Token ${token}` } : {};
 
-      const response = await axios.post('/api/contact/api/suscripciones/', formData, { headers });
+      const response = await api.post('/api/contact/api/suscripciones/', formData, { headers });
 
       // Manejar respuesta de éxito
       if (response.data.reactivada) {
