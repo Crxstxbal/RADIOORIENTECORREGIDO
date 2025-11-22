@@ -2440,11 +2440,7 @@ def edit_user(request, user_id):
         user.correo = request.POST.get('correo')
         user.is_staff = request.POST.get('is_staff') == 'on'
         user.is_active = request.POST.get('is_active') == 'on'
-        
-        password = request.POST.get('password')
-        if password:
-            user.set_password(password)
-        
+
         try:
             user.save()
             messages.success(request, f'Usuario {user.usuario} actualizado exitosamente')

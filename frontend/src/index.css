@@ -109,6 +109,37 @@ html.dark select:disabled {
   opacity: 0.6;
 }
 
+/* Opciones de select en dark mode */
+html.dark select option {
+  background-color: #2a2a2a !important;
+  background-image: none !important;
+  background: #2a2a2a !important;
+  color: #ffffff !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+html.dark select option:checked,
+html.dark select option:hover {
+  background-color: #404040 !important;
+  background: #404040 !important;
+  background-image: none !important;
+}
+
+/* Forzar estilo en opciones - Light mode */
+select option {
+  background-color: #ffffff;
+  background-image: none !important;
+  color: #000000;
+}
+
+select option:checked,
+select option:hover {
+  background-color: #f3f4f6;
+  background-image: none !important;
+}
+
 /* Autofill en dark mode */
 html.dark input:-webkit-autofill,
 html.dark input:-webkit-autofill:hover,

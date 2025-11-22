@@ -35,7 +35,7 @@ const RecuperarContrasena = () => {
     return (
       <div className="auth-page">
         <div className="container">
-          <div className="auth-container">
+          <div className="auth-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <div className="auth-card">
               <div className="auth-header">
                 <CheckCircle className="auth-icon" style={{ color: '#10b981' }} />
@@ -62,8 +62,8 @@ const RecuperarContrasena = () => {
   return (
     <div className="auth-page">
       <div className="container">
-        <div className="auth-container">
-          <div className="auth-card" >
+        <div className="auth-container" style={{ width: '500px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div className="auth-card">
             <div className="auth-header">
               <Mail className="auth-icon" />
               <h1 className="auth-title">Recuperar Contraseña</h1>

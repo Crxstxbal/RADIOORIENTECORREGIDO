@@ -199,7 +199,7 @@ const Subscription = () => {
                 <Users size={40} />
               </div>
               <div className="stat-number-modern">
-                <AnimatedCounter end={5000} suffix="+" duration={2500} />
+                <AnimatedCounter end={500} suffix="+" duration={2500} />
               </div>
               <div className="stat-label-modern">Suscriptores Activos</div>
             </motion.div>

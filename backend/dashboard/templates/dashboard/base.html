@@ -74,7 +74,7 @@
             background: linear-gradient(180deg, #8E0E00, #3A0C00, #1F1C18, #3A0C00, #8E0E00);
             background-size: 400% 400%;
             animation: gradientWave 10s ease-in-out infinite;
-            min-height: 100vh;
+            height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
@@ -83,6 +83,26 @@
             transition: all 0.3s ease;
             box-shadow: 2px 0 15px rgba(0, 0, 0, 0.25);
             color: #f5f5f5;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Scrollbar personalizado para el sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
 
 
@@ -1159,6 +1179,270 @@
             h4 { font-size: 1.1rem; }
             h5 { font-size: 1rem; }
         }
+
+        /* =============================================
+           MODAL DE CONFIRMACIÓN ELEGANTE
+        ============================================= */
+        .delete-confirm-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .delete-confirm-modal.show {
+            display: flex;
+        }
+
+        .delete-modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease;
+        }
+
+        .delete-modal-content {
+            position: relative;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-width: 420px;
+            width: 100%;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .delete-modal-header {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            padding: 2rem 2rem 3rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .delete-modal-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .delete-modal-icon i {
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .delete-modal-header h3 {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .delete-modal-body {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .delete-item-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            word-break: break-word;
+        }
+
+        .delete-count-badge {
+            display: none;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            margin-left: 0.5rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-warning {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .delete-modal-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .delete-modal-actions button {
+            flex: 1;
+            padding: 0.875rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-cancel-delete {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-cancel-delete:hover {
+            background: var(--border-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-confirm-delete {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-confirm-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-confirm-delete:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* =============================================
+           BARRA DE ACCIONES MASIVAS
+        ============================================= */
+        .bulk-actions-bar {
+            position: fixed;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            z-index: 1000;
+            transition: bottom 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+
+        .bulk-actions-bar.show {
+            bottom: 2rem;
+        }
+
+        .bulk-actions-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .bulk-actions-info .count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 700;
+            padding: 0.375rem 0.75rem;
+            border-radius: 50px;
+            min-width: 28px;
+            text-align: center;
+        }
+
+        .bulk-actions-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .bulk-btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .bulk-btn-delete {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .bulk-btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .bulk-btn-cancel {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .bulk-btn-cancel:hover {
+            background: var(--border-color);
+        }
+
+        /* Checkbox personalizado */
+        .row-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .select-all-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -1374,22 +1658,146 @@
         }
         const csrftoken = getCookie('csrftoken');
 
-        // Generic delete function
-        function deleteItem(url, itemName) {
-            if (confirm(`¿Estás seguro de que quieres eliminar ${itemName}?`)) {
+        // =============================================
+        // SISTEMA DE MODAL DE CONFIRMACIÓN ELEGANTE
+        // =============================================
+
+        let deleteModalCallback = null;
+        let deleteModalUrls = [];
+        let deleteModalMode = 'single'; // 'single' o 'multiple'
+
+        // Función para mostrar el modal de confirmación
+        function showDeleteModal(itemName, url, count = 1) {
+            const modal = document.getElementById('deleteConfirmModal');
+            const itemNameEl = document.getElementById('deleteItemName');
+            const countBadge = document.getElementById('deleteCountBadge');
+            const warningText = document.getElementById('deleteWarningText');
+
+            deleteModalUrls = Array.isArray(url) ? url : [url];
+            deleteModalMode = count > 1 ? 'multiple' : 'single';
+
+            if (count > 1) {
+                itemNameEl.textContent = `${count} elementos seleccionados`;
+                countBadge.textContent = count;
+                countBadge.style.display = 'inline-flex';
+                warningText.textContent = 'Esta acción eliminará permanentemente todos los elementos seleccionados.';
+            } else {
+                itemNameEl.textContent = itemName;
+                countBadge.style.display = 'none';
+                warningText.textContent = 'Esta acción no se puede deshacer.';
+            }
+
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Función para cerrar el modal
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteConfirmModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+            deleteModalUrls = [];
+            deleteModalCallback = null;
+        }
+
+        // Función para confirmar la eliminación
+        function confirmDelete() {
+            if (deleteModalUrls.length === 0) return;
+
+            const btn = document.getElementById('confirmDeleteBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Eliminando...';
+            btn.disabled = true;
+
+            if (deleteModalMode === 'multiple' && deleteModalUrls.length > 1) {
+                // Eliminación múltiple
+                Promise.all(deleteModalUrls.map(url =>
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                )).then(() => {
+                    closeDeleteModal();
+                    window.location.reload();
+                }).catch(error => {
+                    console.error('Error:', error);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            } else {
+                // Eliminación simple
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = url;
-                
+                form.action = deleteModalUrls[0];
+
                 const csrfInput = document.createElement('input');
                 csrfInput.type = 'hidden';
                 csrfInput.name = 'csrfmiddlewaretoken';
                 csrfInput.value = csrftoken;
                 form.appendChild(csrfInput);
-                
+
                 document.body.appendChild(form);
                 form.submit();
             }
+        }
+
+        // Función legacy para compatibilidad - ahora usa el modal
+        function deleteItem(url, itemName) {
+            showDeleteModal(itemName, url, 1);
+        }
+
+        // Cerrar modal con Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDeleteModal();
+            }
+        });
+
+        // =============================================
+        // SISTEMA DE SELECCIÓN MÚLTIPLE
+        // =============================================
+
+        function toggleSelectAll(checkbox, tableId) {
+            const table = document.getElementById(tableId) || checkbox.closest('table');
+            const checkboxes = table.querySelectorAll('tbody .row-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+            updateBulkActions(tableId);
+        }
+
+        function updateBulkActions(tableId) {
+            const table = document.getElementById(tableId) || document.querySelector('table');
+            const checkboxes = table.querySelectorAll('tbody .row-checkbox:checked');
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+
+            if (bulkActions) {
+                if (checkboxes.length > 0) {
+                    bulkActions.classList.add('show');
+                    selectedCount.textContent = checkboxes.length;
+                } else {
+                    bulkActions.classList.remove('show');
+                }
+            }
+        }
+
+        function deleteSelected(urlPattern) {
+            const checkboxes = document.querySelectorAll('tbody .row-checkbox:checked');
+            if (checkboxes.length === 0) return;
+
+            const urls = Array.from(checkboxes).map(cb => {
+                return urlPattern.replace('__ID__', cb.dataset.id);
+            });
+
+            const itemName = checkboxes.length === 1
+                ? checkboxes[0].dataset.name
+                : `${checkboxes.length} elementos`;
+
+            showDeleteModal(itemName, urls, checkboxes.length);
         }
 
         // Edit item function (populate modal with data)
@@ -1685,7 +2093,63 @@
             updateBadge();
         }
     </script>
-    
+
+    <!-- Modal de Confirmación de Eliminación -->
+    <div id="deleteConfirmModal" class="delete-confirm-modal">
+        <div class="delete-modal-overlay" onclick="closeDeleteModal()"></div>
+        <div class="delete-modal-content">
+            <div class="delete-modal-header">
+                <div class="delete-modal-icon">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                <h3>Confirmar Eliminación</h3>
+            </div>
+            <div class="delete-modal-body">
+                <div class="delete-item-name">
+                    <span id="deleteItemName"></span>
+                    <span id="deleteCountBadge" class="delete-count-badge"></span>
+                </div>
+                <p class="delete-warning" id="deleteWarningText">Esta acción no se puede deshacer.</p>
+                <div class="delete-modal-actions">
+                    <button type="button" class="btn-cancel-delete" onclick="closeDeleteModal()">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="button" id="confirmDeleteBtn" class="btn-confirm-delete" onclick="confirmDelete()">
+                        <i class="fas fa-trash-alt me-2"></i>Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Acciones Masivas -->
+    <div id="bulkActions" class="bulk-actions-bar">
+        <div class="bulk-actions-info">
+            <span class="count" id="selectedCount">0</span>
+            <span>elementos seleccionados</span>
+        </div>
+        <div class="bulk-actions-buttons">
+            <button type="button" class="bulk-btn bulk-btn-cancel" onclick="clearSelection()">
+                <i class="fas fa-times"></i>
+                Cancelar
+            </button>
+            <button type="button" class="bulk-btn bulk-btn-delete" id="bulkDeleteBtn">
+                <i class="fas fa-trash-alt"></i>
+                Eliminar seleccionados
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Función para limpiar la selección
+        function clearSelection() {
+            const checkboxes = document.querySelectorAll('.row-checkbox, .select-all-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+            const bulkActions = document.getElementById('bulkActions');
+            if (bulkActions) bulkActions.classList.remove('show');
+        }
+    </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

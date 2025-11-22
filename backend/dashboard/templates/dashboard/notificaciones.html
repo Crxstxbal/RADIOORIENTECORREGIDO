@@ -261,12 +261,10 @@ select::-webkit-scrollbar-thumb:hover {
                     </a>
                     {% endif %}
 
-                    <form method="post" action="{% url 'eliminar_notificacion' notificacion.id %}" style="display: inline;">
-                        {% csrf_token %}
-                        <button type="submit" style="width: 32px; height: 32px; border: none; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; color: white; background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);" title="Eliminar" onclick="return confirm('¿Eliminar esta notificación?')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
+                    <button type="button" style="width: 32px; height: 32px; border: none; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; color: white; background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);" title="Eliminar"
+                            onclick="deleteItem('{% url 'eliminar_notificacion' notificacion.id %}', '{{ notificacion.titulo|escapejs }}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
             </div>
             {% endfor %}
