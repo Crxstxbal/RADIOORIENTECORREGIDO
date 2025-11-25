@@ -426,7 +426,7 @@ export default function PublicidadCarousel({
     'bottom': {
       ...baseContainerStyle,
       display: 'flex',
-      margin: '20px auto 40px',
+      margin: '10px auto 20px',
       padding: '0',
       width: '100%',
       maxWidth: '1200px',

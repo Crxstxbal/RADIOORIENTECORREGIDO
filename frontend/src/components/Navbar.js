@@ -22,7 +22,6 @@ const Navbar = () => {
     { name: "Programación", path: "/programacion" },
     { name: "Artículos", path: "/articulos" },
     { name: "En Vivo", path: "/en-vivo", icon: <Wifi size={16} /> },
-    { name: "TV en vivo", path: "/tv", icon: <Radio size={16} /> },
     { name: "Contacto", path: "/contacto" },
     { name: "Suscripción", path: "/suscripcion" }
   ];
@@ -196,6 +195,10 @@ const Navbar = () => {
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
+            <Link to="/tv" className="nav-tv-btn">
+              <Radio size={16} />
+              <span>TV en vivo</span>
+            </Link>
           </div>
 
           {/* Botón de menú en dispositivo mobil */}

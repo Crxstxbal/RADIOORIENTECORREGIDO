@@ -902,3 +902,25 @@ html.dark .btn-logout:hover {
   vertical-align: middle;
   margin-right: 6px;
 }
+
+.nav-tv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(220, 38, 38, 0.14);
+  border: 1px solid rgba(220, 38, 38, 0.5);
+  color: var(--color-white);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.nav-tv-btn:hover {
+  background: rgba(220, 38, 38, 0.24);
+  border-color: #f87171;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}

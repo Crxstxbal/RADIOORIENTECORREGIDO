@@ -380,7 +380,7 @@ const PublicidadPage = () => {
 
         {/* Barra de selección y total */}
         {selectedIds.length > 0 && (
-          <div style={{ position: 'sticky', bottom: 16, marginTop: 24, background: '#1f1f1f', border: '1px solid #333', padding: 12, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ position: 'sticky', bottom: 16, marginTop: 24, background: '#1f1f1f', border: '1px solid #333', padding: 12, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#ffffff' }}>
             <div>
               <strong>{selectedIds.length}</strong> espacios seleccionados · Total: <strong>{CLP.format(totalCLP)}</strong>
             </div>
@@ -393,7 +393,20 @@ const PublicidadPage = () => {
         <div className={styles.locationMap}>
           <h2>Mapa de Ubicaciones Publicitarias</h2>
           <div className={styles.websitePreview}>
-            <div className={styles.locationHeader}>Radio Oriente FM - Navbar</div>
+            <div className={styles.navbarMock}>
+              <div className={styles.navbarMockLogo}>Radio Oriente FM</div>
+              <div className={styles.navbarMockCenter}>
+                <span className={styles.navbarMockLink}>Inicio</span>
+                <span className={styles.navbarMockLink}>Programación</span>
+                <span className={styles.navbarMockLink}>Artículos</span>
+                <span className={styles.navbarMockLink}>En Vivo</span>
+                <span className={styles.navbarMockLink}>Contacto</span>
+              </div>
+              <div className={styles.navbarMockRight}>
+                <span className={styles.navbarMockButton}>Iniciar Sesión</span>
+                <span className={styles.navbarMockPill}>TV en vivo</span>
+              </div>
+            </div>
             <div className={styles.locationSidebar}>
               <div className={`${styles.locationSpot} ${styles.sidebarSpot}`}>
                 Panel<br />Lateral<br />Izquierdo<br />(300x600)<br /><br />$25.000/mes
