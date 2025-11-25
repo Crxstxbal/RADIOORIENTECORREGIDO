@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Menu, X, Radio, User, Sun, Moon, LayoutDashboard, Bell, Wifi } from "lucide-react";
@@ -28,12 +28,12 @@ const Navbar = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     setIsOpen(false);
-  };
+  }, [logout]);
 
-  // Fetch notifications count (if logged in)
+  // fetch de notificaciones
   useEffect(() => {
     let intervalId;
     const token = localStorage.getItem('token');
@@ -48,15 +48,16 @@ const Navbar = () => {
         });
         setNotifCount(resp.data?.no_leidas ?? 0);
       } catch (e) {
-        // Silently ignore
+
       }
     };
     fetchCount();
-    intervalId = setInterval(fetchCount, 30000);
+    //Se reduce el polling de 30s a 60s para rendimiento
+    intervalId = setInterval(fetchCount, 60000);
     return () => intervalId && clearInterval(intervalId);
   }, [isAuthenticated]);
 
-  const openNotifications = async () => {
+  const openNotifications = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
     setLoadingNotifs(true);
@@ -70,15 +71,15 @@ const Navbar = () => {
     } finally {
       setLoadingNotifs(false);
     }
-  };
+  }, []);
 
-  const toggleNotifications = async () => {
+  const toggleNotifications = useCallback(async () => {
     const next = !notifsOpen;
     setNotifsOpen(next);
     if (next) await openNotifications();
-  };
+  }, [notifsOpen, openNotifications]);
 
-  const markAllRead = async () => {
+  const markAllRead = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
@@ -88,13 +89,13 @@ const Navbar = () => {
       setNotifCount(0);
       setNotifs([]);
     } catch (e) {}
-  };
+  }, []);
 
   return (
     <nav className="navbar">
       <div className="container">
         <div className="nav-content">
-          {/* Logo */}
+          {/* logo */}
           <Link to="/" className="nav-logo">
             <img
               src="/images/logo.png"
@@ -104,7 +105,7 @@ const Navbar = () => {
             <span className="logo-text">Radio Oriente FM</span>
           </Link>
 
-          {/* Links desktop */}
+          {/* links */}
           <div className="nav-links desktop">
             {navItems.map((item) => (
               <Link
@@ -116,21 +117,9 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
-            {/* Link Dashboard solo para administradores */}
-            {isAdmin && (
-              <a
-                href={dashboardUrl}
-                className="nav-link dashboard-link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <LayoutDashboard size={18} />
-                Dashboard
-              </a>
-            )}
           </div>
 
-          {/* Sección autenticación desktop */}
+          {/* sección autenticación */}
           <div className="nav-auth desktop">
             {isAuthenticated ? (
               <div className="user-menu">
@@ -201,7 +190,7 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Botón de menú en dispositivo mobil */}
+          {/* boton de menu en dispositivo mobil */}
           <button
             className="mobile-menu-btn"
             onClick={() => setIsOpen(!isOpen)}
@@ -210,7 +199,22 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Navegación mobile */}
+        {/* Botón flotante de Dashboard solo para administradores */}
+        {isAdmin && (
+          <div className="dashboard-floating">
+            <a
+              href={dashboardUrl}
+              className="nav-link dashboard-link dashboard-floating-btn"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <LayoutDashboard size={18} />
+              Dashboard
+            </a>
+          </div>
+        )}
+
+        {/* navegacion mobile */}
         {isOpen && (
           <div className="mobile-nav">
             {navItems.map((item) => (
@@ -246,7 +250,7 @@ const Navbar = () => {
                   onClick={async (e) => {
                     e.stopPropagation();
                     await toggleNotifications();
-                    // NO cerramos el menú para que se vean las notificaciones
+                    //aqui no se cierra las notificaciones
                   }}
                 >
                   <Bell size={20} />
@@ -256,7 +260,7 @@ const Navbar = () => {
                   <span>Notificaciones {notifCount > 0 && `(${notifCount})`}</span>
                 </button>
 
-                {/* Panel de notificaciones mobile */}
+                {/* panel de notificaciones mobile */}
                 {notifsOpen && (
                   <div className="notifications-dropdown-mobile">
                     <div className="notifications-header">

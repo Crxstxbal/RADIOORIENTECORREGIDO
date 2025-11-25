@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { BookOpen, Calendar, User, Eye, Tag, Filter, ArrowRight } from 'lucide-react';
 import api from '../utils/api';
@@ -121,15 +121,15 @@ const Articles = () => {
     loadArticleBySlug();
   }, [slug]);
 
-  const formatDate = (dateString) => {
+  const formatDate = useCallback((dateString) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
-  };
+  }, []);
 
-  const handleArticleClick = async (article) => {
+  const handleArticleClick = useCallback(async (article) => {
     // Hacer petición al backend para obtener el detalle (esto incrementa las vistas)
     try {
       const response = await api.get(`/api/articulos/api/articulos/${article.slug}/`);
@@ -141,13 +141,13 @@ const Articles = () => {
       // Si falla, usar los datos que ya tenemos
       setSelectedArticle(article);
     }
-  };
+  }, [navigate]);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setSelectedArticle(null);
     // Volver a la lista de artículos en la URL
     navigate('/articulos', { replace: true });
-  };
+  }, [navigate]);
 
   // Función auxiliar para obtener la imagen thumbnail (para tarjetas)
   const getArticleThumbnail = (article) => {
@@ -177,42 +177,45 @@ const Articles = () => {
     );
   };
 
-  // Filtrar artículos por búsqueda local (categoría se filtra en la API)
-  const filteredArticles = articles.filter(article => {
-    const matchesSearch = !searchTerm ||
-      article.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (article.contenido && article.contenido.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesSearch;
-  });
+  // Memoizar artículos filtrados
+  const filteredArticles = useMemo(() => {
+    return articles.filter(article => {
+      const matchesSearch = !searchTerm ||
+        article.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (article.contenido && article.contenido.toLowerCase().includes(searchTerm.toLowerCase()));
+      return matchesSearch;
+    });
+  }, [articles, searchTerm]);
 
-  // Artículos destacados (mostrados aparte, sin paginación)
-  const featuredArticles = filteredArticles.filter(article => article.destacado).slice(0, 3);
+  // Memoizar artículos destacados y regulares
+  const { featuredArticles, regularArticles } = useMemo(() => {
+    const featured = filteredArticles.filter(article => article.destacado).slice(0, 3);
+    const regular = filteredArticles.filter(article => !article.destacado);
+    return { featuredArticles: featured, regularArticles: regular };
+  }, [filteredArticles]);
   
-  // Artículos regulares con paginación
-  const regularArticles = filteredArticles.filter(article => !article.destacado);
-  
-  // Calcular artículos a mostrar en la página actual
-  const indexOfLastArticle = currentPage * pageSize;
-  const indexOfFirstArticle = indexOfLastArticle - pageSize;
-  const currentArticles = regularArticles.slice(0, pageSize); // Solo mostramos los artículos de la página actual
+  // Memoizar artículos de la página actual
+  const currentArticles = useMemo(() => {
+    return regularArticles.slice(0, pageSize);
+  }, [regularArticles, pageSize]);
   
   // Mostrar mensaje de carga o sin resultados
   const showLoading = loading && articles.length === 0;
   const showNoResults = !loading && regularArticles.length === 0 && !searchTerm;
   const showNoSearchResults = !loading && regularArticles.length === 0 && searchTerm;
 
-  // Handlers de paginación
-  const handlePageChange = (newPage) => {
+  // Memoizar handler de paginación
+  const handlePageChange = useCallback((newPage) => {
     setCurrentPage(newPage);
     // Scroll suave hacia arriba
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
-  // Resetear a página 1 cuando cambia la categoría
-  const handleCategoryChange = (e) => {
+  // Memoizar handler de cambio de categoría
+  const handleCategoryChange = useCallback((e) => {
     setSelectedCategory(e.target.value);
     setCurrentPage(1);
-  };
+  }, []);
 
   return (
     <div className="news-page">

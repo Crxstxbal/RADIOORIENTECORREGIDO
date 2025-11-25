@@ -50,7 +50,7 @@ const ResetearContrasena = () => {
       toast.success(response.data.message || 'Contraseña actualizada exitosamente');
       setSuccess(true);
 
-      // Redirigir al login después de 3 segundos
+      //se redirige al login después de 3 segundos
       setTimeout(() => {
         navigate('/iniciar-sesion');
       }, 3000);
@@ -96,7 +96,7 @@ const ResetearContrasena = () => {
   return (
     <div className="auth-page">
       <div className="container">
-        <div className="auth-container">
+        <div className="auth-container auth-container-center">
           <div className="auth-card">
             <div className="auth-header">
               <Lock className="auth-icon" />

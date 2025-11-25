@@ -15,9 +15,14 @@ pip install dj-database-url
 pip install django-cors-headers
 pip install detoxify
 pip install pillow
+python -m pip install "channels>=4,<5" "daphne>=4,<5"
 
 #nuevo para filtro ML: 
 pip install detoxify
+
+#para el servirdor con websocket
+python -m daphne -b 0.0.0.0 -p 8000 radio_oriente.asgi:application
+
 
 #Frontend
 npm install

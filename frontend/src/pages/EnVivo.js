@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Play, Users, Wifi, WifiOff, ExternalLink, Youtube, Facebook } from 'lucide-react';
 import api from '../utils/api';
 import './Pages.css';
@@ -36,70 +36,61 @@ const EnVivo = () => {
     fetchLiveStreamData();
   }, []);
 
-  const normalizeStreamUrl = (raw) => {
+  const normalizeStreamUrl = useCallback((raw) => {
     if (!raw) return null;
 
     const url = String(raw).trim();
 
-    // Si el usuario pegó un iframe completo, extraer el src
     if (/<iframe/i.test(url)) {
       const match = url.match(/src\s*=\s*"([^"]+)"/i) || url.match(/src\s*=\s*'([^']+)'/i);
       if (match && match[1]) return normalizeStreamUrl(match[1]);
     }
 
-    // Normalizar YouTube
+    // se normaliza yotube
     if (/youtube\.com|youtu\.be/i.test(url)) {
       let videoId = '';
-      // watch?v=
       if (/watch\?v=/.test(url)) videoId = new URL(url).searchParams.get('v') || '';
-      // youtu.be/<id>
       if (!videoId && /youtu\.be\//.test(url)) videoId = url.split('youtu.be/')[1].split(/[?&#]/)[0];
-      // /embed/<id>
       if (!videoId && /\/embed\//.test(url)) videoId = url.split('/embed/')[1].split(/[?&#]/)[0];
-      // /live/<id>
       if (!videoId && /\/live\//.test(url)) videoId = url.split('/live/')[1].split(/[?&#]/)[0];
       if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`;
-      // Si no se pudo extraer ID, intentar retornar como embed si ya lo es
+      // por si no se puede extraer ID, intentar como embed
       if (/\/embed\//.test(url)) return `${url}${url.includes('?') ? '&' : '?'}autoplay=1&mute=1`;
     }
 
-    // Normalizar Facebook
+    //se normaliza Facebook
     if (/facebook\.com/i.test(url)) {
-      // /videos/<id>
       if (/\/videos\//.test(url)) {
         const after = url.split('/videos/')[1];
         const id = after.split(/[/?&#]/)[0];
         if (id) return `https://www.facebook.com/plugins/video.php?href=https://www.facebook.com/video.php?v=${id}&show_text=false&autoplay=1`;
       }
-      // watch/?v=<id> o watch/live/?v=<id>
       try {
         const u = new URL(url, window.location.origin);
         const id = u.searchParams.get('v');
         if (id) return `https://www.facebook.com/plugins/video.php?href=https://www.facebook.com/video.php?v=${id}&show_text=false&autoplay=1`;
       } catch {}
-      // Fallback: usar plugin con href crudo
       return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=1`;
     }
 
-    // Otras URLs: devolver tal cual
     return url;
-  };
+  }, []);
 
-  const getEmbedUrl = () => {
+  const getEmbedUrl = useMemo(() => {
     if (!liveStream?.url) return null;
     return normalizeStreamUrl(liveStream.url);
-  };
+  }, [liveStream?.url, normalizeStreamUrl]);
 
-  const isYouTubeUrl = (url) => {
+  const isYouTubeUrl = useCallback((url) => {
     return url && /youtube\.com|youtu\.be/i.test(url);
-  };
+  }, []);
 
-  const isFacebookUrl = (url) => {
+  const isFacebookUrl = useCallback((url) => {
     return url && /facebook\.com/i.test(url);
-  };
+  }, []);
 
-  // Utilidad: obtener el ID de YouTube desde diferentes formatos
-  const getYouTubeId = (url) => {
+  // utilidad para obtener ID de youtube
+  const getYouTubeId = useCallback((url) => {
     if (!url) return "";
     try {
       if (/watch\?v=/.test(url)) return new URL(url).searchParams.get('v') || "";
@@ -108,9 +99,10 @@ const EnVivo = () => {
       if (/\/live\//.test(url)) return url.split('/live/')[1].split(/[?&#]/)[0];
     } catch {}
     return "";
-  };
+  }, []);
 
-  //Para cargar el título del video con oEmbed de YouTube. Facebook requiere token, así que se omite por el momento.
+  //para cargar el titulo del video con oEmbed de youtube
+  //Facebook requiere token, así que se omite por el momento.
   useEffect(() => {
     const loadTitle = async () => {
       if (!liveStream?.url) return;
@@ -191,7 +183,7 @@ const EnVivo = () => {
     );
   }
 
-  const embedUrl = getEmbedUrl();
+  const embedUrl = getEmbedUrl;
 
   return (
     <div className="live-page">
@@ -209,7 +201,7 @@ const EnVivo = () => {
 
         <div className="live-content">
 
-        {/* Contenedor principal del video */}
+        {/* contenedor principal del video */}
         <div className="live-video-section">
           <div className="video-container-modern">
             {embedUrl ? (
@@ -252,7 +244,7 @@ const EnVivo = () => {
           </div>
         </div>
 
-        {/* Información del stream modernizada */}
+        {/* información del stream */}
         <div className="stream-info-modern">
           <div className="stream-main-info">
             <div className="stream-title-section">

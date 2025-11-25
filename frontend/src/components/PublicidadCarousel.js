@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import ColorThief from 'colorthief';
+import './PublicidadCarousel.css';
 
 function parseDims(dimStr) {
   if (!dimStr) return null;
@@ -100,17 +101,12 @@ export default function PublicidadCarousel({
     };
   }, [position, reopenHours, dismissed]);
 
-  //Log de debug cuando se monta el componente
+  // Logs de debug solo en desarrollo
   useEffect(() => {
-    if (debug) {
-      console.log(`[PublicidadCarousel] Mounted with position=${position}, dimensiones=${dimensiones}, query=${query}`);
+    if (debug && import.meta.env.DEV) {
+      console.log(`[PublicidadCarousel] Mounted with position=${position}`);
     }
-    return () => {
-      if (debug) {
-        console.log(`[PublicidadCarousel] Unmounted (was at position=${position})`);
-      }
-    };
-  }, [position, dimensiones, query, debug]);
+  }, [position, debug]);
 
   //Obtener datos de publicidad
   useEffect(() => {
@@ -118,8 +114,9 @@ export default function PublicidadCarousel({
     setIsLoading(true);
     setError(null);
 
-    if (debug) {
-      console.log(`[PublicidadCarousel] Fetching ads for position=${position}, dimensiones=${dimensiones}, query=${query}`);
+    // Debug solo en desarrollo
+    if (debug && import.meta.env.DEV) {
+      console.log(`[PublicidadCarousel] Fetching ads for position=${position}`);
     }
 
     async function load() {
@@ -131,7 +128,8 @@ export default function PublicidadCarousel({
         
         const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
         const url = `${base}/dashboard/api/publicidad/activas/?${params.toString()}`;
-        if (debug) {
+        // Debug solo en desarrollo
+        if (debug && import.meta.env.DEV) {
           console.log(`[PublicidadCarousel] API URL: ${url}`);
         }
 
@@ -140,14 +138,11 @@ export default function PublicidadCarousel({
         const data = await resp.json();
         const endTime = performance.now();
 
-        if (debug) {
+        // Debug solo en desarrollo
+        if (debug && import.meta.env.DEV) {
           console.log(`[PublicidadCarousel] API response (${Math.round(endTime - startTime)}ms):`, {
             status: resp.status,
-            data: {
-              success: data.success,
-              itemsCount: data.items?.length || 0,
-              itemsSample: data.items?.slice(0, 2)
-            }
+            itemsCount: data.items?.length || 0
           });
         }
 
@@ -155,8 +150,8 @@ export default function PublicidadCarousel({
           if (data?.success && Array.isArray(data.items)) {
             setItems(data.items);
             setIndex(0);
-            if (data.items.length === 0 && debug) {
-              console.warn(`[PublicidadCarousel] No ads found for position=${position}, dimensiones=${dimensiones}, query=${query}`);
+            if (data.items.length === 0 && debug && import.meta.env.DEV) {
+              console.warn(`[PublicidadCarousel] No ads found for position=${position}`);
             }
           } else {
             setError(data?.message || 'Error al cargar publicidad');
@@ -181,7 +176,7 @@ export default function PublicidadCarousel({
     };
   }, [dimensiones, query, position, debug]);
 
-  const throttle = (func, limit) => {
+  const throttle = useCallback((func, limit) => {
     let inThrottle;
     return function() {
       const args = arguments;
@@ -192,7 +187,7 @@ export default function PublicidadCarousel({
         setTimeout(() => inThrottle = false, limit);
       }
     };
-  };
+  }, []);
 
   const impressedOnceRef = useRef(new Set());
 
@@ -203,9 +198,9 @@ export default function PublicidadCarousel({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
-      if (debug) console.log('[PublicidadCarousel] Tracked impression', campaignId);
+      if (debug && import.meta.env.DEV) console.log('[PublicidadCarousel] Tracked impression', campaignId);
     } catch (e) {
-      if (debug) console.warn('[PublicidadCarousel] Error tracking impression', e);
+      if (debug && import.meta.env.DEV) console.warn('[PublicidadCarousel] Error tracking impression', e);
     }
   };
 
@@ -218,7 +213,7 @@ export default function PublicidadCarousel({
       });
       return await res.json().catch(() => ({}));
     } catch (e) {
-      if (debug) console.warn('[PublicidadCarousel] Error tracking click', e);
+      if (debug && import.meta.env.DEV) console.warn('[PublicidadCarousel] Error tracking click', e);
       return {};
     }
   };
@@ -244,7 +239,6 @@ export default function PublicidadCarousel({
       }
       
       if (!articlesSection) {
-        if (debug) console.log('No se encontró la sección de Últimos Artículos');
         return;
       }
       
@@ -289,14 +283,12 @@ export default function PublicidadCarousel({
     };
   }, [items, autoPlayMs, items.length]); // Added items.length to dependencies
 
-  //Log de cambios de diapositiva
+  // Log de cambios solo en desarrollo
   useEffect(() => {
-    if (debug && items.length > 0) {
-      console.log(`[PublicidadCarousel] Changed to slide ${index + 1}/${items.length}`, {
-        currentItem: items[index]
-      });
+    if (debug && import.meta.env.DEV && items.length > 0) {
+      console.log(`[PublicidadCarousel] Slide ${index + 1}/${items.length}`);
     }
-  }, [index, items, debug]);
+  }, [index, items.length, debug]);
 
   // Tracking de impresiones: cada vez que cambia el slide activo
   useEffect(() => {
@@ -307,8 +299,8 @@ export default function PublicidadCarousel({
     trackImpression(item.id);
   }, [index, items]);
 
-  //Calcular dimensiones responsivas manteniendo la proporción
-  const calculateDimensions = (width, height, maxWidth = '100%') => {
+  // Memoizar cálculo de dimensiones
+  const calculateDimensions = useCallback((width, height, maxWidth = '100%') => {
     if (!width || !height) return { width: '100%', height: 'auto' };
     
     const aspectRatio = height / width;
@@ -324,7 +316,7 @@ export default function PublicidadCarousel({
       maxWidth: '100%',
       margin: '0 auto'
     };
-  };
+  }, []);
 
   //Contenido base con estilo
   const baseContainerStyle = {
@@ -375,16 +367,6 @@ export default function PublicidadCarousel({
       height: 'auto',
       aspectRatio: '16/9',
       overflow: 'visible',
-      '@media (max-width: 768px)': {
-        width: '96%',
-        padding: '0',
-        maxWidth: '100%',
-      },
-      '@media (min-width: 1200px)': {
-        width: '85%',
-        maxWidth: '1000px',
-        padding: '0',
-      }
     },
     'left-fixed': {
       ...baseContainerStyle,
@@ -438,15 +420,6 @@ export default function PublicidadCarousel({
       borderRadius: '0',
       border: 'none',
       overflow: 'hidden',
-      '@media (max-width: 1240px)': {
-        width: '95%',
-        height: 'auto',
-        aspectRatio: '1200/200',
-        maxHeight: '200px'
-      },
-      '@media (max-width: 768px)': {
-        display: 'none' // Ocultar en móviles
-      }
     }
   };
 
@@ -772,14 +745,14 @@ export default function PublicidadCarousel({
           style={panelStyle}
         >
           <div 
-            className={`pub-carousel pos-${position}`} 
-            style={{
-              ...containerStyle,
-              position: 'relative',
-              overflow: 'visible',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
-            }}
-            title={currentItem?.ubicacion?.nombre || 'Publicidad'}
+          className={`pub-carousel pos-${position} ${position === 'top' ? 'publicidad-container-top' : position === 'bottom' ? 'publicidad-container-bottom' : ''}`} 
+          style={{
+            ...containerStyle,
+            position: 'relative',
+            overflow: 'visible',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+          }} 
+          title={currentItem?.ubicacion?.nombre || 'Publicidad'}
           >
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDismiss(); }}
@@ -837,7 +810,7 @@ export default function PublicidadCarousel({
         style={panelStyle}
       >
         <div 
-          className={`pub-carousel pos-${position}`} 
+          className={`pub-carousel pos-${position} ${position === 'top' ? 'publicidad-container-top' : position === 'bottom' ? 'publicidad-container-bottom' : ''}`} 
           style={{
             ...containerStyle,
             overflow: 'visible'
@@ -890,25 +863,11 @@ export default function PublicidadCarousel({
     if (position === 'bottom') {
       return (
         <div 
-          className={`pub-carousel pos-${position}`} 
+          className="publicidad-banner-bottom"
           style={{
-            ...containerStyle,
-            position: 'relative',
             overflow: 'visible',
             margin: '20px auto 40px',
-            padding: '0',
-            width: '100%',
-            maxWidth: '1200px',
-            height: '200px',
-            '@media (max-width: 1240px)': {
-              width: '95%',
-              height: 'auto',
-              aspectRatio: '1200/200',
-              maxHeight: '200px'
-            },
-            '@media (max-width: 768px)': {
-              display: 'none'
-            }
+            padding: '0'
           }}
           title={currentItem?.ubicacion?.nombre || 'Publicidad'}
         >
@@ -960,7 +919,7 @@ export default function PublicidadCarousel({
     // Default for other positions (inline, etc.)
     return (
       <div 
-        className={`pub-carousel pos-${position}`} 
+        className={`pub-carousel pos-${position} ${position === 'top' ? 'publicidad-container-top' : position === 'bottom' ? 'publicidad-container-bottom' : ''}`} 
         style={containerStyle}
         title={currentItem?.ubicacion?.nombre || 'Publicidad'}
       >

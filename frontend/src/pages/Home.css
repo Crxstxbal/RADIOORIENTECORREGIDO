@@ -880,3 +880,79 @@ html.dark .home-page .news-meta .meta-item svg {
 html.dark .home-page .loading {
   color: var(--text-secondary);
 }
+
+/* Animaciones de partículas y radio */
+@keyframes radio-pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-cursor {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(0); opacity: 0.7; }
+  100% { transform: translateY(-100vh); opacity: 0; }
+}
+
+@keyframes floatDown {
+  0% { transform: translateY(0); opacity: 0.7; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes floatLeft {
+  0% { transform: translateX(0); opacity: 0.7; }
+  100% { transform: translateX(-100vw); opacity: 0; }
+}
+
+@keyframes floatRight {
+  0% { transform: translateX(0); opacity: 0.7; }
+  100% { transform: translateX(100vw); opacity: 0; }
+}
+
+@keyframes floatDiagonal1 {
+  0% { transform: translate(0, 0); opacity: 0.7; }
+  100% { transform: translate(100vw, -100vh); opacity: 0; }
+}
+
+@keyframes floatDiagonal2 {
+  0% { transform: translate(0, 0); opacity: 0.7; }
+  100% { transform: translate(-100vw, -100vh); opacity: 0; }
+}
+
+@keyframes floatDiagonal3 {
+  0% { transform: translate(0, 0); opacity: 0.7; }
+  100% { transform: translate(100vw, 100vh); opacity: 0; }
+}
+
+@keyframes floatDiagonal4 {
+  0% { transform: translate(0, 0); opacity: 0.7; }
+  100% { transform: translate(-100vw, 100vh); opacity: 0; }
+}
+
+.particle-floatUp { animation: floatUp 20s linear infinite !important; }
+.particle-floatDown { animation: floatDown 20s linear infinite !important; }
+.particle-floatLeft { animation: floatLeft 20s linear infinite !important; }
+.particle-floatRight { animation: floatRight 20s linear infinite !important; }
+.particle-floatDiagonal1 { animation: floatDiagonal1 25s linear infinite !important; }
+.particle-floatDiagonal2 { animation: floatDiagonal2 25s linear infinite !important; }
+.particle-floatDiagonal3 { animation: floatDiagonal3 25s linear infinite !important; }
+.particle-floatDiagonal4 { animation: floatDiagonal4 25s linear infinite !important; }

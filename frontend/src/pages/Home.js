@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Radio, Users, Music, Newspaper, Calendar, User, Tag, ArrowRight } from "lucide-react";
 import api from "../utils/api";
@@ -81,6 +81,9 @@ const calculateYearsSince = (startDate) => {
   return years;
 };
 
+// Memoizar años calculados
+const yearsOnAir = calculateYearsSince(new Date(2011, 8, 21));
+
 const Home = () => {
   const navigate = useNavigate();
   const [featuredArticles, setFeaturedArticles] = useState([]);
@@ -132,10 +135,9 @@ const Home = () => {
     fetchData();
   }, []);
 
-  const handleArticleClick = (articleId) => {
+  const handleArticleClick = useCallback((articleId) => {
     navigate('/articulos', { state: { selectedArticleId: articleId } });
-  };
-
+  }, [navigate]);
 
   const particleElements = useMemo(() => {
     const colors = [
@@ -146,7 +148,7 @@ const Home = () => {
       '#e53935'
     ];
 
-    return [...Array(25)].map((_, i) => {
+    return [...Array(15)].map((_, i) => {
       const randomX = Math.random() * 100;
       const randomY = Math.random() * 100;
       const randomDelay = Math.random() * 15;
@@ -188,84 +190,6 @@ const Home = () => {
 
   return (
     <>
-      <style>{`
-        @keyframes radio-pulse {
-          0% {
-            transform: scale(0.8);
-            opacity: 1;
-          }
-          100% {
-            transform: scale(2.8);
-            opacity: 0;
-          }
-        }
-
-        @keyframes pulse-cursor {
-          0% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.3;
-            transform: scale(0.8);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        @keyframes floatUp {
-          0% { transform: translateY(0); opacity: 0.7; }
-          100% { transform: translateY(-100vh); opacity: 0; }
-        }
-
-        @keyframes floatDown {
-          0% { transform: translateY(0); opacity: 0.7; }
-          100% { transform: translateY(100vh); opacity: 0; }
-        }
-
-        @keyframes floatLeft {
-          0% { transform: translateX(0); opacity: 0.7; }
-          100% { transform: translateX(-100vw); opacity: 0; }
-        }
-
-        @keyframes floatRight {
-          0% { transform: translateX(0); opacity: 0.7; }
-          100% { transform: translateX(100vw); opacity: 0; }
-        }
-
-        @keyframes floatDiagonal1 {
-          0% { transform: translate(0, 0); opacity: 0.7; }
-          100% { transform: translate(100vw, -100vh); opacity: 0; }
-        }
-
-        @keyframes floatDiagonal2 {
-          0% { transform: translate(0, 0); opacity: 0.7; }
-          100% { transform: translate(-100vw, -100vh); opacity: 0; }
-        }
-
-        @keyframes floatDiagonal3 {
-          0% { transform: translate(0, 0); opacity: 0.7; }
-          100% { transform: translate(100vw, 100vh); opacity: 0; }
-        }
-
-        @keyframes floatDiagonal4 {
-          0% { transform: translate(0, 0); opacity: 0.7; }
-          100% { transform: translate(-100vw, 100vh); opacity: 0; }
-        }
-
-        .particle-floatUp { animation: floatUp 20s linear infinite !important; }
-        .particle-floatDown { animation: floatDown 20s linear infinite !important; }
-        .particle-floatLeft { animation: floatLeft 20s linear infinite !important; }
-        .particle-floatRight { animation: floatRight 20s linear infinite !important; }
-        .particle-floatDiagonal1 { animation: floatDiagonal1 25s linear infinite !important; }
-        .particle-floatDiagonal2 { animation: floatDiagonal2 25s linear infinite !important; }
-        .particle-floatDiagonal3 { animation: floatDiagonal3 25s linear infinite !important; }
-        .particle-floatDiagonal4 { animation: floatDiagonal4 25s linear infinite !important; }
-
-      `}</style>
-
       <div className="home-page">
         {/* Hero Section */}
         <section className="hero">
@@ -344,7 +268,7 @@ const Home = () => {
               </div>
               <CounterCard
                 icon={<Radio className="stat-icon" />}
-                endValue={calculateYearsSince(new Date(2011, 8, 21))}
+                endValue={yearsOnAir}
                 label="Años al Aire"
                 duration={2000}
               />

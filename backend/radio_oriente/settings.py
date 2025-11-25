@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    # 'channels',  # Comentado temporalmente
+    'channels',
     
     # Apps normalizadas
     'apps.ubicacion',
@@ -73,7 +73,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'radio_oriente.wsgi.application'
-# ASGI_APPLICATION = 'radio_oriente.asgi.application'  # Comentado temporalmente
+ASGI_APPLICATION = 'radio_oriente.asgi.application'
 
 # Database configuration
 USE_SQLITE = config('USE_SQLITE', default=True, cast=bool)
@@ -200,15 +200,12 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 
-# Channels configuration (comentado temporalmente)
-# CHANNEL_LAYERS = {
-#     'default': {
-#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
-#         'CONFIG': {
-#             "hosts": [('127.0.0.1', 6379)],
-#         },
-#     },
-# }
+# Channels configuration (desarrollo: capa en memoria)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 # Custom user model
 AUTH_USER_MODEL = 'users.User'

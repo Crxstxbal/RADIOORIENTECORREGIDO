@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Clock, User, Calendar } from 'lucide-react';
 import api from '../utils/api';
 import './Pages.css';
@@ -35,7 +35,7 @@ const Programming = () => {
     fetchData();
   }, []);
 
-  const groupProgramsByDay = () => {
+  const groupProgramsByDay = useMemo(() => {
     const grouped = {};
     daysOfWeek.forEach(day => {
       grouped[day.key] = [];
@@ -67,22 +67,24 @@ const Programming = () => {
     });
     
     return grouped;
-  };
+  }, [programs]);
 
-  const formatTime = (time) => {
+  const formatTime = useCallback((time) => {
     if (!time) return '';
     return new Date(`2000-01-01T${time}`).toLocaleTimeString('es-ES', {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
+  }, []);
 
-  const groupedPrograms = groupProgramsByDay();
+  const groupedPrograms = groupProgramsByDay;
 
-  // Filtrar días para mostrar
-  const daysToShow = selectedDay !== null
-    ? daysOfWeek.filter(day => day.key === selectedDay)
-    : daysOfWeek;
+  // Memoizar días filtrados
+  const daysToShow = useMemo(() => {
+    return selectedDay !== null
+      ? daysOfWeek.filter(day => day.key === selectedDay)
+      : daysOfWeek;
+  }, [selectedDay]);
 
   return (
     <div className="programming-page">

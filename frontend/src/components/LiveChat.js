@@ -17,6 +17,7 @@ const LiveChat = () => {
   const { user, isAuthenticated } = useAuth();
   const messagesEndRef = useRef(null);
   const pollingIntervalRef = useRef(null);
+  const wsRef = useRef(null);
 
   // Detectar si el reproductor está colapsado
   useEffect(() => {
@@ -44,7 +45,6 @@ const LiveChat = () => {
       try {
         const response = await api.get('/api/chat/radio-status/');
         setIsRadioOnline(response.data.is_online);
-        setOnlineUsers(response.data.listeners_count || 0);
       } catch (error) {
         console.error('Error checking radio status:', error);
         setIsRadioOnline(false);
@@ -72,6 +72,60 @@ const LiveChat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // WebSocket para presencia en tiempo real (usuarios activos en la sala)
+  useEffect(() => {
+    try {
+      const rawBase = (import.meta.env.VITE_WS_URL || import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').toString();
+      const toWs = (u) => {
+        let s = u.trim();
+        if (!/^https?:\/\//i.test(s) && !/^wss?:\/\//i.test(s)) s = 'http://' + s;
+        s = s.replace(/^http:/i, 'ws:').replace(/^https:/i, 'wss:');
+        return s.replace(/\/$/, '') + '/ws/chat/radio-oriente/';
+      };
+      const wsUrl = toWs(rawBase);
+      
+      console.log('🔌 Conectando WebSocket a:', wsUrl);
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        console.log('✅ WebSocket conectado');
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('📨 Mensaje WebSocket recibido:', data);
+          
+          if (data && data.type === 'presence' && typeof data.users_online === 'number') {
+            console.log('👥 Actualizando usuarios conectados:', data.users_online);
+            setOnlineUsers(data.users_online);
+          }
+        } catch (error) {
+          console.error('❌ Error parseando mensaje WS:', error);
+        }
+      };
+
+      ws.onclose = (event) => {
+        console.log('🔌 WebSocket cerrado:', event.code, event.reason);
+        wsRef.current = null;
+      };
+
+      ws.onerror = (error) => {
+        console.error('❌ Error WebSocket:', error);
+      };
+
+      return () => {
+        try { 
+          console.log('🔌 Cerrando WebSocket');
+          ws.close(); 
+        } catch (_) {}
+      };
+    } catch (error) {
+      console.error('❌ Error creando WebSocket:', error);
+    }
+  }, []);
 
   const loadMessages = async () => {
     try {
@@ -239,7 +293,7 @@ const LiveChat = () => {
               {/* Online Users */}
               <div className="online-users">
                 <Users size={16} />
-                <span>{onlineUsers} oyentes conectados</span>
+                <span>{onlineUsers} usuarios conectados</span>
               </div>
 
               {/* Messages Area */}

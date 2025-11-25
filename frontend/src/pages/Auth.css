@@ -47,6 +47,11 @@
   margin: 0 auto;
 }
 
+.auth-container-center {
+  display: flex;
+  justify-content: center;
+}
+
 /* ============================================
    SECCIÓN DE BRANDING (Lado izquierdo)
    ============================================ */
@@ -304,18 +309,21 @@
   border-color: rgba(220, 38, 38, 0.3);
 }
 
-/* Input de contraseña con toggle */
-.password-input-modern {
+/* Input de contraseña con toggle (versiones modernas y básicas) */
+.password-input-modern,
+.password-input {
   position: relative;
   width: 100%;
 }
 
-.password-input-modern .form-input-auth {
+.password-input-modern .form-input-auth,
+.password-input .form-input {
   padding-right: 3.5rem;
   width: 100%;
 }
 
-.password-toggle-modern {
+.password-toggle-modern,
+.password-toggle {
   position: absolute;
   right: 0.75rem;
   top: 0;
@@ -326,8 +334,8 @@
   color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
   padding: 0.5rem;
-  border-radius: 8px;
-  transition: color 0.2s ease, background-color 0.2s ease;
+  border-radius: 999px;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.1s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -338,9 +346,11 @@
   width: 36px;
 }
 
-.password-toggle-modern:hover {
+.password-toggle-modern:hover,
+.password-toggle:hover {
   color: var(--color-red);
   background: rgba(220, 38, 38, 0.1);
+  transform: translateY(-1px);
 }
 
 /* Link de contraseña olvidada */
@@ -587,12 +597,14 @@ html:not(.dark) .form-input-auth:focus {
   box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
 }
 
-html:not(.dark) .password-toggle-modern {
+html:not(.dark) .password-toggle-modern,
+html:not(.dark) .password-toggle {
   background: var(--color-gray-100);
   color: var(--color-gray-600);
 }
 
-html:not(.dark) .password-toggle-modern:hover {
+html:not(.dark) .password-toggle-modern:hover,
+html:not(.dark) .password-toggle:hover {
   background: rgba(220, 38, 38, 0.1);
   color: var(--color-red);
 }
