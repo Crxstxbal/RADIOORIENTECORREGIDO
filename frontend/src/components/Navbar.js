@@ -22,6 +22,7 @@ const Navbar = () => {
     { name: "Programación", path: "/programacion" },
     { name: "Artículos", path: "/articulos" },
     { name: "En Vivo", path: "/en-vivo", icon: <Wifi size={16} /> },
+    { name: "TV en vivo", path: "/tv", icon: <Radio size={16} /> },
     { name: "Contacto", path: "/contacto" },
     { name: "Suscripción", path: "/suscripcion" }
   ];

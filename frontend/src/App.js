@@ -27,8 +27,9 @@ import Emergente from './components/Emergente';
 import Reproductor from './pages/reproductor';
 import PublicidadPage from './pages/PublicidadPage';
 import EnVivo from './pages/EnVivo';
+import Television from './pages/Television';
 
-// Layouts en español
+// Layouts
 import LayoutPrincipal from './layouts/LayoutPrincipal';
 import LayoutPantallaCompleta from './layouts/LayoutPantallaCompleta';
 
@@ -76,9 +77,10 @@ function App() {
               <Route path="/resetear-contrasena/:uid/:token" element={<ResetearContrasena />} />
               <Route path="/publicidad" element={<PublicidadPage />} />
               <Route path="/en-vivo" element={<EnVivo />} />
+              <Route path="/tv" element={<Television />} />
             </Route>
 
-            {/* Layout full screen solo para el reproductor */}
+            {/* Layout full screen solo para el reproductor de radio */}
             <Route element={<LayoutPantallaCompleta />}>
               <Route path="/reproductor" element={<Reproductor />} />
             </Route>
