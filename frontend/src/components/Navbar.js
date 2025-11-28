@@ -127,6 +127,17 @@ const Navbar = () => {
                   <User className="user-icon" size={18} />
                 </div>
                 <span className="user-name">{user.username}</span>
+                {isAdmin && (
+                  <a
+                    href={dashboardUrl}
+                    className="btn-dashboard-compact"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <LayoutDashboard size={14} />
+                    <span>Dashboard</span>
+                  </a>
+                )}
                 <button onClick={handleLogout} className="btn btn-logout">
                   Cerrar Sesión
                 </button>
@@ -198,21 +209,6 @@ const Navbar = () => {
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
-
-        {/* Botón flotante de Dashboard solo para administradores */}
-        {isAdmin && (
-          <div className="dashboard-floating">
-            <a
-              href={dashboardUrl}
-              className="nav-link dashboard-link dashboard-floating-btn"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <LayoutDashboard size={18} />
-              Dashboard
-            </a>
-          </div>
-        )}
 
         {/* navegacion mobile */}
         {isOpen && (

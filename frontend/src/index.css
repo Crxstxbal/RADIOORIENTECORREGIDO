@@ -37,6 +37,11 @@
   --input-border: #d1d5db;
 }
 
+html {
+  /* Previene el salto de la scrollbar al cargar/recargar */
+  overflow-y: scroll;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
