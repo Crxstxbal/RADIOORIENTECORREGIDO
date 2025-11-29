@@ -105,7 +105,7 @@ function PaginacionFusion({ currentPage, totalPages, totalItems, itemsPerPage, o
             align-items: center;
           }
           
-          /* Dark mode styles aligned with app */
+          /*dark mode estilos aligned with app*/
           [data-theme='dark'] .pf-info {
             color: #ffffff;
           }

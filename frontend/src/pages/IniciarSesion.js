@@ -32,11 +32,11 @@ const Login = () => {
       const result = await login(formData.email, formData.password);
 
       if (result.success) {
-        // Pequeño delay para que se vea el estado de loading
+        //pequeño delay para que se vea el estado de cargando
         setTimeout(() => {
           setShowSuccess(true);
 
-          // Esperar a que termine la animación antes de navegar
+          //esperar a que termine la animación antes de navegar
           setTimeout(() => {
             navigate('/');
           }, 1800);
@@ -53,7 +53,7 @@ const Login = () => {
 
   return (
     <div className="auth-page">
-      {/* Animated background particles */}
+      {/*animated background particles*/}
       <div className="auth-particles">
         {[...Array(15)].map((_, i) => (
           <motion.div
@@ -80,7 +80,7 @@ const Login = () => {
 
       <div className="container">
         <div className="auth-container">
-          {/* Left side - Branding */}
+          {/*left side - branding*/}
           <motion.div
             className="auth-branding"
             initial={{ opacity: 0, x: -50 }}
@@ -136,7 +136,7 @@ const Login = () => {
             </div>
           </motion.div>
 
-          {/* Right side - Login Form */}
+          {/*right side - login form*/}
           <motion.div
             className="auth-card"
             initial={{ opacity: 0, y: 50 }}

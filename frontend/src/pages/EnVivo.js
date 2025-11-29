@@ -46,7 +46,7 @@ const EnVivo = () => {
       if (match && match[1]) return normalizeStreamUrl(match[1]);
     }
 
-    // se normaliza yotube
+    //se normaliza yotube
     if (/youtube\.com|youtu\.be/i.test(url)) {
       let videoId = '';
       if (/watch\?v=/.test(url)) videoId = new URL(url).searchParams.get('v') || '';
@@ -54,11 +54,11 @@ const EnVivo = () => {
       if (!videoId && /\/embed\//.test(url)) videoId = url.split('/embed/')[1].split(/[?&#]/)[0];
       if (!videoId && /\/live\//.test(url)) videoId = url.split('/live/')[1].split(/[?&#]/)[0];
       if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`;
-      // por si no se puede extraer ID, intentar como embed
+      //por si no se puede extraer id, intentar como embed
       if (/\/embed\//.test(url)) return `${url}${url.includes('?') ? '&' : '?'}autoplay=1&mute=1`;
     }
 
-    //se normaliza Facebook
+    //se normaliza facebook
     if (/facebook\.com/i.test(url)) {
       if (/\/videos\//.test(url)) {
         const after = url.split('/videos/')[1];
@@ -89,7 +89,7 @@ const EnVivo = () => {
     return url && /facebook\.com/i.test(url);
   }, []);
 
-  // utilidad para obtener ID de youtube
+  //utilidad para obtener id de youtube
   const getYouTubeId = useCallback((url) => {
     if (!url) return "";
     try {
@@ -101,8 +101,8 @@ const EnVivo = () => {
     return "";
   }, []);
 
-  //para cargar el titulo del video con oEmbed de youtube
-  //Facebook requiere token, así que se omite por el momento.
+  //para cargar el titulo del video con oembed de youtube
+  //facebook requiere token, así que se omite por el momento
   useEffect(() => {
     const loadTitle = async () => {
       if (!liveStream?.url) return;
@@ -201,7 +201,7 @@ const EnVivo = () => {
 
         <div className="live-content">
 
-        {/* contenedor principal del video */}
+        {/*contenedor principal del video*/}
         <div className="live-video-section">
           <div className="video-container-modern">
             {embedUrl ? (
@@ -244,7 +244,7 @@ const EnVivo = () => {
           </div>
         </div>
 
-        {/* información del stream */}
+        {/*informacion del stream*/}
         <div className="stream-info-modern">
           <div className="stream-main-info">
             <div className="stream-title-section">

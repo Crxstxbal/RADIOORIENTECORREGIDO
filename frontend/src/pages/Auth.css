@@ -1,7 +1,4 @@
-/* ============================================
-   PÁGINAS DE AUTENTICACIÓN MODERNAS
-   Login y Registro con diseño elegante
-   ============================================ */
+/*============================================ páginas de autenticacion modernas login y registro con diseño elegante ============================================*/
 
 .auth-page {
   min-height: 100vh;
@@ -13,7 +10,7 @@
   overflow: hidden;
 }
 
-/* Partículas animadas de fondo */
+/*partículas animadas de fondo*/
 .auth-particles {
   position: absolute;
   top: 0;
@@ -34,7 +31,7 @@
   box-shadow: 0 0 10px var(--color-red);
 }
 
-/* Contenedor principal */
+/*contenedor principal*/
 .auth-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -52,9 +49,7 @@
   justify-content: center;
 }
 
-/* ============================================
-   SECCIÓN DE BRANDING (Lado izquierdo)
-   ============================================ */
+/*============================================ sección de branding (lado izquierdo) ============================================*/
 
 .auth-branding {
   color: white;
@@ -149,9 +144,7 @@
   transform: translateX(10px);
 }
 
-/* ============================================
-   TARJETA DE FORMULARIO (Lado derecho)
-   ============================================ */
+/*tarjeta de formulario lado derecho */
 
 .auth-card {
   background: rgba(26, 26, 26, 0.95);
@@ -216,7 +209,7 @@
   border-radius: 4px;
 }
 
-/* Header del formulario */
+/*header del formulario*/
 .auth-header {
   text-align: center;
   margin-bottom: 2.5rem;
@@ -246,9 +239,7 @@
   font-size: 1.0625rem;
 }
 
-/* ============================================
-   FORMULARIO MODERNO
-   ============================================ */
+/*============================================ formulario moderno ============================================*/
 
 .auth-form {
   display: flex;
@@ -309,7 +300,7 @@
   border-color: rgba(220, 38, 38, 0.3);
 }
 
-/* Input de contraseña con toggle (versiones modernas y básicas) */
+/*input de contraseña con toggle (versiones modernas y básicas)*/
 .password-input-modern,
 .password-input {
   position: relative;
@@ -353,13 +344,13 @@
   transform: translateY(-1px);
 }
 
-/* Link de contraseña olvidada */
+/*link de contraseña olvidada*/
 .forgot-password-link {
   text-align: right;
   margin-top: -0.5rem;
 }
 
-/* Validación de contraseña */
+/*validacion de contraseña*/
 .password-requirements {
   display: flex;
   flex-direction: column;
@@ -382,7 +373,7 @@
   font-weight: 600;
 }
 
-/* Botón de submit */
+/*botón de submit*/
 .auth-submit-modern {
   width: 100%;
   padding: 1.25rem 2rem;
@@ -420,7 +411,7 @@
   cursor: not-allowed;
 }
 
-/* Animación de check en botón - IGUAL QUE EL EJEMPLO */
+/*animación de check en botón - igual que el ejemplo*/
 .auth-submit-modern.success {
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   border-color: #22c55e;
@@ -486,7 +477,7 @@
   transition-delay: 1s;
 }
 
-/* Footer del formulario */
+/*footer del formulario*/
 .auth-footer {
   text-align: center;
   margin-top: 2rem;
@@ -526,9 +517,7 @@
   width: 100%;
 }
 
-/* ============================================
-   LIGHT MODE (Modo claro)
-   ============================================ */
+/*============================================ light mode (modo claro) ============================================*/
 
 html:not(.dark) .auth-page {
   background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 50%, #f0f0f0 100%);
@@ -617,9 +606,7 @@ html:not(.dark) .auth-footer p {
   color: var(--color-gray-600);
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+/*============================================ responsivo design ============================================*/
 
 @media (max-width: 1024px) {
   .auth-container {
@@ -691,7 +678,7 @@ html:not(.dark) .auth-footer p {
 
   .form-input-auth,
   .auth-submit-modern {
-    font-size: 16px; /* Evita zoom en iOS */
+    font-size: 16px; /*evita zoom en ios*/
   }
 
   .auth-submit-modern {
@@ -708,9 +695,7 @@ html:not(.dark) .auth-footer p {
   }
 }
 
-/* ============================================
-   ANIMACIONES ADICIONALES
-   ============================================ */
+/*============================================ animaciones adicionales ============================================*/
 
 @keyframes fadeInUp {
   from {
@@ -734,7 +719,7 @@ html:not(.dark) .auth-footer p {
   }
 }
 
-/* Smooth scroll para el formulario de registro */
+/*smooth scroll para el formulario de registro*/
 .auth-card-register {
   scroll-behavior: smooth;
 }

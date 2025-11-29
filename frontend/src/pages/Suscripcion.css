@@ -1,6 +1,4 @@
-/* ============================================
-   PÁGINA DE SUSCRIPCIÓN MODERNA
-   ============================================ */
+/*============================================ página de suscripcion moderna ============================================*/
 
 .subscription-page {
   min-height: calc(100vh - 80px);
@@ -8,9 +6,7 @@
   background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 }
 
-/* ============================================
-   HEADER DE LA PÁGINA
-   ============================================ */
+/*============================================ header de la página ============================================*/
 
 .page-header-subscription {
   text-align: center;
@@ -55,9 +51,7 @@
   line-height: 1.6;
 }
 
-/* ============================================
-   SECCIÓN DE MÉTRICAS HERO - ARRIBA
-   ============================================ */
+/*============================================ sección de métricas hero - arriba ============================================*/
 
 .stats-section-hero {
   margin-bottom: 4rem;
@@ -84,7 +78,7 @@
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
 }
 
-/* Colores diferentes para cada tarjeta */
+/*colores diferentes para cada tarjeta*/
 .stat-card-modern:nth-child(1) {
   border-color: #0ea5e9;
   background: linear-gradient(135deg, var(--card-bg) 0%, rgba(14, 165, 233, 0.05) 100%);
@@ -224,9 +218,7 @@
   letter-spacing: 1px;
 }
 
-/* ============================================
-   CONTENIDO PRINCIPAL
-   ============================================ */
+/*============================================ contenido principal ============================================*/
 
 .subscription-content {
   display: grid;
@@ -236,9 +228,7 @@
   margin: 0 auto;
 }
 
-/* ============================================
-   SECCIÓN DE BENEFICIOS
-   ============================================ */
+/*============================================ sección de beneficios ============================================*/
 
 .subscription-info {
   padding: 1rem;
@@ -290,7 +280,7 @@
   transition: opacity 0.1s ease;
 }
 
-/* Colores diferentes para cada beneficio */
+/*colores diferentes para cada beneficio*/
 .benefit-card-modern:nth-child(1)::before {
   background: linear-gradient(135deg, transparent 0%, rgba(139, 92, 246, 0.03) 100%);
 }
@@ -417,9 +407,7 @@
   line-height: 1.6;
 }
 
-/* ============================================
-   FORMULARIO DE SUSCRIPCIÓN MODERNO
-   ============================================ */
+/*============================================ formulario de suscripcion moderno ============================================*/
 
 .subscription-form-container-modern {
   background: var(--card-bg);
@@ -535,9 +523,7 @@
   margin-top: 0.5rem;
 }
 
-/* ============================================
-   MENSAJE DE ÉXITO
-   ============================================ */
+/*============================================ mensaje de éxito ============================================*/
 
 .success-message-modern {
   text-align: center;
@@ -601,9 +587,7 @@
   box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
 }
 
-/* ============================================
-   DARK MODE
-   ============================================ */
+/*============================================ dark mode ============================================*/
 
 html.dark .stat-card-modern:nth-child(1) {
   background: linear-gradient(135deg, var(--card-bg) 0%, rgba(14, 165, 233, 0.05) 100%);
@@ -658,9 +642,7 @@ html.dark .form-input-modern:focus {
   box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+/*============================================ responsivo design ============================================*/
 
 @media (max-width: 1024px) {
   .subscription-content {

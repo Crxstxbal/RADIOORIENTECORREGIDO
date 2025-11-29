@@ -5,7 +5,7 @@ const ScrollToTop = () => {
     const { pathname } = useLocation();
 
     useEffect(() => {
-        // Scroll al inicio de la página cuando cambia la ruta
+        //scroll al inicio de la página cuando cambia la ruta
         window.scrollTo({
             top: 0,
             left: 0,

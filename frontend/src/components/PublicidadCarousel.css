@@ -1,4 +1,4 @@
-/* Estilos responsivos para PublicidadCarousel */
+/*estilos responsivos para publicidadcarousel*/
 
 .publicidad-container-top {
   width: 100%;
@@ -61,7 +61,7 @@
 
 @media (max-width: 768px) {
   .publicidad-container-bottom {
-    display: none; /* Ocultar en móviles */
+    display: none; /*ocultar en móviles*/
   }
 }
 

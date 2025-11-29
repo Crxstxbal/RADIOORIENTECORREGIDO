@@ -37,3 +37,5 @@ tzdata==2025.2
 uritemplate==4.2.0
 urllib3==2.5.0
 whitenoise==6.11.0
+daphne>=4,<5
+channels>=4,<5

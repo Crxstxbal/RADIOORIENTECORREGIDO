@@ -25,7 +25,7 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
-/* Centrar y limitar ancho del reproductor dentro de la página de TV */
+/*centrar y limitar ancho del reproductor dentro de la página de tv*/
 .tv-page .live-video-section {
   display: flex;
   justify-content: center;
@@ -50,7 +50,7 @@
   background: #000;
 }
 
-/* Intentar ocultar el control de velocidad en navegadores WebKit (puede variar según navegador) */
+/*intentar ocultar el control de velocidad en navegadores webkit (puede variar según navegador)*/
 .tv-video::-webkit-media-controls-playback-rate-button {
   display: none !important;
 }

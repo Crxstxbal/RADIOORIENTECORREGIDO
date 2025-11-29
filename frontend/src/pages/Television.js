@@ -4,7 +4,7 @@ import { Wifi } from 'lucide-react';
 import './Pages.css';
 import './Television.css';
 
-// const HLS_URL = 'https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HD/master.m3u8';
+//const hls_url = 'https://ntv1.akamaized.net/hls/live/2014075/nasa-ntv1-hd/master.m3u8'
 const HLS_URL = 'https://ireplay.tv/test/blender.m3u8';
 
 export default function Television() {
@@ -16,7 +16,7 @@ export default function Television() {
     const video = videoRef.current;
     if (!video) return;
 
-    // Restaurar volumen guardado si existe
+    //restaurar volumen guardado si existe
     try {
       const savedVolume = localStorage.getItem('tv_volume');
       if (savedVolume !== null) {
@@ -27,11 +27,11 @@ export default function Television() {
       }
     } catch (_) {}
 
-    // Bloquear la velocidad de reproducción en 1x
+    //bloquear la velocidad de reproduccion en 1x
     video.playbackRate = 1;
 
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Soporte nativo (Safari / iOS)
+      //soporte nativo (safari / ios)
       try {
         video.src = HLS_URL;
         const p = video.play();
@@ -52,7 +52,7 @@ export default function Television() {
     }
 
     const hls = new Hls({
-      // intentamos mantenernos cerca del "borde en vivo"
+      //intentamos mantenernos cerca del "borde en vivo"
       liveSyncDuration: 2,
       liveMaxLatencyDuration: 10,
     });
@@ -74,8 +74,8 @@ export default function Television() {
     });
 
     const handleTimeUpdate = () => {
-      // En muchos streams en vivo con buffer DVR, si el usuario se queda muy atrás
-      // lo acercamos de nuevo al final del buffer para que vaya casi en tiempo real.
+      //en muchos streams en vivo con buffer dvr, si el usuario se queda muy atrás
+      //lo acercamos de nuevo al final del buffer para que vaya casi en tiempo real
       const duration = video.duration;
       const currentTime = video.currentTime;
 
@@ -83,7 +83,7 @@ export default function Television() {
 
       const diff = duration - currentTime;
       if (diff > 10) {
-        // si está más de 10s atrasado, lo llevamos a ~2s del final
+        //si está más de 10s atrasado, lo llevamos a ~2s del final
         video.currentTime = Math.max(duration - 2, 0);
       }
     };

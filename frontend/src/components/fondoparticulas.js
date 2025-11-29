@@ -106,7 +106,7 @@ const FondoParticulas = React.memo(() => {
       }
     },
     detectRetina: true,
-    // Efecto de pulsación como ondas de radio
+    //efecto de pulsación como ondas de radio
     emitters: {
       direction: "none",
       life: {

@@ -21,7 +21,7 @@ from .serializers import (
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@authentication_classes([]) # No usar ninguna autenticación para el registro
+ #no usar ninguna autenticación para el registro
 def register(request):
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
@@ -36,7 +36,7 @@ def register(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@authentication_classes([]) # No usar ninguna autenticación para el login
+ #no usar ninguna autenticación para el login
 def login_view(request):
     serializer = UserLoginSerializer(data=request.data)
     if serializer.is_valid():
@@ -75,27 +75,20 @@ def update_profile(request):
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Views de compatibilidad para el frontend existente
+#views de compatibilidad para el frontend existente
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def profile_legacy(request):
-    """Endpoint de compatibilidad para el frontend existente"""
+    """endpoint de compatibilidad para el frontend existente"""
     serializer = UserLegacySerializer(request.user)
     return Response(serializer.data)
 
-# Views para recuperación de contraseña
+#views para recuperación de contraseña
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@authentication_classes([]) # No usar ninguna autenticación para solicitar reseteo
+ #no usar ninguna autenticación para solicitar reseteo
 def password_reset_request(request):
-    """
-    Solicitar reseteo de contraseña.
-    Envía un correo electrónico con el enlace de recuperación.
-
-    NOTA DE SEGURIDAD: Siempre retorna el mismo mensaje de éxito,
-    independientemente de si el email existe o no, para prevenir
-    user enumeration attacks.
-    """
+    """solicitar reseteo de contraseña. envía un correo electrónico con el enlace de recuperación. nota de seguridad: siempre retorna el mismo mensaje de éxito, independientemente de si el email existe o no, para prevenir user enumeration attacks"""
     serializer = PasswordResetRequestSerializer(data=request.data)
     if serializer.is_valid():
         email = serializer.validated_data['email']
@@ -103,32 +96,17 @@ def password_reset_request(request):
         try:
             user = User.objects.get(email=email)
 
-            # Generar token de reseteo
+            #generar token de reseteo
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-            # Construir URL de reseteo (frontend)
+            #construir url de reseteo (frontend)
             frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
             reset_url = f"{frontend_url}/resetear-contrasena/{uid}/{token}"
 
-            # Enviar correo electrónico
+            #enviar correo electrónico
             subject = 'Recuperación de Contraseña - Radio Oriente FM'
-            message = f"""
-Hola {user.first_name or user.username},
-
-Recibimos una solicitud para restablecer tu contraseña en Radio Oriente FM.
-
-Para crear una nueva contraseña, haz clic en el siguiente enlace:
-
-{reset_url}
-
-Este enlace expirará en 24 horas.
-
-Si no solicitaste este cambio, puedes ignorar este correo electrónico y tu contraseña permanecerá sin cambios.
-
-Saludos,
-El equipo de Radio Oriente FM
-            """
+            message = f"""hola {user.first_name or user.username}, recibimos una solicitud para restablecer tu contraseña en radio oriente fm. para crear una nueva contraseña, haz clic en el siguiente enlace: {reset_url} este enlace expirará en 24 horas. si no solicitaste este cambio, puedes ignorar este correo electrónico y tu contraseña permanecerá sin cambios. saludos, el equipo de radio oriente fm"""
 
             try:
                 send_mail(
@@ -139,15 +117,15 @@ El equipo de Radio Oriente FM
                     fail_silently=False,
                 )
             except Exception:
-                # Aún si falla el envío, retornamos mensaje de éxito por seguridad
+                #fallar silenciosamente por seguridad
                 pass
 
         except User.DoesNotExist:
-            # Por seguridad, no revelamos que el email no existe
-            # NO se envía correo, pero retornamos el mismo mensaje de éxito
+            #no revelar si el email existe
+            #no se envía correo, pero retornamos el mismo mensaje de éxito
             pass
 
-        # Siempre retornamos el mismo mensaje de éxito
+        #siempre retornamos el mismo mensaje de éxito
         return Response({
             'message': 'Se ha enviado un correo electrónico con instrucciones para restablecer tu contraseña.'
         }, status=status.HTTP_200_OK)
@@ -156,18 +134,15 @@ El equipo de Radio Oriente FM
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@authentication_classes([]) # No usar ninguna autenticación para confirmar reseteo
+#no usar ninguna autenticación para confirmar reseteo
 def password_reset_confirm(request):
-    """
-    Confirmar reseteo de contraseña con token.
-    Establece la nueva contraseña.
-    """
+    """confirmar reseteo de contraseña con token. establece la nueva contraseña"""
     serializer = PasswordResetConfirmSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.validated_data['user']
         new_password = serializer.validated_data['new_password']
 
-        # Establecer nueva contraseña
+        #establecer nueva contraseña
         user.set_password(new_password)
         user.save()
 

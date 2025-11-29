@@ -1,4 +1,4 @@
-/* Estilo comun para algunas paginas*/
+/*estilo comun para algunas paginas*/
 .page-header {
   display: flex;
   align-items: center;
@@ -52,12 +52,12 @@
   margin-bottom: 1rem;
 }
 
-/* pagiona de programacion */
+/*pagiona de programacion*/
 .programming-page {
   padding: 2rem 0;
 }
 
-/* Filtro de días */
+/*filtro de días*/
 .days-filter {
   display: flex;
   flex-wrap: wrap;
@@ -337,7 +337,7 @@
   border: 1px dashed var(--color-gray-300);
 }
 
-/* Pagina de contacto */
+/*pagina de contacto*/
 .contact-page {
   padding: 2rem 0;
 }
@@ -448,7 +448,7 @@
   cursor: not-allowed;
 }
 
-/* Diseño responsivo */
+/*diseño responsivo*/
 @media (max-width: 1024px) {
   .news-grid,
   .posts-grid {
@@ -463,7 +463,7 @@
     gap: 3rem;
   }
   
-  /* Suscripción en tablet */
+  /*suscripcion en tablet*/
   .subscription-content {
     grid-template-columns: 1fr !important;
     gap: 3rem;
@@ -580,7 +580,7 @@
     padding: 1.5rem;
   }
   
-  /* Suscripción en móvil */
+  /*suscripcion en móvil*/
   .subscription-content {
     gap: 2rem;
   }
@@ -701,7 +701,7 @@
     font-size: 1.5rem;
   }
   
-  /* Suscripción responsive mejorado */
+  /*suscripcion responsivo mejorado*/
   .subscription-page {
     padding: 1.5rem 0;
   }
@@ -770,7 +770,7 @@
   }
 }
 
-/* Responsive adicional para suscripción en móvil muy pequeño */
+/*responsivo adicional para suscripcion en móvil muy pequeño*/
 @media (max-width: 360px) {
   .subscription-content {
     gap: 1.5rem;
@@ -815,8 +815,8 @@
   }
 }
 
-/* Pagina de noticias */
-/* Corrección específica para el layout de noticias */
+/*pagina de noticias*/
+/*corrección específica para el diseño de noticias*/
 .news-page {
   min-height: 100vh;
   display: flex;
@@ -829,7 +829,7 @@
   padding: 2rem 0;
 }
 
-/* Espacio adicional para el contenido de noticias */
+/*espacio adicional para el contenido de noticias*/
 .news-container {
   margin-bottom: 3rem;
 }
@@ -842,7 +842,7 @@
   margin-bottom: 4rem;
 }
 
-/* Mantener todos los demás estilos de noticias iguales */
+/*mantener todos los demás estilos de noticias iguales*/
 .featured-news-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -888,7 +888,7 @@
   line-height: 1.6;
 }
 
-/* Contenedor principal de artículos */
+/*contenedor principal de artículos*/
 .news-container {
   display: flex;
   flex-direction: column;
@@ -896,7 +896,7 @@
   position: relative;
 }
 
-/* Sección de artículos */
+/*sección de artículos*/
 .all-news-section {
   flex: 1;
   display: flex;
@@ -904,7 +904,7 @@
   width: 100%;
 }
 
-/* Contenido de artículos */
+/*contenido de artículos*/
 .articles-content {
   flex: 1;
   display: flex;
@@ -912,7 +912,7 @@
   width: 100%;
 }
 
-/* News Grid Layout */
+/*news grid diseño*/
 .news-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -922,9 +922,7 @@
   width: 100%;
 }
 
-/* ======================
-   PAGINACIÓN
-   ====================== */
+/*====================== paginación ======================*/
 .pagination-wrapper {
   width: 100%;
   margin: 4rem 0 2rem;
@@ -1080,7 +1078,7 @@
   margin-top: 0.5rem;
 }
 
-/* Modo oscuro */
+/*modo oscuro*/
 html.dark .pagination-btn {
   background: var(--color-gray-800);
   border-color: var(--color-gray-700);
@@ -1099,7 +1097,7 @@ html.dark .page-size-select {
   color: var(--color-gray-200);
 }
 
-/* Responsive */
+/*responsivo*/
 @media (max-width: 640px) {
   .pagination-controls {
     gap: 1.25rem;
@@ -1130,7 +1128,7 @@ html.dark .page-size-select {
   }
 }
 
-/* Article Card Styling */
+/*article card styling*/
 .news-card {
   display: flex;
   flex-direction: column;
@@ -1201,24 +1199,24 @@ html.dark .page-size-select {
   font-size: 0.9375rem;
   line-height: 1.6;
   margin-bottom: 1.25rem;
-  /* Standard for line-clamp (works in modern browsers) */
+  /*standard for line-clamp (works in modern browsers)*/
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
-  /* Standard for Firefox */
+  /*standard for firefox*/
   display: -moz-box;
   -moz-box-orient: vertical;
   -moz-line-clamp: 3;
-  /* Standard for older browsers */
+  /*standard for older browsers*/
   display: -ms-flexbox;
   -ms-line-clamp: 3;
   -ms-box-orient: vertical;
-  /* Standard properties */
+  /*standard properties*/
   display: flex;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-height: 4.8em; /* Fallback for non-WebKit browsers */
-  /* Standard line-clamp (not yet widely supported) */
+  max-height: 4.8em; /*fallback for non-webkit browsers*/
+  /*standard line-clamp (not yet widely supported)*/
   line-clamp: 3;
 }
 
@@ -1328,7 +1326,7 @@ html.dark .page-size-select {
   transform: translateX(3px);
 }
 
-/* Modo oscuro */
+/*modo oscuro*/
 html.dark .read-more-btn {
   background: var(--color-red);
   border-color: var(--color-red);
@@ -1345,7 +1343,7 @@ html.dark .read-more-btn::before {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Responsive */
+/*responsivo*/
 @media (max-width: 768px) {
   .read-more-btn {
     padding: 0.6rem 1.25rem;
@@ -1354,7 +1352,7 @@ html.dark .read-more-btn::before {
   }
 }
 
-/* Responsive Design */
+/*responsivo design*/
 @media (max-width: 1200px) {
   .news-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -1433,7 +1431,7 @@ html.dark .read-more-btn::before {
   background: var(--color-red-dark);
 }
 
-/* Estilo del modal */
+/*estilo del modal*/
 .news-modal-overlay,
 .post-modal-overlay {
   position: fixed;
@@ -1509,7 +1507,7 @@ html.dark .read-more-btn::before {
   margin-bottom: 1rem;
 }
 
-/* Pagina de Suscripcion */
+/*pagina de suscripcion*/
 .subscription-page {
   padding: 2rem 0;
 }
@@ -1534,7 +1532,7 @@ html.dark .read-more-btn::before {
   margin-bottom: 3rem;
 }
 
-/* Asegurar que benefits-grid sea responsive */
+/*asegurar que benefits-grid sea responsivo*/
 @media (max-width: 640px) {
   .benefits-grid {
     grid-template-columns: 1fr;
@@ -1684,7 +1682,7 @@ html.dark .read-more-btn::before {
   line-height: 1.6;
 }
 
-/* Pagina de blog */
+/*pagina de blog*/
 .blog-page {
   min-height: 100vh;
   display: flex;
@@ -1794,11 +1792,9 @@ html.dark .read-more-btn::before {
   line-height: 1.6;
 }
 
-/* ============================================
-   DARK MODE STYLES - Aplicar a todas las páginas
-   ============================================ */
+/*============================================ dark mode estilos - aplicar a todas las páginas ============================================*/
 
-/* Títulos y textos generales */
+/*títulos y textos generales*/
 html.dark .page-title,
 html.dark .section-title,
 html.dark .day-title,
@@ -1816,7 +1812,7 @@ html.dark .modal-title {
   color: var(--text-primary);
 }
 
-/* Subtítulos y textos secundarios */
+/*subtítulos y textos secundarios*/
 html.dark .page-subtitle,
 html.dark .program-description,
 html.dark .program-time,
@@ -1837,7 +1833,7 @@ html.dark .meta-item {
   color: var(--text-secondary);
 }
 
-/* Cards y contenedores */
+/*cards y contenedores*/
 html.dark .day-schedule,
 html.dark .contact-item,
 html.dark .contact-form-container,
@@ -1854,7 +1850,7 @@ html.dark .post-modal {
   border-color: var(--card-border);
 }
 
-/* Days filter */
+/*days filter*/
 html.dark .days-filter {
   background: var(--card-bg);
   border-color: var(--card-border);
@@ -1877,7 +1873,7 @@ html.dark .day-filter-btn.active {
   border-color: var(--color-red);
 }
 
-/* Program cards */
+/*program cards*/
 html.dark .program-card {
   background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--card-bg) 100%);
   border-color: var(--card-border);
@@ -1910,36 +1906,36 @@ html.dark .host-avatar-placeholder {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
-/* Business hours y stats section */
+/*business hours y stats section*/
 html.dark .business-hours,
 html.dark .stats-section {
   background: var(--bg-tertiary);
   border-color: var(--card-border);
 }
 
-/* Loading container */
+/*cargando container*/
 html.dark .loading-container {
   color: var(--text-secondary);
 }
 
-/* Spinner */
+/*spinner*/
 html.dark .spinner-large {
   border-color: var(--border-color);
   border-top-color: var(--color-red);
 }
 
-/* No programs message */
+/*no programs message*/
 html.dark .no-programs {
   color: var(--text-tertiary);
 }
 
-/* Modal overlay - más oscuro en dark mode */
+/*modal overlay - más oscuro en dark mode*/
 html.dark .news-modal-overlay,
 html.dark .post-modal-overlay {
   background: rgba(0, 0, 0, 0.9);
 }
 
-/* Success message */
+/*exito message*/
 html.dark .success-message h3 {
   color: var(--text-primary);
 }
@@ -1948,9 +1944,7 @@ html.dark .success-message p {
   color: var(--text-secondary);
 }
 
-/* ============================================
-   RESPONSIVE DESIGN - Pages
-   ============================================ */
+/*============================================ responsivo design - pages ============================================*/
 
 @media (max-width: 1024px) {
   .programming-grid {
@@ -2148,12 +2142,12 @@ html.dark .success-message p {
   }
 }
 
-/* Página de transmisión en vivo */
+/*página de transmision en vivo*/
 .live-page {
   padding: 2rem 0;
 }
 
-/* Ajustes específicos del encabezado en En Vivo */
+/*ajustes específicos del encabezado en en vivo*/
 .live-page .page-header .page-title {
   margin-bottom: 0.25rem;
 }
@@ -2213,7 +2207,7 @@ html.dark .success-message p {
 
 .video-wrapper {
   position: relative;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  padding-bottom: 56.25%; /*16:9 aspect ratio*/
 }
 
 .video-iframe {
@@ -2406,7 +2400,7 @@ html.dark .success-message p {
   color: var(--color-gray-600);
 }
 
-/* Responsive para transmisión en vivo */
+/*responsivo para transmision en vivo*/
 @media (max-width: 768px) {
   .live-status {
     flex-direction: column;
@@ -2426,11 +2420,9 @@ html.dark .success-message p {
   .stream-right { flex-wrap: wrap; justify-content: space-between; }
 }
 
-/* ====================================
-   PÁGINA EN VIVO MODERNA
-   ==================================== */
+/*==================================== página en vivo moderna ====================================*/
 
-/* Contenedor principal moderno */
+/*contenedor principal moderno*/
 .live-page-modern {
   min-height: 100vh;
   position: relative;
@@ -2438,7 +2430,7 @@ html.dark .success-message p {
   background: #ffffff;
 }
 
-/* Fondo animado removido - ahora solo en contenedores */
+/*fondo animado removido - ahora solo en contenedores*/
 .live-animated-bg {
   display: none;
 }
@@ -2461,7 +2453,7 @@ html.dark .success-message p {
   }
 }
 
-/* Contenedor principal con glassmorphism */
+/*contenedor principal con glassmorphism*/
 .live-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -2470,7 +2462,7 @@ html.dark .success-message p {
   z-index: 1;
 }
 
-/* Header moderno con gradiente animado */
+/*header moderno con gradiente animado*/
 .live-header {
   text-align: center;
   margin-bottom: 3rem;
@@ -2582,7 +2574,7 @@ html.dark .success-message p {
   text-shadow: 0 2px 10px rgba(220, 38, 38, 0.3);
 }
 
-/* Sección de video moderna */
+/*sección de video moderna*/
 .live-video-section {
   margin-bottom: 3rem;
 }
@@ -2620,7 +2612,7 @@ html.dark .success-message p {
 
 .video-wrapper-modern {
   position: relative;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  padding-bottom: 56.25%; /*16:9 aspect ratio*/
   height: 0;
   overflow: hidden;
 }
@@ -2677,7 +2669,7 @@ html.dark .success-message p {
   color: #ffffff;
 }
 
-/* Información del stream moderna */
+/*informacion del stream moderna*/
 .stream-info-modern {
   position: relative;
   border-radius: 20px;
@@ -2777,7 +2769,7 @@ html.dark .success-message p {
   border-color: rgba(24, 119, 242, 0.3);
 }
 
-/* Botones modernos */
+/*botones modernos*/
 .btn-external-modern {
   display: inline-flex;
   align-items: center;
@@ -2818,7 +2810,7 @@ html.dark .success-message p {
   transform: translateY(-2px);
 }
 
-/* Responsive para transmisión en vivo */
+/*responsivo para transmision en vivo*/
 @media (max-width: 768px) {
   .live-container {
     padding: 1rem;

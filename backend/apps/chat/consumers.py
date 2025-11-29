@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 class ChatConsumer(AsyncWebsocketConsumer):
-    # Presencia simple en memoria: conexiones por sala (no distribuido)
+    #presencia simple en memoria: conexiones por sala (no distribuido)
     room_connections = {}
     
     async def connect(self):
@@ -18,7 +18,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         
         logger.info(f"WebSocket connecting to room: {self.room_name}")
 
-        # Join room group
+        #join room group
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
@@ -26,14 +26,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
 
-        # Track presence
+        #track presence
         room_set = self.room_connections.setdefault(self.room_group_name, set())
         room_set.add(self.channel_name)
         
         users_count = len(room_set)
         logger.info(f"User connected to {self.room_name}. Total connections: {users_count}")
 
-        # Broadcast updated users_online
+        #broadcast updated users_online
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -43,13 +43,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def disconnect(self, close_code):
-        # Leave room group
+        #leave room group
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
 
-        # Update presence
+        #update presence
         room_set = self.room_connections.get(self.room_group_name)
         if room_set and self.channel_name in room_set:
             room_set.discard(self.channel_name)
@@ -69,10 +69,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         user = self.scope['user']
 
         if user.is_authenticated:
-            # Save message to database
+            #save message to database
             chat_message = await self.save_message(user, message)
             
-            # Send message to room group
+            #send message to room group
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
@@ -85,7 +85,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
 
     async def chat_message(self, event):
-        # Send message to WebSocket
+        #send message to websocket
         await self.send(text_data=json.dumps({
             'message': event['message'],
             'user_name': event['user_name'],
@@ -94,7 +94,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
     async def presence(self, event):
-        # Send presence updates
+        #send presence updates
         await self.send(text_data=json.dumps({
             'type': 'presence',
             'users_online': event.get('users_online', 0)

@@ -1,6 +1,4 @@
-/* ============================================
-   FORMULARIO DE CONTACTO MODERNO
-   ============================================ */
+/*============================================ formulario de contacto moderno ============================================*/
 
 .contact-form-container {
   position: relative;
@@ -25,9 +23,7 @@
   gap: 2rem;
 }
 
-/* ============================================
-   FORM FIELD - Diseño Moderno con Animaciones
-   ============================================ */
+/*============================================ form field - diseño moderno con animaciones ============================================*/
 
 .form-field {
   position: relative;
@@ -40,7 +36,7 @@
   grid-column: 1 / -1;
 }
 
-/* Label flotante con icono */
+/*label flotante con icono*/
 .floating-label {
   position: absolute;
   top: -0.75rem;
@@ -63,7 +59,7 @@
   transition: all 0.3s ease;
 }
 
-/* Input moderno */
+/*input moderno*/
 .modern-input,
 .modern-select,
 .modern-textarea {
@@ -88,7 +84,7 @@
   transition: opacity 0.3s ease;
 }
 
-/* Mostrar placeholder solo cuando está enfocado */
+/*mostrar placeholder solo cuando está enfocado*/
 .form-field.focused .modern-input::placeholder,
 .form-field.focused .modern-textarea::placeholder {
   opacity: 0.6;
@@ -110,12 +106,12 @@
   padding-right: 3rem;
 }
 
-/* Dark mode select icon */
+/*dark mode select icon*/
 html.dark .modern-select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ef4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
-/* Borde animado */
+/*borde animado*/
 .input-border {
   position: absolute;
   bottom: 0;
@@ -130,7 +126,7 @@ html.dark .modern-select {
   z-index: 2;
 }
 
-/* Estado: Focused (cuando el input tiene foco) */
+/*estado: focused (cuando el input tiene foco)*/
 .form-field.focused .floating-label {
   color: var(--color-red);
 }
@@ -151,7 +147,7 @@ html.dark .modern-select {
   transform: scaleX(1);
 }
 
-/* Estado: Error */
+/*estado: error*/
 .form-field.error .modern-input {
   border-color: #ef4444;
   background: rgba(239, 68, 68, 0.05);
@@ -166,7 +162,7 @@ html.dark .modern-select {
   transform: scaleX(1);
 }
 
-/* Mensaje de error */
+/*mensaje de error*/
 .error-message {
   display: flex;
   align-items: center;
@@ -181,9 +177,7 @@ html.dark .modern-select {
   flex-shrink: 0;
 }
 
-/* ============================================
-   BOTÓN DE ENVÍO MODERNO
-   ============================================ */
+/*============================================ botón de envío moderno ============================================*/
 
 .submit-btn-modern {
   margin-top: 1rem;
@@ -227,9 +221,7 @@ html.dark .modern-select {
     0 0 30px rgba(198, 40, 40, 0.2);
 }
 
-/* ============================================
-   EFECTOS HOVER Y ANIMACIONES
-   ============================================ */
+/*============================================ efectos hover y animaciones ============================================*/
 
 .modern-input:hover:not(:focus),
 .modern-select:hover:not(:focus),
@@ -238,7 +230,7 @@ html.dark .modern-select {
   box-shadow: 0 2px 8px rgba(198, 40, 40, 0.1);
 }
 
-/* Animación de carga en el botón */
+/*animación de carga en el botón*/
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -252,9 +244,7 @@ html.dark .modern-select {
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* ============================================
-   DARK MODE
-   ============================================ */
+/*============================================ dark mode ============================================*/
 
 html.dark .form-description {
   color: var(--text-secondary);
@@ -309,9 +299,7 @@ html.dark .error-message {
   color: #f87171;
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+/*============================================ responsivo design ============================================*/
 
 @media (max-width: 768px) {
   .form-row {
@@ -390,9 +378,7 @@ html.dark .error-message {
   }
 }
 
-/* ============================================
-   ANIMACIONES ADICIONALES
-   ============================================ */
+/*============================================ animaciones adicionales ============================================*/
 
 @keyframes shake {
   0%, 100% {
@@ -410,7 +396,7 @@ html.dark .error-message {
   animation: shake 0.3s ease-in-out;
 }
 
-/* Efecto de brillo al hacer hover en inputs */
+/*efecto de brillo al hacer hover en inputs*/
 .modern-input:focus,
 .modern-select:focus,
 .modern-textarea:focus {
@@ -423,7 +409,7 @@ html.dark .modern-textarea:focus {
   background: var(--bg-tertiary);
 }
 
-/* Transición suave al cambiar entre estados */
+/*transición suave al cambiar entre estados*/
 .form-field * {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

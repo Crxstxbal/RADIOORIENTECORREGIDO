@@ -17,7 +17,7 @@ const Articles = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Estados de paginación
+  //estados de paginación
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(6); // Mostrar 6 artículos por página
   const [totalPages, setTotalPages] = useState(1);
@@ -27,13 +27,13 @@ const Articles = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Construir params de paginación
+        //construir params de paginación
         const params = {
           page: currentPage,
           page_size: pageSize
         };
 
-        // Agregar filtro de categoría si está seleccionado
+        //agregar filtro de categoría si está seleccionado
         let endpoint = '/api/articulos/api/articulos/';
         if (selectedCategory) {
           const category = categories.find(c => c.id === parseInt(selectedCategory));
@@ -43,18 +43,18 @@ const Articles = () => {
           }
         }
 
-        // Cargar artículos desde nueva API
+        //cargar artículos desde nueva api
         const articlesResponse = await api.get(endpoint, { params });
 
-        // Extraer datos de paginación
+        //extraer datos de paginación
         const data = articlesResponse.data;
         if (data.results) {
-          // Respuesta paginada
+          //respuesta paginada
           setArticles(data.results);
           setTotalPages(data.total_pages || 1);
           setTotalItems(data.count || 0);
         } else {
-          // Respuesta sin paginación (fallback)
+          //respuesta sin paginación (fallback)
           setArticles(data);
           setTotalPages(1);
           setTotalItems(data.length);
@@ -72,7 +72,7 @@ const Articles = () => {
     fetchData();
   }, [currentPage, pageSize, selectedCategory]);
 
-  // Cargar categorías (solo una vez)
+  //cargar categorías (solo una vez)
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -92,19 +92,19 @@ const Articles = () => {
     fetchCategories();
   }, []);
 
-  // Abrir modal automáticamente si viene del Home
+  //abrir modal automáticamente si viene del home
   useEffect(() => {
     if (location.state?.selectedArticleId && articles.length > 0) {
       const article = articles.find(a => a.id === location.state.selectedArticleId);
       if (article) {
         setSelectedArticle(article);
-        // Limpiar el estado para evitar que se abra nuevamente
+        //limpiar el estado para evitar que se abra nuevamente
         window.history.replaceState({}, document.title);
       }
     }
   }, [location.state, articles]);
 
-  // Cargar artículo si hay slug en la URL
+  //cargar artículo si hay slug en la url
   useEffect(() => {
     const loadArticleBySlug = async () => {
       if (slug) {
@@ -113,7 +113,7 @@ const Articles = () => {
           setSelectedArticle(response.data);
         } catch (error) {
           console.error('Error loading article by slug:', error);
-          // Si no se encuentra el artículo, no hacer nada (quedará en la lista)
+          //si no se encuentra el artículo, no hacer nada (quedará en la lista)
         }
       }
     };
@@ -130,30 +130,30 @@ const Articles = () => {
   }, []);
 
   const handleArticleClick = useCallback(async (article) => {
-    // Hacer petición al backend para obtener el detalle (esto incrementa las vistas)
+    //hacer petición al backend para obtener el detalle (esto incrementa las vistas)
     try {
       const response = await api.get(`/api/articulos/api/articulos/${article.slug}/`);
       setSelectedArticle(response.data);
-      // Actualizar la URL con el slug del artículo
+      //actualizar la url con el slug del artículo
       navigate(`/articulos/${article.slug}`, { replace: true });
     } catch (error) {
       console.error('Error loading article detail:', error);
-      // Si falla, usar los datos que ya tenemos
+      //usar los datos que ya tenemos
       setSelectedArticle(article);
     }
   }, [navigate]);
 
   const closeModal = useCallback(() => {
     setSelectedArticle(null);
-    // Volver a la lista de artículos en la URL
+    //volver a la lista de artículos en la url
     navigate('/articulos', { replace: true });
   }, [navigate]);
 
-  // Función auxiliar para obtener la imagen thumbnail (para tarjetas)
+  //funcion auxiliar para obtener la imagen thumbnail (para tarjetas)
   const getArticleThumbnail = (article) => {
-    // Soportar claves de lista y detalle del backend
-    // Lista: imagen_thumbnail (abs), imagen_portada (abs), imagen_url
-    // Detalle: imagen_thumbnail_url (abs), imagen_portada_url (abs), imagen_destacada
+    //soportar claves de lista y detalle del backend
+    //lista: imagen_thumbnail (abs), imagen_portada (abs), imagen_url
+    //detalle: imagen_thumbnail_url (abs), imagen_portada_url (abs), imagen_destacada
     return (
       article.imagen_thumbnail ||
       article.imagen_thumbnail_url ||
@@ -165,9 +165,9 @@ const Articles = () => {
     );
   };
 
-  // Función auxiliar para obtener la imagen banner (para modal)
+  //funcion auxiliar para obtener la imagen banner (para modal)
   const getArticleBanner = (article) => {
-    // Priorizar portada absoluta; fallback a destacada o url externa
+    //priorizar portada absoluta; fallback a destacada o url externa
     return (
       article.imagen_portada ||
       article.imagen_portada_url ||
@@ -177,7 +177,7 @@ const Articles = () => {
     );
   };
 
-  // Memoizar artículos filtrados
+  //memoizar artículos filtrados
   const filteredArticles = useMemo(() => {
     return articles.filter(article => {
       const matchesSearch = !searchTerm ||
@@ -187,31 +187,31 @@ const Articles = () => {
     });
   }, [articles, searchTerm]);
 
-  // Memoizar artículos destacados y regulares
+  //memoizar artículos destacados y regulares
   const { featuredArticles, regularArticles } = useMemo(() => {
     const featured = filteredArticles.filter(article => article.destacado).slice(0, 3);
     const regular = filteredArticles.filter(article => !article.destacado);
     return { featuredArticles: featured, regularArticles: regular };
   }, [filteredArticles]);
   
-  // Memoizar artículos de la página actual
+  //memoizar artículos de la página actual
   const currentArticles = useMemo(() => {
     return regularArticles.slice(0, pageSize);
   }, [regularArticles, pageSize]);
   
-  // Mostrar mensaje de carga o sin resultados
+  //mostrar mensaje de carga o sin resultados
   const showLoading = loading && articles.length === 0;
   const showNoResults = !loading && regularArticles.length === 0 && !searchTerm;
   const showNoSearchResults = !loading && regularArticles.length === 0 && searchTerm;
 
-  // Memoizar handler de paginación
+  //memoizar manejador de paginación
   const handlePageChange = useCallback((newPage) => {
     setCurrentPage(newPage);
-    // Scroll suave hacia arriba
+    //scroll suave hacia arriba
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Memoizar handler de cambio de categoría
+  //memoizar manejador de cambio de categoría
   const handleCategoryChange = useCallback((e) => {
     setSelectedCategory(e.target.value);
     setCurrentPage(1);
@@ -230,7 +230,7 @@ const Articles = () => {
           </div>
         </div>
 
-        {/* Contenido principal */}
+        {/*contenido principal*/}
         <div className="container">
           <div className="filters-section" style={{display: 'flex', gap: '2rem', marginBottom: '2rem', alignItems: 'center', flexWrap: 'wrap'}}>
             <div className="search-filter" style={{flex: '1', minWidth: '300px'}}>
@@ -268,7 +268,7 @@ const Articles = () => {
             </div>
           ) : (
             <>
-              {/* Artículos destacados */}
+              {/*artículos destacados*/}
               {featuredArticles.length > 0 && (
                 <section className="featured-section">
                   <h2 className="section-title">Artículos Destacados</h2>
@@ -308,7 +308,7 @@ const Articles = () => {
                 </section>
               )}
 
-              {/* Lista de artículos */}
+              {/*lista de artículos*/}
               <section className="all-news-section">
                 <h2 className="section-title">
                   {selectedCategory ? 
@@ -380,7 +380,7 @@ const Articles = () => {
                   )}
                 </div>
 
-                {/* Paginación */}
+                {/*paginación*/}
                 {totalPages > 0 && (
                   <PaginacionFusion
                     currentPage={currentPage}
@@ -395,7 +395,7 @@ const Articles = () => {
           )}
         </div>
 
-        {/* Modal para artículo seleccionado */}
+        {/*modal para artículo seleccionado*/}
         {selectedArticle && (
           <div className="news-modal-overlay" onClick={closeModal}>
             <div className="news-modal" onClick={(e) => e.stopPropagation()}>
@@ -431,7 +431,7 @@ const Articles = () => {
                 )}
                 
                 <div>
-                  {/* Imagen thumbnail cuadrada flotada para que el texto la rodee */}
+                  {/*imagen thumbnail cuadrada flotada para que el texto la rodee*/}
                   {getArticleThumbnail(selectedArticle) && (
                     <img
                       src={getArticleThumbnail(selectedArticle)}
@@ -449,7 +449,7 @@ const Articles = () => {
                     />
                   )}
 
-                  {/* Contenido del artículo */}
+                  {/*contenido del artículo*/}
                   <div className="modal-text" style={{minWidth: '300px'}}>
                     {(() => {
                       const raw = selectedArticle.contenido || '';
@@ -458,26 +458,26 @@ const Articles = () => {
                       return <div dangerouslySetInnerHTML={{ __html: html }} />;
                     })()}
                   </div>
-                  {/* Limpiar el float para evitar solapamientos posteriores */}
+                  {/*limpiar el float para evitar solapamientos posteriores*/}
                   <div style={{clear: 'both'}} />
                 </div>
                 
-                {/* Video embebido si existe (video_url o enlace dentro del contenido) */}
+                {/*video embebido si existe (video_url o enlace dentro del contenido)*/}
                 {(() => {
-                  // encontrar url de video priorizando video_url
+                  //encontrar url de video priorizando video_url
                   const rawVideo = selectedArticle.video_url || '';
                   const content = selectedArticle.contenido || '';
                   let url = rawVideo.trim();
                   if (!url) {
-                    // Buscar primer enlace de YouTube/Vimeo en el contenido en texto
+                    //buscar primer enlace de youtube/vimeo en el contenido en texto
                     const match = content.match(/https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=[^\s"']+|shorts\/[^\s"']+)|youtu\.be\/[^\s"']+|vimeo\.com\/\d+)/i);
                     if (match) url = match[0];
                   }
                   if (!url) return null;
-                  // Normalizar a URL embebible
+                  //normalizar a url embebible
                   let embed = '';
                   if (/youtube\.com|youtu\.be/i.test(url)) {
-                    // extraer id de youtube (watch?v=, youtu.be/, shorts/)
+                    //extraer id de youtube (watch?v=, youtu.be/, shorts/)
                     const idMatch = url.match(/(?:watch\?v=|youtu\.be\/|shorts\/)([A-Za-z0-9_-]{6,})/);
                     const id = idMatch ? idMatch[1] : '';
                     if (id) embed = `https://www.youtube.com/embed/${id}`;
@@ -501,7 +501,7 @@ const Articles = () => {
                   );
                 })()}
                 
-                {/* Archivo adjunto si existe */}
+                {/*archivo adjunto si existe*/}
                 {selectedArticle.archivo_adjunto && (
                   <div style={{marginTop: '2rem', padding: '1rem', backgroundColor: 'var(--color-gray-50)', borderRadius: '0.5rem'}}>
                     <h3 style={{marginBottom: '0.5rem', fontSize: '1.125rem', fontWeight: '600'}}>📎 Archivo adjunto</h3>

@@ -159,19 +159,19 @@ const PublicidadPage = () => {
     try {
       const ubicaciones = selectedCards.length ? selectedCards : (selected ? [selected] : []);
       
-      // Validar campos requeridos
+      //validar campos requeridos
       if (!form.nombre_contacto || !form.email_contacto || !ubicaciones.length) {
         alert('Completa nombre, email y selecciona al menos una ubicación.');
         return;
       }
 
-      // Validar URL de destino (requerida por ItemSolicitudWeb)
+      //validar url de destino (requerida por itemsolicitudweb)
       if (!form.url_destino) {
         alert('Ingresa la URL de destino de tu publicidad.');
         return;
       }
 
-      // Autocompletar fechas por mes si no se proporcionan
+      //autocompletar fechas por mes si no se proporcionan
       const fmt = (d) => d.toISOString().split('T')[0];
       const today = new Date();
       const startAuto = fmt(today);
@@ -179,11 +179,11 @@ const PublicidadPage = () => {
       const fechaInicio = form.fecha_inicio || startAuto;
       const fechaFin = form.fecha_fin || endAuto;
 
-      // Nota: el endpoint actual no acepta imágenes. No bloqueamos por falta de imagen.
+      //el endpoint actual no acepta imágenes. no bloqueamos por falta de imagen
 
       const ubicacionIds = ubicaciones.map(u => u.id);
 
-      // Crear el payload en el formato que espera el endpoint de dashboard
+      //crear el payload en el formato que espera el endpoint de dashboard
       const payload = {
         nombre: String(form.nombre_contacto || '').trim(),
         email: String(form.email_contacto || '').trim(),
@@ -194,12 +194,12 @@ const PublicidadPage = () => {
         fecha_inicio: fechaInicio,
         fecha_fin: fechaFin,
         mensaje: form.mensaje || '',
-        // Copias de respaldo (por si hay otras vistas que las lean)
+        //copias de respaldo (por si hay otras vistas que las lean)
         nombre_contacto: String(form.nombre_contacto || '').trim(),
         email_contacto: String(form.email_contacto || '').trim(),
       };
 
-      // Función auxiliar para obtener cookies
+      //funcion auxiliar para obtener cookies
       const getCookie = (name) => {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
@@ -207,7 +207,7 @@ const PublicidadPage = () => {
         return null;
       };
       
-      // Configurar headers con el token CSRF si está disponible
+      //configurar headers con el token csrf si está disponible
       const headers = {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
@@ -217,7 +217,7 @@ const PublicidadPage = () => {
       if (csrfToken) {
         headers['X-CSRFToken'] = csrfToken;
       }
-      // Incluir token si el usuario inició sesión vía API
+      //incluir token si el usuario inició sesión vía api
       try {
         const token = localStorage.getItem('token');
         if (token) {
@@ -234,7 +234,7 @@ const PublicidadPage = () => {
           body: JSON.stringify(payload),
         });
         
-        // Si el usuario no está autenticado, redirigir al login del frontend
+        //si el usuario no está autenticado, redirigir al login del frontend
         if (res.status === 401) {
           alert('Debes iniciar sesión para enviar la solicitud.');
           const next = encodeURIComponent(window.location.pathname);
@@ -248,7 +248,7 @@ const PublicidadPage = () => {
           throw new Error(data.message || 'Error al procesar la solicitud');
         }
 
-        // Subir imágenes si existen
+        //subir imágenes si existen
         if (data.items_web && data.items_web.length > 0 && Object.keys(form.imagenes).length > 0) {
           for (const item of data.items_web) {
             const imagen = form.imagenes[item.ubicacion_id];
@@ -369,7 +369,7 @@ const PublicidadPage = () => {
           ))}
         </div>
 
-        {/* Barra de selección y total */}
+        {/*barra de selección y total*/}
         {selectedIds.length > 0 && (
           <div style={{ position: 'sticky', bottom: 16, marginTop: 24, background: '#1f1f1f', border: '1px solid #333', padding: 12, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#ffffff' }}>
             <div>
@@ -417,7 +417,7 @@ const PublicidadPage = () => {
             <div className={styles.locationSpot}>Banner Footer (1200x200) - $20.000/mes</div>
           </div>
         </div>
-        {/* Modal de solicitud */}
+        {/*modal de solicitud*/}
         <ModalSolicitud
           open={showModal}
           onClose={() => setShowModal(false)}
@@ -433,7 +433,7 @@ const PublicidadPage = () => {
   );
 };
 
-// Modal simple inline
+//modal simple inline
 const ModalSolicitud = memo(function ModalSolicitud({ open, onClose, onSubmit, selectedCards, selectedSingle, form, setForm, CLP }) {
   if (!open) return null;
   const list = selectedSingle ? [selectedSingle] : selectedCards;
@@ -442,13 +442,13 @@ const ModalSolicitud = memo(function ModalSolicitud({ open, onClose, onSubmit, s
   const handleImageChange = (ubicacionId, event) => {
     const file = event.target.files[0];
     if (file) {
-      // Validar tamaño de la imagen (máx 5MB)
+      //validar tamaño de la imagen (máx 5mb)
       if (file.size > 5 * 1024 * 1024) {
         alert('La imagen no debe superar los 5MB');
         return;
       }
       
-      // Validar tipo de archivo
+      //validar tipo de archivo
       const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       if (!validTypes.includes(file.type)) {
         alert('Formato de archivo no válido. Usa JPG, PNG, GIF o WebP');
@@ -596,7 +596,7 @@ const ModalSolicitud = memo(function ModalSolicitud({ open, onClose, onSubmit, s
               />
             </div>
             
-            {/* Campos de fecha ocultos: el período se determina al aprobar en el dashboard */}
+            {/*campos de fecha ocultos: el período se determina al aprobar en el dashboard*/}
             
             <div>
               <label className={styles.modalLabel}>Mensaje adicional (opcional)</label>

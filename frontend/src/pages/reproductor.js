@@ -23,7 +23,7 @@ const Reproductor = () => {
   const contentRef = useRef(null);
   const backButtonRef = useRef(null);
   
-  // Obtener la página anterior desde el state o usar '/' como default
+  //obtener la página anterior desde el estado o usar '/' como default
   const previousPage = location.state?.from || '/';
 
   useEffect(() => setIsMuted(volume === 0), [volume]);
@@ -36,7 +36,7 @@ const Reproductor = () => {
   }, []);
 
   useEffect(() => {
-    // Animación de entrada suave
+    //animación de entrada suave
     if (contentRef.current) {
       contentRef.current.style.opacity = '0';
       contentRef.current.style.transform = 'translateY(30px) scale(0.95)';
@@ -50,7 +50,7 @@ const Reproductor = () => {
   }, []);
 
   const handlePlayClick = () => {
-    // Efecto de pulso avanzado
+    //efecto de pulso avanzado
     if (playButtonRef.current) {
       playButtonRef.current.style.transform = 'scale(0.9)';
       playButtonRef.current.style.transition = 'transform 0.1s ease';
@@ -72,7 +72,7 @@ const Reproductor = () => {
   const handleVolumeClick = () => {
     toggleMute();
     
-    // Efecto de rotación más simple después del toggle
+    //efecto de rotación más simple después del toggle
     if (volumeButtonRef.current) {
       setTimeout(() => {
         volumeButtonRef.current.style.transform = 'rotate(180deg) scale(1.2)';
@@ -88,10 +88,10 @@ const Reproductor = () => {
   const handleVolumeChange = (e) => {
     const newVolume = Number(e.target.value);
     
-    // Cambiar volumen sin efectos que puedan interferir
+    //cambiar volumen sin efectos que puedan interferir
     setVolume(newVolume);
     
-    // Efectos visuales más simples y seguros
+    //efectos visuales más simples y seguros
     if (sliderRef.current) {
       sliderRef.current.style.setProperty('--progress', `${newVolume * 100}%`);
     }
@@ -114,7 +114,7 @@ const Reproductor = () => {
   };
 
   const handleGoBack = () => {
-    // Animación del botón
+    //animación del botón
     if (backButtonRef.current) {
       backButtonRef.current.style.transform = 'scale(0.9) translateX(-5px)';
       backButtonRef.current.style.transition = 'transform 0.2s ease';
@@ -124,20 +124,20 @@ const Reproductor = () => {
       }, 200);
     }
     
-    // Navegar a la página anterior
+    //navegar a la página anterior
     setTimeout(() => {
       navigate(previousPage);
     }, 300);
   };
 
-  // Si streamUrl no es string, muestra "Cargando..."
+  //si streamurl no es string, muestra "cargando..."
   const streamStatus = typeof streamUrl === "string" && streamUrl.length > 0 ? "En vivo" : "Cargando stream...";
 
   return (
     <div className="reproductor-page">
       <FondoParticulas />
 
-      {/* Botón de volver */}
+      {/*botón de volver*/}
       <button 
         ref={backButtonRef}
         onClick={handleGoBack}

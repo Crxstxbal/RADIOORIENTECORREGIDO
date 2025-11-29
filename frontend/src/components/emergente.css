@@ -1,6 +1,4 @@
-/* ============================================
-   FORMULARIO DE BANDAS EMERGENTES - WIZARD
-   ============================================ */
+/*============================================ formulario de bandas emergentes - wizard ============================================*/
 
 .emergente-container {
   min-height: 100vh;
@@ -8,9 +6,7 @@
   background: var(--bg-primary);
 }
 
-/* ============================================
-   WIZARD LAYOUT
-   ============================================ */
+/*============================================ wizard diseño ============================================*/
 
 .emergente-wizard {
   max-width: 900px;
@@ -18,9 +14,7 @@
   padding: 0 1rem;
 }
 
-/* ============================================
-   STEPPER STYLES
-   ============================================ */
+/*============================================ stepper estilos ============================================*/
 
 .stepper {
   display: flex;
@@ -119,9 +113,7 @@
   background: linear-gradient(90deg, #22c55e, #16a34a);
 }
 
-/* ============================================
-   WIZARD CARD
-   ============================================ */
+/*============================================ wizard card ============================================*/
 
 .wizard-card {
   background: var(--card-bg);
@@ -141,9 +133,7 @@
   flex: 1;
 }
 
-/* ============================================
-   STEP CONTENT
-   ============================================ */
+/*============================================ step content ============================================*/
 
 .step-content {
   flex: 1;
@@ -181,9 +171,7 @@
   margin: 0.25rem 0 0;
 }
 
-/* ============================================
-   WIZARD NAVIGATION
-   ============================================ */
+/*============================================ wizard navigation ============================================*/
 
 .wizard-navigation {
   display: flex;
@@ -246,9 +234,7 @@
   min-width: 180px;
 }
 
-/* ============================================
-   INFO CARDS
-   ============================================ */
+/*============================================ info cards ============================================*/
 
 .info-cards {
   display: grid;
@@ -303,9 +289,7 @@
   margin: 0;
 }
 
-/* ============================================
-   FORM STYLES
-   ============================================ */
+/*============================================ form estilos ============================================*/
 
 .form-group {
   margin-bottom: 1.5rem;
@@ -347,7 +331,7 @@
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  /* Fondo con color e imagen de flecha combinados */
+  /*fondo con color e imagen de flecha combinados*/
   background-color: var(--input-bg);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -378,7 +362,7 @@
   background-color: rgba(239, 68, 68, 0.05);
 }
 
-/* Estilos para las opciones del select - IMPORTANTE: sin background-image */
+/*estilos para opciones del select sin background-image*/
 .form-group select option {
   background-color: var(--card-bg) !important;
   background-image: none !important;
@@ -416,9 +400,7 @@
   font-weight: 500;
 }
 
-/* ============================================
-   ADD SECTION (Integrantes)
-   ============================================ */
+/*============================================ add section (integrantes) ============================================*/
 
 .add-section {
   display: flex;
@@ -434,9 +416,7 @@
   padding: 0.875rem 1.25rem;
 }
 
-/* ============================================
-   INTEGRANTES LIST
-   ============================================ */
+/*============================================ integrantes list ============================================*/
 
 .integrantes-list {
   display: flex;
@@ -503,9 +483,7 @@
   border-color: #ef4444;
 }
 
-/* ============================================
-   LINKS SECTION
-   ============================================ */
+/*============================================ links section ============================================*/
 
 .add-link-container {
   display: grid;
@@ -623,9 +601,7 @@
   text-overflow: ellipsis;
 }
 
-/* ============================================
-   SUCCESS STYLES
-   ============================================ */
+/*============================================ exito estilos ============================================*/
 
 .success-container {
   min-height: 100vh;
@@ -765,9 +741,7 @@
   color: white;
 }
 
-/* ============================================
-   BUTTON STYLES
-   ============================================ */
+/*============================================ button estilos ============================================*/
 
 .btn {
   display: inline-flex;
@@ -802,9 +776,7 @@
   font-size: 0.875rem;
 }
 
-/* ============================================
-   DARK MODE
-   ============================================ */
+/*============================================ dark mode ============================================*/
 
 html.dark .stepper {
   background: var(--card-bg);
@@ -849,7 +821,7 @@ html.dark .form-group select:focus {
   box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
 }
 
-/* Opciones del select en modo oscuro - CRÍTICO: sin herencia de background-image */
+/*opciones del select en modo oscuro - crítico: sin herencia de background-image*/
 html.dark .form-group select option {
   background-color: #2a2a2a !important;
   background-image: none !important;
@@ -884,9 +856,7 @@ html.dark .social-icon.apple {
   color: #ffffff;
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
+/*============================================ responsivo ============================================*/
 
 @media (max-width: 768px) {
   .emergente-container {

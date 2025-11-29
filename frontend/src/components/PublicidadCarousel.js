@@ -12,7 +12,7 @@ function parseDims(dimStr) {
   return { w: parseInt(m[1], 10), h: parseInt(m[2], 10) };
 }
 
-//Variantes de animacion para los paneles
+//variantes de animacion para los paneles
 const panelVariants = {
   hidden: (position) => ({
     opacity: 0,
@@ -59,7 +59,7 @@ export default function PublicidadCarousel({
     setDismissed(true);
   };
 
-  //Persistencia de cierre con reapertura automática
+  //persistencia de cierre con reapertura automática
   useEffect(() => {
     if (position !== 'left-fixed' && position !== 'right-fixed' && position !== 'bottom') return;
     try {
@@ -75,7 +75,7 @@ export default function PublicidadCarousel({
     } catch (_) {}
   }, [position]);
 
-  // Reapertura automática en footer sin recargar la página
+  //reapertura automática en footer sin recargar la página
   useEffect(() => {
     if (position !== 'bottom') return;
     let timeoutId;
@@ -101,20 +101,20 @@ export default function PublicidadCarousel({
     };
   }, [position, reopenHours, dismissed]);
 
-  // Logs de debug solo en desarrollo
+  //logs de debug solo en desarrollo
   useEffect(() => {
     if (debug && import.meta.env.DEV) {
       console.log(`[PublicidadCarousel] Mounted with position=${position}`);
     }
   }, [position, debug]);
 
-  //Obtener datos de publicidad
+  //obtener datos de publicidad
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
     setError(null);
 
-    // Debug solo en desarrollo
+    //debug solo en desarrollo
     if (debug && import.meta.env.DEV) {
       console.log(`[PublicidadCarousel] Fetching ads for position=${position}`);
     }
@@ -128,7 +128,7 @@ export default function PublicidadCarousel({
         
         const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
         const url = `${base}/dashboard/api/publicidad/activas/?${params.toString()}`;
-        // Debug solo en desarrollo
+        //debug solo en desarrollo
         if (debug && import.meta.env.DEV) {
           console.log(`[PublicidadCarousel] API URL: ${url}`);
         }
@@ -138,7 +138,7 @@ export default function PublicidadCarousel({
         const data = await resp.json();
         const endTime = performance.now();
 
-        // Debug solo en desarrollo
+        //debug solo en desarrollo
         if (debug && import.meta.env.DEV) {
           console.log(`[PublicidadCarousel] API response (${Math.round(endTime - startTime)}ms):`, {
             status: resp.status,
@@ -226,7 +226,7 @@ export default function PublicidadCarousel({
     }
 
     const handleScroll = () => {
-      //Para que aparezca la animacion de la publicidad cuando se llega a la seccion de ultimos articulos
+      //para que aparezca la animacion de la publicidad cuando se llega a la seccion de ultimos articulos
       const sections = document.querySelectorAll('section');
       let articlesSection = null;
       
@@ -267,7 +267,7 @@ export default function PublicidadCarousel({
     };
   }, [position, isHomePage, debug]);
 
-  //Avance automático
+  //avance automático
   useEffect(() => {
     if (!items.length || autoPlayMs <= 0) return;
 
@@ -283,14 +283,14 @@ export default function PublicidadCarousel({
     };
   }, [items, autoPlayMs, items.length]); // Added items.length to dependencies
 
-  // Log de cambios solo en desarrollo
+  //log de cambios solo en desarrollo
   useEffect(() => {
     if (debug && import.meta.env.DEV && items.length > 0) {
       console.log(`[PublicidadCarousel] Slide ${index + 1}/${items.length}`);
     }
   }, [index, items.length, debug]);
 
-  // Tracking de impresiones: cada vez que cambia el slide activo
+  //tracking de impresiones: cada vez que cambia el slide activo
   useEffect(() => {
     const item = items[index];
     if (!item?.id) return;
@@ -299,7 +299,7 @@ export default function PublicidadCarousel({
     trackImpression(item.id);
   }, [index, items]);
 
-  // Memoizar cálculo de dimensiones
+  //memoizar cálculo de dimensiones
   const calculateDimensions = useCallback((width, height, maxWidth = '100%') => {
     if (!width || !height) return { width: '100%', height: 'auto' };
     
@@ -318,7 +318,7 @@ export default function PublicidadCarousel({
     };
   }, []);
 
-  //Contenido base con estilo
+  //contenido base con estilo
   const baseContainerStyle = {
     display: 'flex',
     justifyContent: 'center',
@@ -334,22 +334,22 @@ export default function PublicidadCarousel({
     height: 'auto'
   };
 
-  // No mostrar en rutas de autenticación
+  //no mostrar en rutas de autenticacion
   const authRoutes = ['/login', '/register', '/auth', '/iniciar-sesion', '/registro'];
   const isAuthRoute = authRoutes.some(route => location.pathname.startsWith(route));
   
-  // No renderizar en móvil, si fue cerrado o en rutas de autenticación
+  //no renderizarizar en móvil, si fue cerrado o en rutas de autenticacion
   if ((position === 'left-fixed' || position === 'right-fixed') && 
       (window.innerWidth < 1024 || dismissed || isAuthRoute)) {
     return null;
   }
   
-  // No mostrar banner inferior en móvil, si fue cerrado o en rutas de autenticación
+  //no mostrar banner inferior en móvil, si fue cerrado o en rutas de autenticacion
   if (position === 'bottom' && (window.innerWidth < 768 || dismissed || isAuthRoute)) {
     return null;
   }
 
-  //Estilos específicos de posición
+  //estilos específicos de posición
   const positionStyles = {
     'top': {
       ...baseContainerStyle,
@@ -428,7 +428,7 @@ export default function PublicidadCarousel({
     ...(position.includes('fixed') && {
       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
     }),
-    // Asegurar que el contenedor mantenga su relación de aspecto
+    //validar
     aspectRatio: dims ? `${dims.w}/${dims.h}` : '16/9',
     minHeight: position === 'bottom' ? '200px' : (position === 'top' ? '200px' : '300px'),
     overflow: 'visible', // Cambiado a visible para que el efecto de neón no se recorte
@@ -439,7 +439,7 @@ export default function PublicidadCarousel({
     zIndex: 1 // Aseguramos que esté por encima de otros elementos
   };
 
-  // Contenedor con estilo de tarjeta moderna
+  //contenedor con estilo de tarjeta moderna
   const neonWrapperStyle = {
     display: 'block',
     borderRadius: '8px',
@@ -472,13 +472,13 @@ export default function PublicidadCarousel({
     }
   };
 
-  // Estilo para el skeleton loader - debe mantener exactamente las mismas dimensiones que el contenido final
+  //estilo para el skeleton loader - debe mantener exactamente las mismas dimensiones que el contenido final
   const skeletonStyle = {
     ...containerStyle, // Aplicar primero los estilos del contenedor
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
     borderRadius: '8px',
     overflow: 'hidden',
-    // Asegurar dimensiones específicas según posición
+    //asegurar dimensiones específicas según posición
     ...(position === 'top' && {
       width: '100%',
       maxWidth: dims ? `${dims.w}px` : '1920px',
@@ -508,25 +508,25 @@ export default function PublicidadCarousel({
     })
   };
 
-  // Mientras carga - no renderizar nada para evitar layout shift
+  //mientras carga - no renderizarizar nada para evitar diseño shift
   if (isLoading) {
     return null;
   }
 
-  //En estado de error - no renderizar nada para evitar layout shift
+  //en estado de error - no renderizarizar nada para evitar diseño shift
   if (error) {
     return null;
   }
 
-  // No renderizar si no hay items
+  //no renderizarizar si no hay items
   if (items.length === 0) {
     return null;
   }
 
-  // Item actual para construir enlaces y handlers
+  //item actual para construir enlaces y manejadors
   const currentItem = items[index];
 
-  // Click handler (debe estar antes de usarlo en el bloque bottom)
+  //click manejador (debe estar antes de usarlo en el bloque bottom)
   const handleAdClick = async (e) => {
     if (!currentItem?.url_destino) {
       e.preventDefault();
@@ -547,23 +547,23 @@ export default function PublicidadCarousel({
 
   
 
-  // Función para manejar los colores extraídos
+  //funcion para manejar los colores extraídos
   const handleColors = (colors) => {
     if (colors && colors.length > 0) {
       setDominantColor(colors[0]);
     }
   };
 
-  // Manejador para cargar el color dominante con efecto neón mejorado
+  //manejador para cargar el color dominante con efecto neón mejorado
   const handleImageLoad = (e) => {
     try {
       const img = e.target;
       
       if (img.complete) {
-        // Extraer el color dominante de la imagen
+        //extraer el color dominante de la imagen
         const color = colorThief.current.getColor(img);
         
-        // Función para ajustar el brillo del color
+        //funcion para ajustar el brillo del color
         const adjustBrightness = (r, g, b, percent) => {
           const adjust = (value) => Math.min(255, Math.floor(value + (255 - value) * (percent / 100)));
           return {
@@ -573,16 +573,16 @@ export default function PublicidadCarousel({
           };
         };
         
-        // Ajustar el color para el efecto neón
+        //ajustar el color para el efecto neón
         const neonColor = adjustBrightness(color[0], color[1], color[2], 40);
         const colorHex = `#${neonColor.r.toString(16).padStart(2, '0')}${neonColor.g.toString(16).padStart(2, '0')}${neonColor.b.toString(16).padStart(2, '0')}`;
         
-        // Actualizar el estado con el nuevo color dominante
+        //actualizar el estado con el nuevo color dominante
         setDominantColor(colorHex);
         
         const wrapper = img.closest('.publicidad-wrapper');
         if (wrapper) {
-          // Crear y aplicar la animación de neón mejorada
+          //crear y aplicar la animación de neón mejorada
           const style = document.createElement('style');
           style.id = 'neonGlowStyle';
           style.textContent = `
@@ -613,7 +613,7 @@ export default function PublicidadCarousel({
             }
           `;
           
-          // Limpiar estilos anteriores
+          //limpiar estilos anteriores
           const existingStyle = document.getElementById('neonGlowStyle');
           if (existingStyle) {
             document.head.removeChild(existingStyle);
@@ -621,12 +621,12 @@ export default function PublicidadCarousel({
           
           document.head.appendChild(style);
           
-          // Aplicar estilos directamente al wrapper
+          //aplicar estilos directamente al wrapper
           wrapper.style.border = '1px solid #e5e7eb';
           wrapper.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)';
           wrapper.style.borderRadius = '8px';
           
-          // Forzar el repintado para asegurar que la animación se aplique
+          //forzar el repintado para asegurar que la animación se aplique
           wrapper.style.animation = 'none';
           wrapper.offsetHeight; // Trigger reflow
           wrapper.style.animation = 'neonGlow 2s ease-in-out infinite alternate';
@@ -634,12 +634,12 @@ export default function PublicidadCarousel({
       }
     } catch (error) {
       console.error('Error al extraer el color:', error);
-      // Usar un color azul neón por defecto que combine mejor con el diseño
+      //usar un color azul neón por defecto que combine mejor con el diseño
       setDominantColor('#00f7ff');
     }
   };
 
-  // Animation variants for image transitions
+  //animation variants for image transitions
   const fadeVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -658,7 +658,7 @@ export default function PublicidadCarousel({
     }
   };
 
-  //Contenido para el carrusel
+  //contenido para el carrusel
   const content = (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <div className="publicidad-wrapper" style={neonWrapperStyle}>
@@ -718,14 +718,14 @@ export default function PublicidadCarousel({
     </div>
   );
 
-  //Para paneles fijos (izquierda y derecha)
+  //para paneles fijos (izquierda y derecha)
   if (position === 'left-fixed' || position === 'right-fixed') {
     const isArticlesPage = location.pathname.includes('/articulos');
     const isProgramacionPage = location.pathname.includes('/programacion');
     const isStaticContentPage = isArticlesPage || isProgramacionPage; // Páginas donde debe mostrarse igual que en artículos
     const shouldAnimate = isHomePage && !isStaticContentPage; // Solo animar en la página de inicio
     
-    //Estilo del panel
+    //estilo del panel
     const panelStyle = {
       position: 'fixed',
       [position === 'left-fixed' ? 'left' : 'right']: '16px',
@@ -735,7 +735,7 @@ export default function PublicidadCarousel({
       pointerEvents: 'auto'
     };
 
-    // En artículos y programación con animación de entrada
+    //en artículos y programación con animación de entrada
     if (isStaticContentPage) {
       return (
         <motion.div 
@@ -800,7 +800,7 @@ export default function PublicidadCarousel({
       );
     }
     
-    //En home con animacion
+    //en home con animacion
     return (
       <motion.div
         initial="hidden"
@@ -859,7 +859,7 @@ export default function PublicidadCarousel({
       </motion.div>
     );
   } else {
-    // For bottom banner, add close button
+    //for bottom banner, add close button
     if (position === 'bottom') {
       return (
         <div 
@@ -916,7 +916,7 @@ export default function PublicidadCarousel({
       );
     }
     
-    // Default for other positions (inline, etc.)
+    //default for other positions (inline, etc.)
     return (
       <div 
         className={`pub-carousel pos-${position} ${position === 'top' ? 'publicidad-container-top' : position === 'bottom' ? 'publicidad-container-bottom' : ''}`} 

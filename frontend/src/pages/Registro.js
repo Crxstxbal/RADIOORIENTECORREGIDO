@@ -22,7 +22,7 @@ const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  // Validación de contraseña
+  //validacion de contraseña
   const validatePassword = (password) => {
     const errors = [];
     if (password.length < 8) {
@@ -47,7 +47,7 @@ const Register = () => {
       [name]: value
     });
 
-    // Validar contraseña en tiempo real
+    //validar contraseña en tiempo real
     if (name === 'password') {
       setPasswordErrors(validatePassword(value));
     }
@@ -56,7 +56,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validar contraseña antes de enviar
+    //validar contraseña antes de enviar
     const errors = validatePassword(formData.password);
     if (errors.length > 0) {
       setPasswordErrors(errors);
@@ -70,11 +70,11 @@ const Register = () => {
       const result = await register(formData);
 
       if (result.success) {
-        // Pequeño delay para que se vea el estado de loading
+        //pequeño delay para que se vea el estado de cargando
         setTimeout(() => {
           setShowSuccess(true);
 
-          // Esperar a que termine la animación antes de navegar
+          //esperar a que termine la animación antes de navegar
           setTimeout(() => {
             navigate('/');
           }, 1800);
@@ -91,7 +91,7 @@ const Register = () => {
 
   return (
     <div className="auth-page">
-      {/* Animated background particles */}
+      {/*animated background particles*/}
       <div className="auth-particles">
         {[...Array(15)].map((_, i) => (
           <motion.div
@@ -118,7 +118,7 @@ const Register = () => {
 
       <div className="container">
         <div className="auth-container">
-          {/* Left side - Branding */}
+          {/*left side - branding*/}
           <motion.div
             className="auth-branding"
             initial={{ opacity: 0, x: -50 }}
@@ -174,7 +174,7 @@ const Register = () => {
             </div>
           </motion.div>
 
-          {/* Right side - Register Form */}
+          {/*right side - register form*/}
           <motion.div
             className="auth-card auth-card-register"
             initial={{ opacity: 0, y: 50 }}

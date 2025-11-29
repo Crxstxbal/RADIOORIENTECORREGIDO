@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import './Pages.css';
 import './Suscripcion.css';
 
-// Componente de contador animado
+//componentee de contador animado
 const AnimatedCounter = ({ end, duration = 2000, suffix = '', prefix = '' }) => {
   const [count, setCount] = useState(0);
   const countRef = useRef(null);
@@ -24,7 +24,7 @@ const AnimatedCounter = ({ end, duration = 2000, suffix = '', prefix = '' }) => 
             if (!startTime) startTime = currentTime;
             const progress = Math.min((currentTime - startTime) / duration, 1);
 
-            // Ease out animation
+            //ease out animation
             const easeOutQuart = 1 - Math.pow(1 - progress, 4);
             const currentCount = Math.floor(easeOutQuart * (end - startValue) + startValue);
 
@@ -81,13 +81,13 @@ const Subscription = () => {
     setLoading(true);
 
     try {
-      // Obtener token de autenticación si existe
+      //obtener token de autenticacion si existe
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Token ${token}` } : {};
 
       const response = await api.post('/api/contact/api/suscripciones/', formData, { headers });
 
-      // Manejar respuesta de éxito
+      //manejar respuesta de éxito
       if (response.data.reactivada) {
         toast.success('¡Bienvenido de vuelta! Tu suscripción ha sido reactivada exitosamente.', {
           duration: 5000,
@@ -103,37 +103,37 @@ const Subscription = () => {
       setIsSubscribed(true);
       setFormData({ email: '', nombre: '' });
     } catch (error) {
-      // Manejar diferentes tipos de errores
+      //manejar diferentes tipos de errores
       if (error.response) {
         const { status, data } = error.response;
 
         if (status === 400) {
-          // Email ya suscrito
+          //email ya suscrito
           const errorMsg = data.message || 'Ya estás suscrito a nuestro newsletter. ¡Gracias por tu interés!';
           toast.error(errorMsg, {
             duration: 5000,
             icon: '📧'
           });
         } else if (status === 500) {
-          // Error del servidor
+          //error del servidor
           toast.error(data.message || 'Error en el servidor. Por favor, intenta más tarde.', {
             duration: 5000,
             icon: '⚠️'
           });
         } else {
-          // Otros errores
+          //otros errores
           toast.error(data.message || 'Error al procesar la suscripción', {
             duration: 5000
           });
         }
       } else if (error.request) {
-        // Error de red
+        //error de red
         toast.error('No se pudo conectar al servidor. Verifica tu conexión a internet.', {
           duration: 5000,
           icon: '🌐'
         });
       } else {
-        // Otros errores
+        //otros errores
         toast.error('Ocurrió un error inesperado. Por favor, intenta nuevamente.', {
           duration: 5000
         });
@@ -182,7 +182,7 @@ const Subscription = () => {
           </p>
         </motion.div>
 
-        {/* Sección de Métricas - AHORA ARRIBA */}
+        {/*sección de métricas - ahora arriba*/}
         <motion.div
           className="stats-section-hero"
           initial={{ opacity: 0, scale: 0.95 }}

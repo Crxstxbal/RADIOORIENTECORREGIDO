@@ -17,17 +17,17 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-  // NO configurar axios.defaults globalmente
-  // Esto causaba problemas en páginas públicas como /contacto y /emergente
-  // useEffect(() => {
-  //   if (token) {
-  //     axios.defaults.headers.common['Authorization'] = `Token ${token}`;
-  //   } else {
-  //     delete axios.defaults.headers.common['Authorization'];
-  //   }
-  // }, [token]);
+  //no configurar axios.defaults globalmente
+  //esto causaba problemas en páginas públicas como /contacto y /emergente
+  //useefecto(() => {
+  //if (token) {
+  //axios.defaults.headers.common['authorization'] = `token ${token}`
+  //} else {
+  //delete axios.defaults.headers.common['authorization']
+  //}
+  //}, [token])
 
-  // Check if user is logged in on mount
+  //check if user is logged in on montar
   useEffect(() => {
     const checkAuth = async () => {
       if (token) {

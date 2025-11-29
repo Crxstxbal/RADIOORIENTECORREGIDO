@@ -56,7 +56,7 @@ const Emergente = () => {
         { id: 4, title: 'Links', icon: Link, description: 'Redes y música' },
     ];
 
-    // Cargar países al iniciar
+    //cargar países al iniciar
     useEffect(() => {
         const inicializarDatos = async () => {
             try {
@@ -164,7 +164,7 @@ const Emergente = () => {
         cargarGeneros();
     }, []);
 
-    // Cargar ciudades cuando se selecciona un país
+    //cargar ciudades cuando se selecciona un país
     useEffect(() => {
         const cargarCiudades = async () => {
             if (!formData.pais) {
@@ -206,7 +206,7 @@ const Emergente = () => {
         cargarCiudades();
     }, [formData.pais]);
 
-    // Cargar comunas cuando se selecciona una ciudad
+    //cargar comunas cuando se selecciona una ciudad
     useEffect(() => {
         const cargarComunas = async () => {
             if (!formData.ciudad) {
@@ -295,7 +295,7 @@ const Emergente = () => {
 
     const handlePhoneChange = (e) => {
         const { value } = e.target;
-        // Solo permitir +, -, espacios y números
+        //solo permitir +, -, espacios y números
         const sanitizedValue = value.replace(/[^0-9+\-\s]/g, '');
         setFormData(prev => ({
             ...prev,
@@ -330,7 +330,7 @@ const Emergente = () => {
                 if (formData.integrantes.length === 0) newErrors.integrantes = 'Debes agregar al menos un integrante';
                 break;
             case 2:
-                // Ubicación es obligatoria
+                //ubicación es obligatoria
                 if (!formData.pais) newErrors.pais = 'El país es requerido';
                 if (!formData.ciudad) newErrors.ciudad = 'La región es requerida';
                 if (!formData.comuna) newErrors.comuna = 'La comuna es requerida';
@@ -341,7 +341,7 @@ const Emergente = () => {
                 } else if (!/\S+@\S+\.\S+/.test(formData.email_contacto)) {
                     newErrors.email_contacto = 'Por favor ingresa un correo electrónico válido';
                 }
-                // Teléfono es obligatorio
+                //teléfono es obligatorio
                 if (!formData.telefono_contacto.trim()) {
                     newErrors.telefono_contacto = 'El teléfono es requerido';
                 } else {
@@ -353,7 +353,7 @@ const Emergente = () => {
                 if (!formData.mensaje.trim()) newErrors.mensaje = 'El mensaje es requerido';
                 break;
             case 4:
-                // Al menos un link es obligatorio
+                //al menos un link es obligatorio
                 if (formData.links.length === 0) newErrors.links = 'Debes agregar al menos un link de tu música o redes';
                 break;
             default:
@@ -381,7 +381,7 @@ const Emergente = () => {
     };
 
     const goToStep = (step) => {
-        // Validar pasos anteriores antes de saltar
+        //validar pasos anteriores antes de saltar
         for (let i = 0; i < step; i++) {
             const stepErrors = validateStep(i);
             if (Object.keys(stepErrors).length > 0) {
@@ -396,7 +396,7 @@ const Emergente = () => {
     };
 
     const handleSubmit = async () => {
-        // Validar todos los pasos
+        //validar todos los pasos
         for (let i = 0; i <= currentStep; i++) {
             const stepErrors = validateStep(i);
             if (Object.keys(stepErrors).length > 0) {
@@ -1008,7 +1008,7 @@ const Emergente = () => {
                 </motion.div>
 
                 <div className="emergente-wizard">
-                    {/* Stepper */}
+                    {/*stepper*/}
                     <motion.div
                         className="stepper"
                         initial={{ opacity: 0, y: 20 }}
@@ -1048,7 +1048,7 @@ const Emergente = () => {
                         })}
                     </motion.div>
 
-                    {/* Form Card */}
+                    {/*form card*/}
                     <motion.div
                         className="wizard-card"
                         initial={{ opacity: 0, y: 20 }}
@@ -1067,7 +1067,7 @@ const Emergente = () => {
 
                         <form onSubmit={(e) => {
                             e.preventDefault();
-                            // Solo enviar si estamos en el último paso y se hizo clic explícito
+                            //solo enviar si estamos en el último paso y se hizo clic explícito
                         }}>
                             <AnimatePresence mode="wait" custom={direction}>
                                 <motion.div
@@ -1083,7 +1083,7 @@ const Emergente = () => {
                                 </motion.div>
                             </AnimatePresence>
 
-                            {/* Navigation */}
+                            {/*navigation*/}
                             <div className="wizard-navigation">
                                 <motion.button
                                     type="button"
@@ -1129,7 +1129,7 @@ const Emergente = () => {
                         </form>
                     </motion.div>
 
-                    {/* Info Cards */}
+                    {/*info cards*/}
                     <motion.div
                         className="info-cards"
                         initial={{ opacity: 0 }}

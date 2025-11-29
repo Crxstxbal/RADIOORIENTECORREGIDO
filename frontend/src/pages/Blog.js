@@ -59,7 +59,7 @@ const Blog = () => {
           </div>
         ) : (
           <div className="blog-container">
-            {/* Featured Posts */}
+            {/*featured posts*/}
             {posts.filter(post => post.is_featured).length > 0 && (
               <section className="featured-section">
                 <h2 className="section-title">Artículos Destacados</h2>
@@ -103,7 +103,7 @@ const Blog = () => {
               </section>
             )}
 
-            {/* All Posts */}
+            {/*all posts*/}
             <section className="all-posts-section">
               <h2 className="section-title">Todos los Artículos</h2>
               <div className="posts-grid">
@@ -151,7 +151,7 @@ const Blog = () => {
           </div>
         )}
 
-        {/* Post Modal */}
+        {/*post modal*/}
         {selectedPost && (
           <div className="post-modal-overlay" onClick={closeModal}>
             <div className="post-modal" onClick={(e) => e.stopPropagation()}>

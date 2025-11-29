@@ -19,26 +19,26 @@ const Contacto = () => {
   const [focusedField, setFocusedField] = useState(null);
   const [errors, setErrors] = useState({});
 
-  // Cargar tipos de asunto y información de la estación
+  //cargar tipos de asunto y informacion de la estación
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        // Usar fetch en lugar de axios para evitar problemas con headers globales
+        //usar obtener en lugar de axios para evitar problemas con headers globales
         const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
         const tiposResponse = await fetch(`${base}/api/contact/api/tipos-asunto/`);
         if (!tiposResponse.ok) {
           throw new Error('Error al cargar tipos de asunto');
         }
         const tiposData = await tiposResponse.json();
-        // Los endpoints DRF devuelven objetos paginados con { results: [] }
+        //los endpoints drf devuelven objetos paginados con { results: [] }
         const tiposArray = tiposData.results || (Array.isArray(tiposData) ? tiposData : []);
         setTiposAsunto(tiposArray);
 
-        // Cargar información de la estación
+        //cargar informacion de la estación
         const estacionResponse = await fetch(`${base}/api/radio/api/estaciones/`);
         if (estacionResponse.ok) {
           const estacionData = await estacionResponse.json();
-          // Los endpoints DRF devuelven objetos paginados con { results: [] }
+          //los endpoints drf devuelven objetos paginados con { results: [] }
           const estacionArray = estacionData.results || (Array.isArray(estacionData) ? estacionData : []);
           if (estacionArray.length > 0) {
             setEstacionInfo(estacionArray[0]);
@@ -46,7 +46,7 @@ const Contacto = () => {
         }
       } catch (error) {
         console.error('Error al cargar datos:', error);
-        // Fallback con tipos de asunto por defecto
+        //fallback con tipos de asunto por defecto
         setTiposAsunto([
           { id: 1, nombre: 'Consulta General' },
           { id: 2, nombre: 'Publicidad' },
@@ -60,7 +60,7 @@ const Contacto = () => {
   }, []);
 
   const validatePhone = (phone) => {
-    // Permitir solo números, espacios, guiones y paréntesis
+    //permitir solo números, espacios, guiones y paréntesis
     const phoneRegex = /^[\d\s\-\+\(\)]+$/;
     return phoneRegex.test(phone) || phone === '';
   };
@@ -68,9 +68,9 @@ const Contacto = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Validación especial para teléfono
+    //validacion especial para teléfono
     if (name === 'telefono') {
-      // Permitir solo números y algunos caracteres especiales
+      //permitir solo números y algunos caracteres especiales
       if (value && !validatePhone(value)) {
         setErrors({
           ...errors,
@@ -78,7 +78,7 @@ const Contacto = () => {
         });
         return; // No actualizar si no es válido
       } else {
-        // Limpiar error si es válido
+        //limpiar error si es válido
         const newErrors = { ...errors };
         delete newErrors.telefono;
         setErrors(newErrors);
@@ -96,7 +96,7 @@ const Contacto = () => {
     setLoading(true);
 
     try {
-      // Usar fetch para enviar sin autenticación (formulario público)
+      //usar obtener para enviar sin autenticacion (formulario público)
       const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await fetch(`${base}/api/contact/api/contactos/`, {
         method: 'POST',

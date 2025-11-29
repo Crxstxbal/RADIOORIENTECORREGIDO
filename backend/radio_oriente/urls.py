@@ -24,7 +24,7 @@ def api_info(request):
     })
 
 def root_redirect(request):
-    # Si el usuario está autenticado, ir al dashboard; si no, al login del dashboard
+    #si el usuario está autenticado, ir al dashboard; si no, al login del dashboard
     if request.user.is_authenticated:
         return redirect('dashboard_home')
     return redirect('dashboard_login')

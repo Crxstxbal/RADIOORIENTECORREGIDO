@@ -24,14 +24,14 @@ const ProgramacionDebug = () => {
       try {
         console.log('🔄 Iniciando carga de datos...');
         
-        // Cargar programas
+        //cargar programas
         console.log('📡 Cargando programas...');
         const programsResponse = await api.get('/api/radio/api/programas/');
         const programsData = programsResponse.data.results || programsResponse.data;
         console.log('✅ Programas cargados:', programsData);
         setPrograms(programsData);
         
-        // Cargar horarios
+        //cargar horarios
         console.log('📅 Cargando horarios...');
         const horariosResponse = await api.get('/api/radio/api/horarios/');
         const horariosData = horariosResponse.data.results || horariosResponse.data;
@@ -110,7 +110,7 @@ const ProgramacionDebug = () => {
           </div>
         </div>
 
-        {/* Debug Info */}
+        {/*debug info*/}
         <div style={{ background: '#f0f0f0', padding: '1rem', marginBottom: '2rem', borderRadius: '0.5rem' }}>
           <h3>Debug Info:</h3>
           <p><strong>Programas cargados:</strong> {programs.length}</p>

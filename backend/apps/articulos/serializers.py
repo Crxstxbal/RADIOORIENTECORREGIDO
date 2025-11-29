@@ -66,7 +66,7 @@ class ArticuloSerializer(serializers.ModelSerializer):
         return None
 
 class ArticuloListSerializer(serializers.ModelSerializer):
-    """Serializer simplificado para listas"""
+    """serializer simplificado para listas"""
     autor_nombre = serializers.CharField(source='autor.full_name', read_only=True)
     categoria_nombre = serializers.CharField(source='categoria.nombre', read_only=True)
     imagen_destacada = serializers.SerializerMethodField()
@@ -134,7 +134,7 @@ class ArticuloListSerializer(serializers.ModelSerializer):
         return None
 
 class ArticuloCreateSerializer(serializers.ModelSerializer):
-    """Serializer para crear artículos"""
+    """serializer para crear articulos"""
     
     class Meta:
         model = Articulo
@@ -148,9 +148,9 @@ class ArticuloCreateSerializer(serializers.ModelSerializer):
         validated_data['autor'] = self.context['request'].user
         return super().create(validated_data)
 
-# Serializers de compatibilidad para el frontend existente
+#serializers de compatibilidad para el frontend existente
 class BlogPostLegacySerializer(serializers.ModelSerializer):
-    """Serializer para mantener compatibilidad con el frontend existente"""
+    """serializer para mantener compatibilidad con el frontend existente"""
     autor_id = serializers.IntegerField(source='autor.id', read_only=True)
     autor_nombre = serializers.CharField(source='autor.full_name', read_only=True)
     categoria = serializers.CharField(source='categoria.nombre', read_only=True)

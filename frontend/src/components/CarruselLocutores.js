@@ -1,11 +1,11 @@
-// frontend/src/components/CarruselLocutores.jsx
+//frontend/src/componentes/carrusellocutores.jsx
 
 import React, { useState, useEffect } from 'react';
 import { Splide, SplideSlide } from '@splidejs/react-splide';
 import { AutoScroll } from '@splidejs/splide-extension-auto-scroll';
 import api from '../utils/api';
 
-// Estilos de Splide
+//estilos de splide
 import '@splidejs/react-splide/css';
 
 import './CarruselLocutores.css'; 
@@ -24,21 +24,21 @@ const CarruselLocutores = () => {
         const data = response.data;
         console.log('API Response:', data);
 
-        // ---- ESTA ES LA SOLUCIÓN MEJORADA ----
+        //---- esta es la solución mejorada ----
         let locutoresData = [];
         
         if (data && Array.isArray(data.results)) {
-          // 1. Si es una respuesta paginada, usamos .results
+          //1. si es una respuesta paginada, usamos .results
           locutoresData = data.results;
         } else if (data && Array.isArray(data)) {
-          // 2. Si es una respuesta de array simple, la usamos
+          //2. si es una respuesta de array simple, la usamos
           locutoresData = data;
         } else {
-          // 3. Si es cualquier otra cosa (null, objeto, etc.), dejamos un array vacío
+          //3. si es cualquier otra cosa (null, objeto, etc.), dejamos un array vacío
           console.error("La API no devolvió un array de locutores:", data);
         }
 
-        // Log de depuración para las URLs de las imágenes
+        //log de depuración para las urls de las imágenes
         console.log('Locutores con sus fotos:', locutoresData.map(l => ({
           id: l.id,
           nombre: l.nombre,
@@ -47,11 +47,11 @@ const CarruselLocutores = () => {
         })));
 
         setLocutores(locutoresData);
-        // -------------------------------------
+        //-------------------------------------
 
       } catch (error) {
         console.error("Error al cargar locutores:", error);
-        // 4. Si la API falla (404, 500), también dejamos un array vacío
+        //4. si la api falla (404, 500), también dejamos un array vacío
         setLocutores([]); // <-- Garantiza que sea un array
       } finally {
         setLoading(false);
@@ -72,7 +72,7 @@ const CarruselLocutores = () => {
     );
   }
 
-  // Si no hay locutores, mostramos un mensaje
+  //si no hay locutores, mostramos un mensaje
   if (locutores.length === 0) {
     return (
       <div className="locutores-carrusel-container">
@@ -150,7 +150,7 @@ const CarruselLocutores = () => {
                       {locutor.nombre?.charAt(0)}{locutor.apellido?.charAt(0) || ''}
                     </div>
                   </div>
-                  {/* Iconos flotantes de redes sociales */}
+                  {/*iconos flotantes de redes sociales*/}
                   <div className="social-icons">
                     <a href="#" className="social-icon social-icon-1" aria-label="Facebook">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">

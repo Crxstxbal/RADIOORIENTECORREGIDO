@@ -6,7 +6,7 @@ from channels.auth import AuthMiddlewareStack
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'radio_oriente.settings')
 
-# Asegurar que las apps estén cargadas antes de importar routing que usa modelos
+#validar condiciones
 django.setup()
 
 from apps.chat import routing

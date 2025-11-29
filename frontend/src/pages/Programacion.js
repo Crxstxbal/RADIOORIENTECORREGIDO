@@ -79,7 +79,7 @@ const Programming = () => {
 
   const groupedPrograms = groupProgramsByDay;
 
-  // Memoizar días filtrados
+  //memoizar días filtrados
   const daysToShow = useMemo(() => {
     return selectedDay !== null
       ? daysOfWeek.filter(day => day.key === selectedDay)
@@ -99,7 +99,7 @@ const Programming = () => {
           </div>
         </div>
 
-        {/* Filtro de días */}
+        {/*filtro de días*/}
         <div className="days-filter">
           <button
             className={`day-filter-btn ${selectedDay === null ? 'active' : ''}`}

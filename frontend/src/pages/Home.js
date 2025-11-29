@@ -7,7 +7,7 @@ import PublicidadCarousel from "../components/PublicidadCarousel";
 import CarruselLocutores from '../components/CarruselLocutores';
 import Typewriter from '../components/Typewriter';
 
-// Componente para contador animado
+//componentee para contador animado
 const CounterCard = ({ icon, endValue, suffix = "", label, duration = 2000 }) => {
   const [count, setCount] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -81,7 +81,7 @@ const calculateYearsSince = (startDate) => {
   return years;
 };
 
-// Memoizar años calculados
+//memoizar años calculados
 const yearsOnAir = calculateYearsSince(new Date(2011, 8, 21));
 
 const Home = () => {
@@ -155,7 +155,7 @@ const Home = () => {
       const randomSize = 3 + Math.random() * 3;
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
-      // Dirección aleatoria: arriba, abajo, izquierda o derecha
+      //dirección aleatoria: arriba, abajo, izquierda o derecha
       const directions = [
         'floatUp',
         'floatDown',
@@ -191,9 +191,9 @@ const Home = () => {
   return (
     <>
       <div className="home-page">
-        {/* Hero Section */}
+        {/*hero section*/}
         <section className="hero">
-          {/* Partículas animadas */}
+          {/*partículas animadas*/}
           <div className="floating-particles">
             {particleElements}
           </div>
@@ -245,7 +245,7 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Secciones */}
+        {/*secciones*/}
         <section className="stats">
           <div className="container">
             <div className="stats-grid">
@@ -278,7 +278,7 @@ const Home = () => {
 
         <CarruselLocutores />
 
-        {/* Noticias */}
+        {/*noticias*/}
         <section className="featured-news">
           <div className="container">
             <h2 className="section-title">Últimos Artículos</h2>
@@ -297,7 +297,7 @@ const Home = () => {
               <>
                 <div className="news-grid">
                   {featuredArticles.map((article) => {
-                    // Función para obtener thumbnail
+                    //funcion para obtener thumbnail
                     const getThumbnail = (article) => {
                       return article.imagen_thumbnail || article.imagen_url || article.imagen_portada;
                     };
@@ -358,7 +358,7 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Publicidad Home 1920x1080 debajo de Últimos Artículos */}
+        {/*publicidad home 1920x1080 debajo de últimos artículos*/}
         <div className="container" style={{ margin: '24px auto' }}>
           <PublicidadCarousel dimensiones="1920x1080" position="top" autoPlayMs={8000} />
         </div>

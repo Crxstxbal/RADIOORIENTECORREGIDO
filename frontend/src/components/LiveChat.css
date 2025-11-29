@@ -341,7 +341,7 @@
   cursor: not-allowed;
 }
 
-/* Scrollbar Styles */
+/*scrollbar estilos*/
 .messages-list::-webkit-scrollbar {
   width: 4px;
 }
@@ -359,7 +359,7 @@
   background: var(--color-gray-500);
 }
 
-/* Responsive Design */
+/*responsivo design*/
 @media (max-width: 768px) {
   .chat-toggle {
     bottom: 90px;
@@ -429,9 +429,7 @@
   }
 }
 
-/* ============================================
-   DARK MODE STYLES - LiveChat
-   ============================================ */
+/*============================================ dark mode estilos - livechat ============================================*/
 
 html.dark .chat-window {
   background: var(--card-bg);
@@ -501,7 +499,7 @@ html.dark .message-input::placeholder {
   opacity: 0.7;
 }
 
-/* Scrollbar en dark mode */
+/*scrollbar en dark mode*/
 html.dark .messages-list::-webkit-scrollbar-track {
   background: var(--bg-tertiary);
 }
@@ -514,7 +512,7 @@ html.dark .messages-list::-webkit-scrollbar-thumb:hover {
   background: var(--text-tertiary);
 }
 
-/* Animaciones */
+/*animaciones*/
 @keyframes pulse {
   0% {
     transform: scale(1);

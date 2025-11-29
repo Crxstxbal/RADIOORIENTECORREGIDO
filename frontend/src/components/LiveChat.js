@@ -19,7 +19,7 @@ const LiveChat = () => {
   const pollingIntervalRef = useRef(null);
   const wsRef = useRef(null);
 
-  // Detectar si el reproductor está colapsado
+  //detectar si el reproductor está colapsado
   useEffect(() => {
     const checkPlayerCollapsed = () => {
       const radioPlayer = document.querySelector('.radio-player-wrapper');
@@ -28,7 +28,7 @@ const LiveChat = () => {
 
     checkPlayerCollapsed();
 
-    // Observer para detectar cambios
+    //observer para detectar cambios
     const observer = new MutationObserver(checkPlayerCollapsed);
     const radioPlayer = document.querySelector('.radio-player-wrapper');
 
@@ -39,7 +39,7 @@ const LiveChat = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Verificar estado de la radio
+  //verificar estado de la radio
   useEffect(() => {
     const checkRadioStatus = async () => {
       try {
@@ -57,7 +57,7 @@ const LiveChat = () => {
     return () => clearInterval(statusInterval);
   }, []);
 
-  // Cargar mensajes cuando se abre el chat
+  //cargar mensajes cuando se abre el chat
   useEffect(() => {
     if (isOpen && isAuthenticated) {
       loadMessages();
@@ -73,7 +73,7 @@ const LiveChat = () => {
     scrollToBottom();
   }, [messages]);
 
-  // WebSocket para presencia en tiempo real (usuarios activos en la sala)
+  //websocket para presencia en tiempo real (usuarios activos en la sala)
   useEffect(() => {
     try {
       const rawBase = (import.meta.env.VITE_WS_URL || import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').toString();
@@ -131,7 +131,7 @@ const LiveChat = () => {
     try {
       const response = await api.get('/api/chat/messages/radio-oriente/');
 
-      // La API puede devolver un array directo o un objeto con 'results'
+      //la api puede devolver un array directo o un objeto con 'results'
       const messagesData = Array.isArray(response.data) ? response.data : (response.data.results || []);
 
       const loadedMessages = messagesData.map(msg => ({
@@ -149,7 +149,7 @@ const LiveChat = () => {
   };
 
   const startPolling = () => {
-    // Actualizar mensajes cada 3 segundos
+    //actualizar mensajes cada 3 segundos
     pollingIntervalRef.current = setInterval(() => {
       loadMessages();
     }, 3000);
@@ -177,7 +177,7 @@ const LiveChat = () => {
     setError('');
     setNewMessage(''); // Limpiar input inmediatamente
 
-    // Optimistic update: agregar mensaje inmediatamente
+    //optimistic actualizar: agregar mensaje inmediatamente
     const tempMessage = {
       id: `temp-${Date.now()}`,
       message: messageContent,
@@ -192,19 +192,19 @@ const LiveChat = () => {
       await api.post('/api/chat/messages/radio-oriente/', {
         contenido: messageContent
       });
-      // Recargar mensajes para obtener el mensaje real del servidor
+      //recargar mensajes para obtener el mensaje real del servidor
       await loadMessages();
     } catch (error) {
       console.error('Error sending message:', error);
       console.error('Error response:', error.response?.data);
 
-      // Remover el mensaje temporal si falla
+      //remover mensaje temporal
       setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
 
       if (error.response?.data?.detail) {
         setError(error.response.data.detail);
       } else if (error.response?.data) {
-        // Mostrar el primer error que encuentre
+        //mostrar el primer error que encuentre
         const firstError = Object.values(error.response.data)[0];
         setError(Array.isArray(firstError) ? firstError[0] : firstError);
       } else {
@@ -240,7 +240,7 @@ const LiveChat = () => {
 
   return (
     <>
-      {/* Chat Toggle Button */}
+      {/*chat toggle button*/}
       <button
         className={`chat-toggle ${isOpen ? 'active' : ''} ${isPlayerCollapsed ? 'player-collapsed' : ''}`}
         onClick={toggleChat}
@@ -255,9 +255,9 @@ const LiveChat = () => {
         )}
       </button>
 
-      {/* Chat Window */}
+      {/*chat window*/}
       <div className={`chat-window ${isMinimized ? 'minimized' : ''} ${isOpen ? 'open' : ''}`}>
-          {/* Chat Header */}
+          {/*chat header*/}
           <div className="chat-header">
             <div className="chat-title">
               <MessageCircle size={20} />
@@ -290,13 +290,13 @@ const LiveChat = () => {
 
           {!isMinimized && (
             <>
-              {/* Online Users */}
+              {/*online users*/}
               <div className="online-users">
                 <Users size={16} />
                 <span>{onlineUsers} usuarios conectados</span>
               </div>
 
-              {/* Messages Area */}
+              {/*messages area*/}
               <div className="messages-container">
                 {!isAuthenticated ? (
                   <div className="auth-required">
@@ -348,7 +348,7 @@ const LiveChat = () => {
                       <div ref={messagesEndRef} />
                     </div>
 
-                    {/* Error Message */}
+                    {/*error message*/}
                     {error && (
                       <div className="chat-error">
                         <AlertCircle size={14} />
@@ -356,7 +356,7 @@ const LiveChat = () => {
                       </div>
                     )}
 
-                    {/* Message Input */}
+                    {/*message input*/}
                     <form onSubmit={sendMessage} className="message-form">
                       <input
                         type="text"
