@@ -155,7 +155,7 @@ REST_FRAMEWORK = {
 
 #cors settings
 #en desarrollo, permitir todos los orígenes para facilitar el desarrollo
-  #solo para desarrollo
+CORS_ALLOW_ALL_ORIGINS = True  #solo para desarrollo
 
 #lista de orígenes permitidos (se puede configurar desde .env)
 #en producción, descomenta las siguientes líneas y configura los orígenes permitidos
