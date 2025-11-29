@@ -2787,7 +2787,6 @@ def agregar_estado(request):
         if is_ajax:
             return JsonResponse({'status': 'error', 'message': message}, status=500)
         messages.error(request, message)
-
     return redirect('dashboard_emergentes')
 
 @login_required
@@ -2796,6 +2795,7 @@ def agregar_estado(request):
 def eliminar_estado(request, estado_id):
     """eliminar un estado, con soporte para ajax y fallback"""
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    next_url = request.META.get('HTTP_REFERER')
 
     try:
         estado = get_object_or_404(Estado, id=estado_id)
@@ -2807,14 +2807,14 @@ def eliminar_estado(request, estado_id):
             if is_ajax:
                 return JsonResponse({'status': 'error', 'message': message}, status=400)
             messages.error(request, message)
-            return redirect('dashboard_emergentes')
+            return redirect(next_url or 'dashboard_emergentes')
 
         if estado.tipo_entidad == 'banda' and BandaEmergente.objects.filter(estado=estado).exists():
             message = f'No se puede eliminar el estado "{nombre_estado}" porque está siendo usado por bandas.'
             if is_ajax:
                 return JsonResponse({'status': 'error', 'message': message}, status=400)
             messages.error(request, message)
-            return redirect('dashboard_emergentes')
+            return redirect(next_url or 'dashboard_emergentes')
 
         estado.delete()
         message = f'Estado "{nombre_estado}" eliminado correctamente.'
@@ -2829,7 +2829,7 @@ def eliminar_estado(request, estado_id):
             return JsonResponse({'status': 'error', 'message': message}, status=500)
         messages.error(request, message)
 
-    return redirect('dashboard_emergentes')
+    return redirect(next_url or 'dashboard_emergentes')
 
 #chat moderation
 @login_required
@@ -3195,8 +3195,11 @@ def dashboard_contactos(request):
     page_obj = paginator.get_page(page_number)
 
     #obtener estados y tipos de asunto disponibles
-    estados_disponibles = Estado.objects.filter(tipo_entidad='contacto').order_by('nombre')
+    estados_disponibles = Estado.objects.all().order_by('nombre')
     tipos_asunto = TipoAsunto.objects.all().order_by('nombre')
+
+    # estados para la sección "Gestión de estados" (contactos y bandas)
+    estados = Estado.objects.all().order_by('tipo_entidad', 'nombre')
 
     context = {
         'contactos': page_obj,
@@ -3207,6 +3210,7 @@ def dashboard_contactos(request):
         'contactos_semana': contactos_semana,
         'estados_disponibles': estados_disponibles,
         'tipos_asunto': tipos_asunto,
+        'estados': estados,
   #añadido para la gestion de estados
     }
 
@@ -3223,7 +3227,7 @@ def update_contacto(request, contacto_id):
         nuevo_estado_id = request.POST.get('estado')
 
         try:
-            nuevo_estado = Estado.objects.get(id=nuevo_estado_id, tipo_entidad='contacto')
+            nuevo_estado = Estado.objects.get(id=nuevo_estado_id)
             contacto.estado = nuevo_estado
 
             #si el estado es "respondida", marcar fecha y usuario

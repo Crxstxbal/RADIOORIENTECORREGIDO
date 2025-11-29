@@ -17,6 +17,15 @@ class Publicidad(models.Model):
     nombre_cliente = models.CharField(max_length=150, verbose_name="Nombre del Cliente")
     descripcion = models.TextField(blank=True, null=True, verbose_name="Descripción")
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, verbose_name="Tipo de Publicidad")
+    # relación opcional hacia la solicitud web de origen (1 solicitud -> N campañas)
+    solicitud_web_origen = models.ForeignKey(
+        'SolicitudPublicidadWeb',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='campanias_web',
+        verbose_name="Solicitud Web de origen"
+    )
     fecha_inicio = models.DateField(verbose_name="Fecha de Inicio")
     fecha_fin = models.DateField(verbose_name="Fecha de Finalización")
     activo = models.BooleanField(default=True, verbose_name="¿Activo?")

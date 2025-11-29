@@ -1162,9 +1162,24 @@ if (!document.getElementById('toastExito')) {
                           <i class="fas fa-check"></i> Aprobar
                         </button>
                       {% else %}
-                        {% if s.publicacion_id %}
-                          <a href="#camp-{{ s.publicacion_id }}" class="btn btn-sm btn-outline-primary">Ver campaña</a>
-                        {% endif %}
+                        {% with s.campanias_web.all as campanias_relacionadas %}
+                          {% if campanias_relacionadas %}
+                            <div class="btn-group ms-1 dropup" role="group">
+                              <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                Campañas ({{ campanias_relacionadas|length }})
+                              </button>
+                              <ul class="dropdown-menu dropdown-menu-end">
+                                {% for c in campanias_relacionadas %}
+                                  <li>
+                                    <a class="dropdown-item" href="#" onclick="verDetallesCampania({{ c.id }}); return false;">
+                                      Ver campaña #{{ c.id }}
+                                    </a>
+                                  </li>
+                                {% endfor %}
+                              </ul>
+                            </div>
+                          {% endif %}
+                        {% endwith %}
                       {% endif %}
                     </div>
                   </td>
