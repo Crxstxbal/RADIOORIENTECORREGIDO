@@ -101,23 +101,12 @@ export default function PublicidadCarousel({
     };
   }, [position, reopenHours, dismissed]);
 
-  //logs de debug solo en desarrollo
-  useEffect(() => {
-    if (debug && import.meta.env.DEV) {
-      console.log(`[PublicidadCarousel] Mounted with position=${position}`);
-    }
-  }, [position, debug]);
-
   //obtener datos de publicidad
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
     setError(null);
 
-    //debug solo en desarrollo
-    if (debug && import.meta.env.DEV) {
-      console.log(`[PublicidadCarousel] Fetching ads for position=${position}`);
-    }
 
     async function load() {
       try {
@@ -128,23 +117,11 @@ export default function PublicidadCarousel({
         
         const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
         const url = `${base}/dashboard/api/publicidad/activas/?${params.toString()}`;
-        //debug solo en desarrollo
-        if (debug && import.meta.env.DEV) {
-          console.log(`[PublicidadCarousel] API URL: ${url}`);
-        }
 
         const startTime = performance.now();
         const resp = await fetch(url);
         const data = await resp.json();
         const endTime = performance.now();
-
-        //debug solo en desarrollo
-        if (debug && import.meta.env.DEV) {
-          console.log(`[PublicidadCarousel] API response (${Math.round(endTime - startTime)}ms):`, {
-            status: resp.status,
-            itemsCount: data.items?.length || 0
-          });
-        }
 
         if (!cancelled) {
           if (data?.success && Array.isArray(data.items)) {
@@ -198,9 +175,7 @@ export default function PublicidadCarousel({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
-      if (debug && import.meta.env.DEV) console.log('[PublicidadCarousel] Tracked impression', campaignId);
     } catch (e) {
-      if (debug && import.meta.env.DEV) console.warn('[PublicidadCarousel] Error tracking impression', e);
     }
   };
 
@@ -282,13 +257,6 @@ export default function PublicidadCarousel({
       }
     };
   }, [items, autoPlayMs, items.length]); // Added items.length to dependencies
-
-  //log de cambios solo en desarrollo
-  useEffect(() => {
-    if (debug && import.meta.env.DEV && items.length > 0) {
-      console.log(`[PublicidadCarousel] Slide ${index + 1}/${items.length}`);
-    }
-  }, [index, items.length, debug]);
 
   //tracking de impresiones: cada vez que cambia el slide activo
   useEffect(() => {

@@ -4,6 +4,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
 from django.shortcuts import redirect
+# 1. Eliminamos "from . import views" porque no se usaba y causaba alerta.
+from . import auth_views
 
 def api_info(request):
     return JsonResponse({
@@ -35,7 +37,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('dashboard/', include('dashboard.urls')),
     path('api/auth/', include('apps.users.urls')),
-
+    
+    path('api/radio/auth/google/', auth_views.google_login, name='google_login'),
 
     path('api/radio/', include('apps.radio.urls')),
     path('api/chat/', include('apps.chat.urls')),

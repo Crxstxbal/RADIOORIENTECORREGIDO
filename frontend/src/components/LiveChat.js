@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { MessageCircle, Send, X, Users, Minimize2, Maximize2, Radio, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
@@ -18,6 +18,37 @@ const LiveChat = () => {
   const messagesEndRef = useRef(null);
   const pollingIntervalRef = useRef(null);
   const wsRef = useRef(null);
+
+  // --- LOGICA DE NOMBRE SEGURO (PRIVACIDAD) ---
+  // 1. Calculamos tu nombre para mostrar en mensajes nuevos
+  const displayName = useMemo(() => {
+    if (!user) return '';
+    
+    // Prioridad 1: Nombre guardado por GoogleAuth
+    const localName = localStorage.getItem('user_name');
+    if (localName && localName !== 'undefined') return localName;
+
+    // Prioridad 2: Nombre del objeto user
+    if (user.first_name) return user.first_name;
+
+    // Prioridad 3: Username cortado si es correo
+    const username = user.username || '';
+    if (username.includes('@')) {
+        return username.split('@')[0]; 
+    }
+    return username;
+  }, [user]);
+
+  // 2. Función para limpiar nombres en el historial del chat (Otros usuarios)
+  const formatAuthorName = (name) => {
+    if (!name) return 'Anónimo';
+    // Si el nombre parece un correo, lo cortamos
+    if (name.includes('@')) {
+        return name.split('@')[0]; 
+    }
+    return name;
+  };
+  // ---------------------------------------------
 
   //detectar si el reproductor está colapsado
   useEffect(() => {
@@ -181,8 +212,9 @@ const LiveChat = () => {
     const tempMessage = {
       id: `temp-${Date.now()}`,
       message: messageContent,
-      user_name: user?.username,
-      username: user?.username,
+      // AQUI EL CAMBIO 1: Usamos displayName en vez de user.username
+      user_name: displayName,
+      username: displayName,
       timestamp: new Date().toISOString(),
       isOwn: true
     };
@@ -332,7 +364,8 @@ const LiveChat = () => {
                             <div className="message-content">
                               <div className="message-header">
                                 <span className="message-author">
-                                  {message.user_name || message.username}
+                                  {/* AQUI EL CAMBIO 2: Aplicamos el filtro al mostrar el nombre */}
+                                  {formatAuthorName(message.user_name || message.username)}
                                 </span>
                                 <span className="message-time">
                                   {formatTime(message.timestamp)}

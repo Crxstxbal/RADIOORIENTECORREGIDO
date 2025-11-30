@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { LogIn, Eye, EyeOff, Mail, Lock, Radio } from 'lucide-react';
+import { LogIn, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
+import GoogleAuth from '../components/GoogleAuth'; // <--- 1. IMPORTAMOS EL COMPONENTE
 import './Auth.css';
 
 const Login = () => {
@@ -243,6 +244,25 @@ const Login = () => {
                 </span>
               </motion.button>
             </form>
+
+            {/* --- SECCIÓN NUEVA: LOGIN CON GOOGLE --- */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.85 }}
+              style={{ margin: '1.5rem 0' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem', opacity: 0.6 }}>
+                <div style={{ flex: 1, height: '1px', backgroundColor: '#ccc' }}></div>
+                <span style={{ padding: '0 10px', fontSize: '0.85rem', color: '#666' }}>O inicia con</span>
+                <div style={{ flex: 1, height: '1px', backgroundColor: '#ccc' }}></div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <GoogleAuth />
+              </div>
+            </motion.div>
+            {/* -------------------------------------- */}
 
             <motion.div
               className="auth-footer"

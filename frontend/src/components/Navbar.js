@@ -17,6 +17,30 @@ const Navbar = () => {
   const [notifs, setNotifs] = useState([]);
   const [loadingNotifs, setLoadingNotifs] = useState(false);
 
+  // --- LOGICA DE NOMBRE SEGURO ---
+  // Calculamos qué nombre mostrar. Prioridad:
+  // 1. 'user_name' en localStorage (Guardado por GoogleAuth)
+  // 2. user.first_name (Si el backend lo envía)
+  // 3. user.username (Si es email, lo cortamos antes del @)
+  const displayName = useMemo(() => {
+    if (!user) return '';
+    
+    // 1. Intento leer lo que guardó GoogleAuth
+    const localName = localStorage.getItem('user_name');
+    if (localName && localName !== 'undefined') return localName;
+
+    // 2. Intento leer nombre real del objeto user
+    if (user.first_name) return user.first_name;
+
+    // 3. Fallback: Si es un email, mostramos solo la parte antes del @
+    const username = user.username || '';
+    if (username.includes('@')) {
+        return username.split('@')[0]; // "juan@gmail.com" -> "juan"
+    }
+    return username;
+  }, [user]);
+  // ------------------------------
+
   const navItems = [
     { name: "Inicio", path: "/" },
     { name: "Programación", path: "/programacion" },
@@ -31,6 +55,9 @@ const Navbar = () => {
   const handleLogout = useCallback(() => {
     logout();
     setIsOpen(false);
+    // Limpiamos también las variables de Google por si acaso
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_avatar');
   }, [logout]);
 
   // fetch de notificaciones
@@ -124,9 +151,15 @@ const Navbar = () => {
             {isAuthenticated ? (
               <div className="user-menu">
                 <div className="user-avatar">
-                  <User className="user-icon" size={18} />
+                  {/* Intentamos mostrar avatar de Google si existe, sino el ícono por defecto */}
+                  {localStorage.getItem('user_avatar') ? (
+                      <img src={localStorage.getItem('user_avatar')} alt="Avatar" style={{width: '100%', height: '100%', borderRadius: '50%'}} />
+                  ) : (
+                      <User className="user-icon" size={18} />
+                  )}
                 </div>
-                <span className="user-name">{user.username}</span>
+                {/* AQUI ESTA EL CAMBIO: Usamos displayName en lugar de user.username */}
+                <span className="user-name">{displayName}</span>
                 {isAdmin && (
                   <a
                     href={dashboardUrl}
@@ -299,7 +332,8 @@ const Navbar = () => {
               {isAuthenticated ? (
                 <>
                   <User className="user-icon" size={18} />
-                  <span className="user-name">Hola {user.username}</span>
+                  {/* También actualizado en la vista móvil */}
+                  <span className="user-name">Hola {displayName}</span>
                   <button onClick={handleLogout} className="btn btn-primary">
                     Cerrar Sesión
                   </button>
