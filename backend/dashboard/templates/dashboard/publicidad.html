@@ -382,7 +382,7 @@ let currentSolicitudId = null;
 document.addEventListener('DOMContentLoaded', function() {
     detallesCampaniaModal = new bootstrap.Modal(document.getElementById('detallesCampaniaModal'));
     detallesSolicitudModal = new bootstrap.Modal(document.getElementById('detallesSolicitudModal'));
-    
+
     // Configurar el modal para que se cierre correctamente
     document.getElementById('detallesSolicitudModal').addEventListener('hidden.bs.modal', function () {
         // Limpiar el contenido al cerrar
@@ -391,6 +391,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cargar información de ubicación para todas las campañas
     cargarUbicacionesCampanias();
+
+    // Configurar el botón de confirmar eliminación del modal global
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', async function() {
+            if (campaniaIdPendiente !== null) {
+                await eliminarCampania(campaniaIdPendiente);
+                campaniaIdPendiente = null;
+                closeDeleteModal();
+            } else if (solicitudIdPendiente !== null) {
+                await eliminarSolicitud(solicitudIdPendiente);
+                solicitudIdPendiente = null;
+                closeDeleteModal();
+            }
+        });
+    }
 });
 
 // Función para cargar la información de ubicación de las campañas
@@ -972,16 +988,28 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// Variables globales para el modal de eliminación
+let campaniaIdPendiente = null;
+let solicitudIdPendiente = null;
+
+// Función para mostrar modal de eliminación de campaña
+function mostrarModalEliminarCampania(campaniaId, nombreCampania) {
+    campaniaIdPendiente = campaniaId;
+    showDeleteModal(nombreCampania, null, 1);
+}
+
+// Función para mostrar modal de eliminación de solicitud
+function mostrarModalEliminarSolicitud(solicitudId, nombreSolicitud) {
+    solicitudIdPendiente = solicitudId;
+    showDeleteModal(nombreSolicitud, null, 1);
+}
+
 // Función para eliminar una campaña
 async function eliminarCampania(campaniaId) {
-    if (!confirm('¿Está seguro de eliminar esta campaña? Esta acción no se puede deshacer.')) {
-        return;
-    }
-    
     try {
         const url = `/dashboard/api/publicidad/campanias-web/${campaniaId}/`;
         console.log('Enviando solicitud DELETE a:', url);
-        
+
         const response = await fetch(url, {
             method: 'DELETE',
             headers: {
@@ -991,9 +1019,9 @@ async function eliminarCampania(campaniaId) {
             },
             credentials: 'same-origin'
         });
-        
+
         console.log('Respuesta recibida. Estado:', response.status, response.statusText);
-        
+
         let responseData = {};
         try {
             const responseText = await response.text();
@@ -1002,18 +1030,18 @@ async function eliminarCampania(campaniaId) {
         } catch (parseError) {
             console.warn('No se pudo analizar la respuesta como JSON:', parseError);
         }
-        
+
         if (response.ok) {
             // Mostrar notificación de éxito
             const toast = new bootstrap.Toast(document.getElementById('toastExito'));
             document.getElementById('toastMensaje').textContent = responseData.message || 'Campaña eliminada correctamente';
             toast.show();
-            
+
             // Recargar la página después de un breve retraso
             setTimeout(() => location.reload(), 1000);
         } else {
-            const errorMessage = responseData.error || 
-                               responseData.message || 
+            const errorMessage = responseData.error ||
+                               responseData.message ||
                                `Error ${response.status}: ${response.statusText}`;
             throw new Error(errorMessage);
         }
@@ -1152,7 +1180,7 @@ if (!document.getElementById('toastExito')) {
                             <i class="fas fa-hourglass-half"></i> En revisión
                           </button>
                         {% endif %}
-                        <button class="btn btn-sm btn-outline-danger ms-1" onclick="eliminarSolicitud({{ s.id }}); return false;" title="Eliminar solicitud">
+                        <button class="btn btn-sm btn-outline-danger ms-1" onclick="mostrarModalEliminarSolicitud({{ s.id }}, 'Solicitud #{{ s.id }} - {{ s.usuario.username|default:'Usuario'|escapejs }}'); return false;" title="Eliminar solicitud">
                           <i class="fas fa-trash"></i>
                         </button>
                         <button class="btn btn-sm btn-outline-danger" onclick="rechazarSolicitud({{ s.id }})">
@@ -1284,7 +1312,7 @@ if (!document.getElementById('toastExito')) {
                       <button class="btn btn-sm btn-outline-secondary" onclick="editarCampania({{ c.id }}, '{{ c.web_config.url_destino|default:''|escapejs }}', '{{ c.web_config.formato|default:''|escapejs }}', '{{ c.web_config.archivo_media|default:''|escapejs }}')" title="Editar">
                         <i class="fas fa-edit"></i>
                       </button>
-                      <button class="btn btn-sm btn-outline-danger" onclick="eliminarCampania({{ c.id }}); return false;" title="Eliminar">
+                      <button class="btn btn-sm btn-outline-danger" onclick="mostrarModalEliminarCampania({{ c.id }}, 'Campaña #{{ c.id }} - {{ c.nombre_cliente|escapejs }}'); return false;" title="Eliminar">
                         <i class="fas fa-trash"></i>
                       </button>
                     </div>
@@ -1967,10 +1995,6 @@ async function verDetallesSolicitud(solicitudId) {
 
 // Función para eliminar una solicitud
 async function eliminarSolicitud(solicitudId) {
-  if (!confirm('¿Estás seguro de que deseas eliminar esta solicitud? Esta acción no se puede deshacer.')) {
-    return;
-  }
-  
   try {
     const csrftoken = getCookie('csrftoken');
     const response = await fetch(`/dashboard/api/publicidad/solicitudes/${solicitudId}/eliminar/`, {
@@ -1985,7 +2009,7 @@ async function eliminarSolicitud(solicitudId) {
     if (!response.ok) {
       const errorText = await response.text();
       let errorMessage = `Error ${response.status}: ${response.statusText}`;
-      
+
       try {
         const errorData = JSON.parse(errorText);
         errorMessage = errorData.message || errorData.error || errorMessage;
@@ -1995,10 +2019,10 @@ async function eliminarSolicitud(solicitudId) {
           errorMessage = errorText;
         }
       }
-      
+
       throw new Error(errorMessage);
     }
-    
+
     // Si llegamos aquí, la eliminación fue exitosa
     location.reload();
   } catch (error) {
