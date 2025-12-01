@@ -1,4 +1,5 @@
 """utilidades para analisis de contenido con machine learning"""
+import os
 import re
 from typing import Dict, Tuple
 from .models import ContentFilterConfig, PalabraProhibida, InfraccionUsuario
@@ -9,13 +10,27 @@ class ContentAnalyzer:
 
     def __init__(self):
         """inicializar modelo ml de detoxify para español"""
-        try:
-            #usar modelo multilingüe que incluye español
-            from detoxify import Detoxify
-            self.model = Detoxify('multilingual')
-        except Exception as e:
-            print(f"Error al cargar modelo Detoxify: {e}")
+        #detectar si estamos en Render o si se desactivó explícitamente
+        disable_detoxify = os.getenv('DISABLE_DETOXIFY', 'false').lower() == 'true'
+        is_render = os.getenv('RENDER', 'false').lower() == 'true'
+        
+        #desactivar Detoxify en Render automáticamente o si está configurado
+        if disable_detoxify or is_render:
+            print("Detoxify desactivado (Render o configuración manual)")
             self.model = None
+            self.disabled = True
+        else:
+            #solo cargar en localhost
+            try:
+                from detoxify import Detoxify
+                print("Cargando modelo Detoxify para análisis de toxicidad...")
+                self.model = Detoxify('multilingual')
+                self.disabled = False
+                print("Detoxify cargado exitosamente")
+            except Exception as e:
+                print(f"Error al cargar modelo Detoxify: {e}")
+                self.model = None
+                self.disabled = True
 
     def analyze_message(self, contenido: str, id_usuario: int, usuario_nombre: str) -> Dict:
         """analizar mensaje y determinar si debe ser bloqueado returns: dict con: - allowed: bool - si el mensaje puede publicarse - reason: str - razón del bloqueo (si aplica) - score: float - score de toxicidad (0.0 - 1.0) - infraction_type: str - tipo de infracción"""

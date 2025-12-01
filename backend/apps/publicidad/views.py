@@ -2,10 +2,10 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Publicidad, PublicidadWeb, PublicidadRadial
+from .models import Publicidad, PublicidadWeb
 from .serializers import (
     PublicidadSerializer, PublicidadCreateSerializer, PublicidadListSerializer,
-    PublicidadWebSerializer, PublicidadRadialSerializer
+    PublicidadWebSerializer
 )
 
 class PublicidadViewSet(viewsets.ModelViewSet):
