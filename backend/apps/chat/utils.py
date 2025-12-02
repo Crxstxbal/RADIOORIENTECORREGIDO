@@ -10,7 +10,7 @@ class ContentAnalyzer:
 
     def __init__(self):
         """inicializar modelo ml de detoxify para español"""
-        #detectar si estamos en Render o si se desactivó explícitamente
+        #detectar si esta en Render
         disable_detoxify = os.getenv('DISABLE_DETOXIFY', 'false').lower() == 'true'
         is_render = os.getenv('RENDER', 'false').lower() == 'true'
         

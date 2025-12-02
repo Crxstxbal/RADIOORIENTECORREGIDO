@@ -37,8 +37,9 @@ class PaisViewSet(viewsets.ModelViewSet):
         """limpia y recarga todos los datos de chile desde la api externa divpa"""
         try:
             with transaction.atomic():
-                #eliminar datos de ubicacion existentes para chile
- #esto eliminará en cascada ciudades y comunas
+                #eliminar datos de ubicacion existentes para chile y recrear
+                #esto eliminará en cascada ciudades y comunas
+                Pais.objects.filter(nombre='Chile').delete()
                 
                 #crear chile
                 chile = Pais.objects.create(nombre='Chile')
@@ -97,7 +98,7 @@ class CiudadViewSet(viewsets.ReadOnlyModelViewSet):
     """viewset para ciudades (solo lectura)"""
     queryset = Ciudad.objects.select_related('pais').all()
     serializer_class = CiudadSerializer
- #permite que cualquiera consulte las ciudades
+    permission_classes = [permissions.AllowAny]  #permite que cualquiera consulte las ciudades
     
     @action(detail=False, methods=['get'])
     def por_pais(self, request):
